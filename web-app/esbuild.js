@@ -7,6 +7,8 @@ const path = require('path')
 
 dotenv.config();
 
+const WEB_ROOT = __dirname;
+
 (async () => {
   const define = {}
 
@@ -22,9 +24,9 @@ dotenv.config();
 
   const config = {
     jsx: 'automatic',
-    entryPoints: [path.resolve(process.cwd(), './src/index.tsx')],
+    entryPoints: [path.resolve(WEB_ROOT, './src/index.tsx')],
     bundle: true,
-    outdir: path.resolve(process.cwd(), './build'),
+    outdir: path.resolve(WEB_ROOT, './build'),
     sourcemap: true,
     target: ['esnext'],
     plugins: [
@@ -48,11 +50,17 @@ dotenv.config();
   }
 
   try {
-    if (fsSync.existsSync(path.resolve(process.cwd(), './build'))) {
-      await fs.rm(path.resolve(process.cwd(), './build'), { recursive: true, force: true })
+    if (fsSync.existsSync(path.resolve(WEB_ROOT, './build'))) {
+      await fs.rm(path.resolve(WEB_ROOT, './build'), { recursive: true, force: true })
     }
 
-    await fs.cp(path.resolve(process.cwd(), './public'), path.resolve(process.cwd(), './build'), { recursive: true })
+    await fs.cp(path.resolve(WEB_ROOT, './public'), path.resolve(WEB_ROOT, './build'), { recursive: true })
+
+    console.debug(`build files:`)
+
+    for (const fileName of await fs.readdir(path.resolve(WEB_ROOT, './build'))) {
+      console.debug(`  ${fileName}`)
+    }
 
     const context = await esbuild.context(config)
 
@@ -60,9 +68,9 @@ dotenv.config();
       console.log('Serving...')
 
       const { port, hosts } = await context.serve({
-        servedir: path.resolve(process.cwd(), './build'),
+        servedir: path.resolve(WEB_ROOT, './build'),
         port: 3000,
-        fallback: path.resolve(process.cwd(), './build/index.html'),
+        fallback: path.resolve(WEB_ROOT, './build/index.html'),
       })
 
       console.log(`${hosts} :${port}`)
@@ -75,7 +83,7 @@ dotenv.config();
     } else {
       const result = await context.rebuild()
 
-      await fs.writeFile(path.resolve(process.cwd(), './meta.json'), JSON.stringify(result.metafile))
+      await fs.writeFile(path.resolve(WEB_ROOT, './meta.json'), JSON.stringify(result.metafile))
 
       console.log('Build success!')
       console.log('Errors:', result.errors)
