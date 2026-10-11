@@ -3,6 +3,7 @@ const svgrPlugin = require('esbuild-plugin-svgr')
 const fs = require('fs/promises')
 const fsSync = require('fs')
 const dotenv = require('dotenv')
+const path = require('path')
 
 dotenv.config();
 
@@ -21,9 +22,9 @@ dotenv.config();
 
   const config = {
     jsx: 'automatic',
-    entryPoints: ['./src/index.tsx'],
+    entryPoints: [path.resolve(process.cwd(), './src/index.tsx')],
     bundle: true,
-    outdir: './build',
+    outdir: path.resolve(process.cwd(), './build'),
     sourcemap: true,
     target: ['esnext'],
     plugins: [
@@ -47,11 +48,11 @@ dotenv.config();
   }
 
   try {
-    if (fsSync.existsSync('./build')) {
-      await fs.rm('./build', { recursive: true, force: true })
+    if (fsSync.existsSync(path.resolve(process.cwd(), './build'))) {
+      await fs.rm(path.resolve(process.cwd(), './build'), { recursive: true, force: true })
     }
 
-    await fs.cp('./public', './build', { recursive: true })
+    await fs.cp(path.resolve(process.cwd(), './public'), path.resolve(process.cwd(), './build'), { recursive: true })
 
     const context = await esbuild.context(config)
 
@@ -59,9 +60,9 @@ dotenv.config();
       console.log('Serving...')
 
       const { port, hosts } = await context.serve({
-        servedir: './build',
+        servedir: path.resolve(process.cwd(), './build'),
         port: 3000,
-        fallback: './build/index.html',
+        fallback: path.resolve(process.cwd(), './build/index.html'),
       })
 
       console.log(`${hosts} :${port}`)
@@ -74,7 +75,7 @@ dotenv.config();
     } else {
       const result = await context.rebuild()
 
-      await fs.writeFile('./meta.json', JSON.stringify(result.metafile))
+      await fs.writeFile(path.resolve(process.cwd(), './meta.json'), JSON.stringify(result.metafile))
 
       console.log('Build success!')
       console.log('Errors:', result.errors)

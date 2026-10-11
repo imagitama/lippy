@@ -28,6 +28,7 @@ import VisitVrchatInstanceButton from '@/components/visit-vrchat-instance-button
 import useDataStoreItem from '@/hooks/useDataStoreItem'
 import { useState } from 'react'
 import useInterval from '@/hooks/useInterval'
+import { getPrefersBritishSpelling } from '@/utils'
 
 const StyledClubDetails = styled.div`
   font-size: 125%;
@@ -49,7 +50,9 @@ const FavButton = ({ eventId }: { eventId: string }) => {
       onClick={toggleFav}
       color="secondary"
       title="Highlights the event in the timeline (all local)">
-      {isFaved ? 'Unfav' : 'Fav'}
+      {isFaved
+        ? `Stop Favo${getPrefersBritishSpelling() ? 'u' : ''}riting`
+        : `Favo${getPrefersBritishSpelling() ? 'u' : ''}rite This Event`}
     </Button>
   )
 }
