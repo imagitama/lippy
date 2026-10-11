@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "workspaces": [
+    "shared",
+    "web-app"
+  ],
+  "scripts": {
+    "build": "npm run build -w shared && npm run build -w web-app"
+  }
+}
