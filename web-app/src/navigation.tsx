@@ -4,6 +4,7 @@ import { MyUser, UserRoles } from 'shared/modules/users'
 import * as routes from './routes'
 import {
   DISCORD_URL,
+  GITHUB_REPO_URL,
   JOIN_VRCHAT_WORLD_URL,
   VRCHAT_GROUP_ID,
   VRCHAT_GROUP_URL,
@@ -118,16 +119,21 @@ const items: MenuItem[] = [
         url: routes.about,
         label: 'About',
       },
-      // {
-      //   id: 'discord',
-      //   url: DISCORD_URL,
-      //   label: 'Our Discord',
-      // },
+      {
+        id: 'discord',
+        url: DISCORD_URL,
+        label: 'Our Discord',
+      },
       // {
       //   id: 'patreon',
       //   url: routes.patreon,
       //   label: 'Patreon',
       // },
+      {
+        id: 'github',
+        url: GITHUB_REPO_URL,
+        label: 'GitHub',
+      },
       {
         id: 'admin',
         label: 'Admin',

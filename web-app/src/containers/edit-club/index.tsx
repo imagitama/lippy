@@ -60,12 +60,10 @@ export default () => {
   return (
     <>
       <Helmet>
-        <title>{isCreating ? 'Create' : 'Edit'} an club</title>
+        <title>{isCreating ? 'Create' : 'Edit'} a club</title>
         <meta
           name="description"
-          content={`Use this form to ${
-            isCreating ? 'create' : 'edit'
-          } an club.`}
+          content={`Use this form to ${isCreating ? 'create' : 'edit'} a club.`}
         />
       </Helmet>
       <View />

@@ -15,7 +15,7 @@ import { darken } from '@mui/material/styles'
 import { alpha, useTheme } from '@mui/material/styles'
 import HistoryIcon from '@mui/icons-material/History'
 
-import { Event, Performance } from 'shared/modules/events'
+import { Event, EventForList, Performance } from 'shared/modules/events'
 import { Performer } from 'shared/modules/performers'
 
 import { useEventsFavoriting } from '@/hooks/useEventFavoriting'
@@ -55,11 +55,11 @@ const Controls = styled.div`
 `
 
 export interface HorizontalTimelineProps {
-  events: Event[]
+  events: EventForList[]
   /** Called when an event bar is clicked. */
-  onEventClick?: (event: Event) => void
+  onEventClick?: (event: EventForList) => void
   /** Called when a performer bar is clicked. */
-  onPerformanceClick?: (performer: Performer, event: Event) => void
+  onPerformanceClick?: (performance: Performance, event: EventForList) => void
   /**
    * Called when the user finishes dragging the timeline (and when they press
    * "Back to now") to fetch more data.
@@ -109,7 +109,7 @@ interface ParsedPerformance {
 }
 
 interface ParsedEvent {
-  event: Event
+  event: EventForList
   startMs: number
   endMs: number
   performances: ParsedPerformance[]
@@ -147,7 +147,7 @@ function getPackedLanes<T extends { startMs: number; endMs: number }>(
   return { lanes, laneCount: laneEndsMs.length }
 }
 
-function getParsedEvents(events: Event[]): ParsedEvent[] {
+function getParsedEvents(events: EventForList[]): ParsedEvent[] {
   const parsedEvents: ParsedEvent[] = []
 
   for (const event of events) {
@@ -625,17 +625,27 @@ const HorizontalTimeline = ({
                 </Tooltip>
               )}
               {performances.map(
-                ({
-                  performance,
-                  startMs: performanceStartMs,
-                  endMs: performanceEndMs,
-                }) => {
+                (
+                  {
+                    performance,
+                    startMs: performanceStartMs,
+                    endMs: performanceEndMs,
+                  },
+                  idx
+                ) => {
                   const performanceBoxPx = getProjectedBoxPx(
                     performanceStartMs,
                     performanceEndMs
                   )
                   if (!performanceBoxPx) return null
-                  const label = performance.performerid // TODO: label
+
+                  const fullPerformance = event.fullperformances[idx]
+
+                  const label = fullPerformance
+                    ? fullPerformance.fullperformername ||
+                      fullPerformance.performername
+                    : performance.performerid?.substring(0, 10) ||
+                      performance.performername
 
                   return (
                     <Tooltip
