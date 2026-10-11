@@ -10,13 +10,9 @@ export enum SectionNames {
   Perms = 'Perms',
 }
 
-const test: CustomEditableField<Club> = {
-  type: fieldTypes.custom,
-  name: 'owneruserids',
-  renderer: ({ value, onChange }) => (
-    <ClubPermissionsEditor value={value || []} onChange={onChange} />
-  ),
-}
+const ignoreFieldNames = ['vrchatuserid', 'vrchatusername']
+const filterSocialEditableField = (field: EditableField<any>): boolean =>
+  !ignoreFieldNames.includes(field.name as string)
 
 const fields: EditableField<Club>[] = [
   {
@@ -92,7 +88,7 @@ Note: We can only automatically retrieve the VRChat group owner.`,
 Note: We can only automatically retrieve the VRChat group owner.`,
     section: SectionNames.Perms,
   } as CustomEditableField<Club, 'moduserids'>,
-  ...socialEditableFields,
+  ...socialEditableFields.filter(filterSocialEditableField),
 ]
 
 export default fields

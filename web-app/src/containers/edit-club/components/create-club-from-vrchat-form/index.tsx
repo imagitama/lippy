@@ -24,6 +24,8 @@ import InfoMessage from '@/components/info-message'
 import SearchInput from '@/components/search-input'
 import StatusText from '@/components/status-text'
 import { PostgresErrorCode } from '@/data-store'
+import FormControls from '@/components/form-controls'
+import WarningMessage from '@/components/warning-message'
 
 interface GetVrchatGroupsForUserPayload {
   userId: string
@@ -134,15 +136,17 @@ const CreateClubFromVrchatForm = () => {
 
   if (!user!.linkedvrchatuserid)
     return (
-      <InfoMessage>
+      <WarningMessage>
         You must link your account with VRChat to continue.
         <br />
         <br />
-        <Button
-          url={routes.myAccountWithTabNameVar.replace(':tabName', 'vrchat')}>
-          Link Now
-        </Button>
-      </InfoMessage>
+        <FormControls>
+          <Button
+            url={routes.myAccountWithTabNameVar.replace(':tabName', 'vrchat')}>
+            Link Now
+          </Button>
+        </FormControls>
+      </WarningMessage>
     )
 
   return (
