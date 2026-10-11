@@ -5,9 +5,10 @@ export interface ClubFields extends Record<string, any>, SocialFields {
   resonitegroupid: string | null
   chilloutvrgroupid: string | null
   name: string
-  description: string
-  websiteurl: string
-  email: string
+  description: string | null
+  thumbnailurl: string | null
+  websiteurl: string | null
+  email: string | null
   owneruserids: string[]
   moduserids: string[]
 }

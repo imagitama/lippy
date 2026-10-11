@@ -58,7 +58,7 @@ const useStyles = makeStyles({
 })
 
 const ClubResultsItem = ({
-  club: { id, name, avatarurl, accessstatus },
+  club: { id, name, thumbnailurl, accessstatus },
   onClick = undefined,
   isSelected = false,
 }: {
@@ -77,9 +77,9 @@ const ClubResultsItem = ({
             onClick={onClick}>
             <CardMedia
               className={classes.media}
-              image={avatarurl || undefined}
+              image={thumbnailurl || undefined}
               title={`Avatar for club ${name}`}>
-              {!avatarurl && (
+              {!thumbnailurl && (
                 <DefaultAvatar stringForDecision={name || undefined} />
               )}
               <div className={classes.chips}>
