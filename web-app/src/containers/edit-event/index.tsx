@@ -3,7 +3,12 @@ import { useParams } from 'react-router'
 import { Helmet } from '@unhead/react/helmet'
 
 import * as routes from '@/routes'
-import { CollectionNames, Event } from 'shared/modules/events'
+import {
+  CollectionNames,
+  Event,
+  EventForList,
+  FullPerformance,
+} from 'shared/modules/events'
 import editableFields from '@/editable-fields/events'
 import { addDays } from '@/utils/dates'
 import useIsLoggedIn from '@/hooks/useIsLoggedIn'
@@ -23,10 +28,25 @@ const EventPreview = ({ event }: { event: Partial<Event> }) => {
         Need a start and end date to show a preview
       </WarningMessage>
     )
+
+  const mockFullPerformances: FullPerformance[] =
+    event.performances?.map((perf) => ({
+      ...perf,
+      fullperformername: perf.performerid
+        ? perf.performerid.slice(0, 5)
+        : perf.performername || '[name]',
+    })) || []
+
+  const mockEventForList: EventForList = {
+    ...event,
+    fullperformances: mockFullPerformances,
+    clubname: 'My Club',
+  }
+
   return (
     <div style={{ height: '200px' }}>
       {' '}
-      <HorizontalTimeline events={[event as Event]} />
+      <HorizontalTimeline events={[mockEventForList]} />
     </div>
   )
 }
