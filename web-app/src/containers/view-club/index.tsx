@@ -230,7 +230,7 @@ const View = () => {
             lazy={false}
           />
         </div>
-        <Heading variant="h1">
+        <Heading variant="h1" center>
           <Link to={routes.viewClubWithVar.replace(':clubId', clubId)}>
             {name}
           </Link>

@@ -7,11 +7,14 @@ import styled from '@emotion/styled'
 import * as routes from '@/routes'
 import { mediaQueryForTabletsOrBelow } from '@/media-queries'
 import { FullPerformer, ViewNames } from 'shared/modules/performers'
+import { FunctionNames, PublicEvent } from 'shared/modules/events'
 import { AccessStatus } from 'shared/modules/common'
+import { CONTENT_MAX_WIDTH_PX } from '@/config'
 
 import useDataStoreItem from '@/hooks/useDataStoreItem'
 import useIsModerator from '@/hooks/useIsModerator'
 import useIsLoggedIn from '@/hooks/useIsLoggedIn'
+import useDataStoreFunction from '@/hooks/useDataStoreFunction'
 
 import Markdown from '@/components/markdown'
 import ErrorMessage from '@/components/error-message'
@@ -23,12 +26,8 @@ import SocialMediaList from '@/components/social-media-list'
 import Avatar from '@/components/avatar'
 import Message from '@/components/message'
 import SupporterBadgeForm from '@/components/supporter-badge-form'
-import { CONTENT_MAX_WIDTH_PX } from '@/config'
 import Paper from '@/components/paper'
-import useDatabaseQuery, { Operators } from '@/hooks/useDatabaseQuery'
 import EventResults from '@/components/event-results'
-import { FunctionNames, PublicEvent } from 'shared/modules/events'
-import useDataStoreFunction from '@/hooks/useDataStoreFunction'
 import NoResultsMessage from '@/components/no-results-message'
 
 const useStyles = makeStyles({
@@ -155,8 +154,8 @@ const View = () => {
     description: description,
     discordserverid: discordServerId,
     thumbnailurl: thumbnailUrl,
-    email: email,
-    websiteurl: websiteUrl,
+    // email: email,
+    // websiteurl: websiteUrl,
 
     // view
     createdbyusername: createdByUsername,
@@ -205,7 +204,7 @@ const View = () => {
               lazy={false}
             />
           </div>
-          <Heading variant="h1">
+          <Heading variant="h1" center>
             <Link
               to={routes.viewPerformerWithVar.replace(
                 ':performerId',

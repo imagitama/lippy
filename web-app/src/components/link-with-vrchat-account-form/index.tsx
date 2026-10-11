@@ -216,7 +216,7 @@ const Form = () => {
     return (
       <>
         <Heading variant="h3">
-          Your link code is <strong>{user.vrchatlinkcode}</strong>
+          Your link code is &nbsp; &nbsp; <strong>{user.vrchatlinkcode}</strong>
         </Heading>
         <UnlinkAccountWithVrchatButton size="large" color="secondary" />{' '}
         <Button onClick={onClickPerformLink} size="large" icon={<CheckIcon />}>

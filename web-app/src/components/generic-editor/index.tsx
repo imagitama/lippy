@@ -219,7 +219,7 @@ const GenericEditor = <TRecord extends Record<string, any>>({
     fields.reduce(
       (finalState, { name }) => ({
         ...finalState,
-        Lippy:
+        [name]:
           storedIsStartingExpanded !== null ? storedIsStartingExpanded : true,
       }),
       {}
@@ -291,12 +291,13 @@ const GenericEditor = <TRecord extends Record<string, any>>({
     }
 
     if (!formFields) {
+      console.debug('no form fields!')
       return
     }
 
     const newFields = {
       ...formFields,
-      Lippy: newVal,
+      [name]: newVal,
     }
 
     setFormFields(newFields)

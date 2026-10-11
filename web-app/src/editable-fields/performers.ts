@@ -35,7 +35,7 @@ const fields: EditableField<Performer>[] = [
     requiredWidth: THUMBNAIL_WIDTH,
     requiredHeight: THUMBNAIL_HEIGHT,
     bucketName: BucketNames.PerformerThumbnails,
-    default: '',
+    default: null,
     section: SectionNames.Basic,
   },
   {

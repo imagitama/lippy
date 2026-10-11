@@ -77,7 +77,7 @@ export const uploadFile = async (
   const fullPathToUploadTo = fullPathInsideBucketAsUuid
 
   console.debug(
-    `uploading ${file.name} to ${bucketName}/${fullPathToUploadTo}...`
+    `uploading ${file.name} to bucket '${bucketName}' path '${fullPathToUploadTo}'...`
   )
 
   const { error } = await client.storage
@@ -122,7 +122,7 @@ export class FileUploadError extends Error {}
 export const uploadImage = async (
   file: File,
   bucketName: string,
-  fullPathInsideBucket: string,
+  pathInsideBucket: string = '',
   onProgress?: (progress: number) => void
 ): Promise<string> => {
   try {
@@ -130,13 +130,15 @@ export const uploadImage = async (
 
     const webpFile = await convertImageToWebp(file)
 
-    const pathInsideBucket = webpFile.name
+    const fileNameWithExt = webpFile.name
 
     console.debug('uploadImage.webp', { webpFile, pathInsideBucket })
 
-    // TODO: rename fullPathInsideBucket
+    const fullPathInsideBucket = `${
+      pathInsideBucket ? `${pathInsideBucket}/` : ''
+    }${fileNameWithExt}`
 
-    return uploadFile(webpFile, bucketName, pathInsideBucket, onProgress)
+    return uploadFile(webpFile, bucketName, fullPathInsideBucket, onProgress)
   } catch (err) {
     console.error(err)
     throw new FileUploadError()

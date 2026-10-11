@@ -659,7 +659,7 @@ const PaginatedView = <TRecord extends Record<string, any>>({
                       <Button
                         icon={<AddIcon />}
                         size="small"
-                        color="secondary"
+                        color="primary"
                         url={createUrl}>
                         Create
                       </Button>

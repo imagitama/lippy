@@ -17,7 +17,7 @@ function usePermissions<TRecord extends CommonRecordFields = never>(
   const [, , user] = useUserRecord()
   const isVerified = useAccountVerification()
 
-  console.debug(`usePermissions`, { user, isVerified, routeOrRecord })
+  // console.debug(`usePermissions`, { user, isVerified, routeOrRecord })
 
   if (!user) {
     return false

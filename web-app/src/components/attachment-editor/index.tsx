@@ -211,7 +211,7 @@ const AttachmentEditor = ({
   const setField = (name: keyof AttachmentFields, newVal: any) =>
     setFields((currentVal) => ({
       ...currentVal,
-      Lippy: newVal,
+      [name]: newVal,
     }))
 
   const onFileUploadedWithUrl = async (urls: string[]) => {

@@ -1,11 +1,11 @@
 export const BUSINESS_NAME = 'Lippy' // privacy policy, TOS, DMCA, etc.
 export const BUSINESS_DESC =
   'A VRChat world and website for discovering live events.'
-export const WEBSITE_FULL_URL = '[URL]'
-export const DISCORD_URL = 'https://discord.gg/todo'
+export const WEBSITE_FULL_URL = 'https//lippystreet.com' // never www.
+export const DISCORD_URL = 'https://discord.gg/aEDgpQ3KWm'
 export const PATREON_BECOME_PATRON_URL =
   'https://www.patreon.com/bePatron?u=Lippy'
-export const EMAIL = 'contact@[todo]'
+export const EMAIL = 'contact@lippystreet.com' // TODO: setup email
 export const GITHUB_REPO_URL = 'https://github.com/imagitama/lippy'
 export const DEFAULT_PAGE_DESC = 'Lippy'
 
@@ -13,7 +13,10 @@ export const VRCHAT_GROUP_ID = 'LIPPY.5986'
 export const VRCHAT_GROUP_URL =
   'https://vrchat.com/home/group/grp_3cd9eaf5-e61d-4d74-a1a8-f10f1c9763c4'
 
-export const JOIN_VRCHAT_WORLD_URL = 'https://vrchat.com/WORLD_TODO'
+// test world
+// TODO: use prod world when ready
+export const JOIN_VRCHAT_WORLD_URL =
+  'https://vrchat.com/home/content/worlds/wrld_53961058-f31d-4f7e-acf3-7b47fadfdc9a'
 
 export const CONTENT_MAX_WIDTH_PX = 700
 

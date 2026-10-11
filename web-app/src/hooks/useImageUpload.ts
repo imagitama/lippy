@@ -5,7 +5,7 @@ import { uploadImage } from '@/file-uploading'
 type UploadFunc = (
   file: File,
   bucketName: string,
-  bucketDirectoryPath?: string
+  bucketDirectoryPath?: string // defaults to root
 ) => Promise<string>
 
 const useImageUpload = (): [

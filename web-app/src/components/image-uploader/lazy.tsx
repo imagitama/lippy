@@ -169,11 +169,11 @@ const Cropper = ({
   const classes = useStyles()
 
   useEffect(() => {
-    console.debug(`ImageUploader.Cropper.mount`, {
-      imageUrl,
-      requiredWidth,
-      requiredHeight,
-    })
+    // console.debug(`ImageUploader.Cropper.mount`, {
+    //   imageUrl,
+    //   requiredWidth,
+    //   requiredHeight,
+    // })
 
     return () => {
       if (throttleTimeoutRef.current) {
@@ -186,7 +186,7 @@ const Cropper = ({
   }, [])
 
   const onCrop = (newCrop: Crop) => {
-    console.debug(`ImageUploader.Cropper.onCrop`, { oldCrop: crop, newCrop })
+    // console.debug(`ImageUploader.Cropper.onCrop`, { oldCrop: crop, newCrop })
     if (throttleTimeoutRef.current) {
       clearTimeout(throttleTimeoutRef.current)
     }
@@ -203,9 +203,9 @@ const Cropper = ({
         onChange={(newCrop) => onCrop(newCrop)}
         ruleOfThirds
         onImageLoaded={(img) => {
-          console.debug(`ImageUploader.Cropper.ReactCrop.onImageLoaded`, {
-            img,
-          })
+          // console.debug(`ImageUploader.Cropper.ReactCrop.onImageLoaded`, {
+          //   img,
+          // })
 
           // store their image so we can use it later
           imageRef.current = img
@@ -257,7 +257,7 @@ interface ImageInfo {
 }
 
 const getImageInfo = async (file: File): Promise<ImageInfo> => {
-  console.debug(`ImageUploader.getImageInfo`, { file })
+  // console.debug(`ImageUploader.getImageInfo`, { file })
 
   return new Promise((resolve, reject) => {
     const imageUrl = URL.createObjectURL(file)
@@ -265,15 +265,15 @@ const getImageInfo = async (file: File): Promise<ImageInfo> => {
     const i = new Image()
 
     i.onload = () => {
-      console.debug(`ImageUploader.getImageInfo.img.onload`)
+      // console.debug(`ImageUploader.getImageInfo.img.onload`)
 
       let reader = new FileReader()
       reader.readAsDataURL(file)
 
       reader.onload = () => {
-        console.debug(`ImageUploader.getImageInfo.reader.onload`, {
-          result: reader.result,
-        })
+        // console.debug(`ImageUploader.getImageInfo.reader.onload`, {
+        //   result: reader.result,
+        // })
 
         if (reader.result === null) {
           reject(new Error('Result is null'))
@@ -350,7 +350,7 @@ const ImageUploader = ({
   const [lastCustomError, setLastCustomError] = useState<Error | null>(null)
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    console.debug(`ImageUploader.onDrop`, { files: acceptedFiles })
+    // console.debug(`ImageUploader.onDrop`, { files: acceptedFiles })
 
     if (!acceptedFiles.length) {
       // no error here as it should be caught by onDropRejected
@@ -443,7 +443,7 @@ const ImageUploader = ({
     cropSettings: Crop
   ): Promise<void> => {
     try {
-      console.debug(`ImageUploader.onDoneCropping`, { crop: cropSettings })
+      // console.debug(`ImageUploader.onDoneCropping`, { crop: cropSettings })
 
       const blob = await cropImageToBlob(image, cropSettings)
 

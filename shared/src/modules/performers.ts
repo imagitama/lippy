@@ -2,9 +2,10 @@ import type { AccessStatus, ApprovalStatus, SocialFields } from './common.ts'
 
 export interface PerformerFields extends Record<string, any>, SocialFields {
   name: string
-  description: string
-  websiteurl: string
-  email: string
+  description: string | null
+  websiteurl: string | null
+  email: string | null
+  thumbnailurl: string | null
 }
 
 export interface Performer extends PerformerFields {
@@ -49,5 +50,4 @@ export enum ViewNames {
 
 export enum BucketNames {
   PerformerThumbnails = 'performer-thumbnails',
-  PerformerBanners = 'performer-banners',
 }

@@ -23,6 +23,7 @@ export default <TRecord extends Record<string, any>>({
   TRecord,
   ImageUploadEditableField<TRecord>
 >) => {
+  console.debug('RENDER', { value })
   return (
     <>
       {value ? (
@@ -39,7 +40,10 @@ export default <TRecord extends Record<string, any>>({
       ) : (
         <>
           <ImageUploader
-            onDone={(urls) => onChange(urls[0])}
+            onDone={(urls) => {
+              console.debug(`GenericEditor.ImageUploadInput urls`, { urls })
+              onChange(urls[0])
+            }}
             {...editableField}
             directoryPath={
               editableField.getDirectoryPath
