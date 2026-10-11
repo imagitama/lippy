@@ -20,7 +20,7 @@ import Markdown from '@/components/markdown'
 import ErrorMessage from '@/components/error-message'
 import LoadingIndicator from '@/components/loading-indicator'
 import Heading from '@/components/heading'
-import Button from '@/components/button'
+import Button, { EditButton } from '@/components/button'
 import DiscordServerWidget from '@/components/discord-server-widget'
 import SocialMediaList from '@/components/social-media-list'
 import Avatar from '@/components/avatar'
@@ -29,6 +29,8 @@ import SupporterBadgeForm from '@/components/supporter-badge-form'
 import Paper from '@/components/paper'
 import EventResults from '@/components/event-results'
 import NoResultsMessage from '@/components/no-results-message'
+import useUserId from '@/hooks/useUserId'
+import FormControls from '@/components/form-controls'
 
 const useStyles = makeStyles({
   categories: {
@@ -132,6 +134,7 @@ const View = () => {
   )
   const classes = useStyles()
   const isMod = useIsModerator()
+  const myUserId = useUserId()
 
   if (isLoading) {
     return <LoadingIndicator />
@@ -170,7 +173,7 @@ const View = () => {
 
   const isDeleted = accessStatus === AccessStatus.Deleted
 
-  const isPerformerStaff = true // TODO
+  const isCreator = myUserId === createdBy
 
   return (
     <>
@@ -192,6 +195,21 @@ const View = () => {
             <br />
             <br />
             {modNotes}
+          </Message>
+        )}
+
+        {isCreator && (
+          <Message>
+            You created this performer so you can edit it.
+            <FormControls>
+              <EditButton
+                url={routes.editPerformerWithVar.replace(
+                  ':performerId',
+                  performer.id
+                )}>
+                Edit Performer
+              </EditButton>
+            </FormControls>
           </Message>
         )}
 

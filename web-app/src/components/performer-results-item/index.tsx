@@ -58,7 +58,7 @@ const useStyles = makeStyles({
 })
 
 const PerformerResultsItem = ({
-  performer: { id, name, avatarurl, accessstatus },
+  performer: { id, name, thumbnailurl, accessstatus },
   onClick = undefined,
   isSelected = false,
 }: {
@@ -77,9 +77,9 @@ const PerformerResultsItem = ({
             onClick={onClick}>
             <CardMedia
               className={classes.media}
-              image={avatarurl || undefined}
+              image={thumbnailurl || undefined}
               title={`Avatar for performer ${name}`}>
-              {!avatarurl && (
+              {!thumbnailurl && (
                 <DefaultAvatar stringForDecision={name || undefined} />
               )}
               <div className={classes.chips}>

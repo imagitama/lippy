@@ -23,7 +23,6 @@ export default <TRecord extends Record<string, any>>({
   TRecord,
   ImageUploadEditableField<TRecord>
 >) => {
-  console.debug('RENDER', { value })
   return (
     <>
       {value ? (
