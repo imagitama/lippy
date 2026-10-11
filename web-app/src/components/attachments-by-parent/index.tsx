@@ -1,0 +1,88 @@
+import React from 'react'
+
+import useDatabaseQuery, { Operators } from '@/hooks/useDatabaseQuery'
+import {
+  AttachmentReason,
+  FullAttachment,
+  ViewNames,
+} from 'shared/modules/attachments'
+
+import ErrorMessage from '@/components/error-message'
+import NoResultsMessage from '@/components/no-results-message'
+import ImageGallery from '@/components/image-gallery'
+import Attachments from '@/components/attachments'
+
+const LoadingGallery = () => {
+  return <ImageGallery showLoadingCount={3} />
+}
+
+const AttachmentsByParent = ({
+  reason,
+  parentTable,
+  parentId,
+  createdBy = undefined,
+  includeMeta = undefined,
+  includeParents = undefined,
+}: {
+  reason: AttachmentReason
+  // optional for user page
+  parentTable?: string
+  parentId?: string
+  createdBy?: string
+  // if to render label "for asset X"
+  includeMeta?: boolean
+  includeParents?: boolean
+}) => {
+  const [isLoading, lastErrorCode, attachments] =
+    useDatabaseQuery<FullAttachment>(
+      ViewNames.GetPublicAttachments,
+      // @ts-ignore
+      [['reason', Operators.EQUALS, reason]].concat(
+        createdBy
+          ? [['createdby', Operators.EQUALS, createdBy!]]
+          : parentTable && parentId
+          ? [
+              ['parenttable', Operators.EQUALS, parentTable],
+              ['parentid', Operators.EQUALS, parentId],
+            ]
+          : []
+      ),
+      {
+        queryName: 'attachments',
+        subscribe: true,
+      }
+    )
+
+  if (isLoading) {
+    return <LoadingGallery />
+  }
+
+  if (lastErrorCode !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCode}>
+        Failed to load attachments
+      </ErrorMessage>
+    )
+  }
+
+  if (!Array.isArray(attachments)) {
+    return (
+      <ErrorMessage>Failed to load attachments (invalid items)</ErrorMessage>
+    )
+  }
+
+  if (!attachments.length) {
+    return <NoResultsMessage>No user attachments found</NoResultsMessage>
+  }
+
+  return (
+    <Attachments
+      ids={attachments.map((attachment) => attachment.id)}
+      attachmentsData={attachments}
+      includeMeta={includeMeta}
+      includeParents={includeParents}
+    />
+  )
+}
+
+export default AttachmentsByParent

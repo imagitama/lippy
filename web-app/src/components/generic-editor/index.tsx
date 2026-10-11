@@ -1,0 +1,563 @@
+import React, { useState, useEffect, useRef, Suspense } from 'react'
+import SaveIcon from '@mui/icons-material/Save'
+import AddIcon from '@mui/icons-material/Add'
+
+import { EditableField } from '@/editable-fields'
+import { fieldTypes } from '@/generic-forms'
+import { trackAction } from '@/analytics'
+import { capitalize, scrollToElement, scrollToTop } from '@/utils'
+import { handleError } from '@/error-handling'
+import { ValidationIssue, getValidationIssues } from '@/validation'
+
+import useDataStoreItem from '@/hooks/useDataStoreItem'
+import useDataStoreEditOrCreate from '@/hooks/useDataStoreEditOrCreate'
+
+import Button from '@/components/button'
+import LoadingIndicator from '@/components/loading-indicator'
+import ErrorMessage from '@/components/error-message'
+import SuccessMessage from '@/components/success-message'
+import Tabs from '@/components/tabs'
+import UrlInput from '@/components/url-input'
+import ValidationIssuesMessage from '@/components/validation-issues-message'
+import FormControls from '@/components/form-controls'
+
+import Field from './components/field'
+import CheckboxInput from './components/checkbox-input'
+import TextInput from './components/text-input'
+import TextMarkdownInput from './components/text-markdown-input'
+import MultichoiceInput from './components/multichoice-input'
+import SinglechoiceInput from './components/singlechoice-input'
+import ImageUploadInput from './components/image-upload-input'
+import SearchableInput from './components/searchable-input'
+import CustomInput from './components/custom-input'
+import TagsInput from './components/tags-input'
+import DropdownInput from './components/dropdown-input'
+import ItemInput from './components/item-input'
+import DateInput from './components/date-input'
+import DateRangeInput from './components/date-range-input'
+import JsonInput from './components/json-input'
+import { GenericInput } from './types'
+import IntInput from './components/int-input'
+import FloatInput from './components/float-input'
+import useStorage from '@/hooks/useStorage'
+
+function getInputForFieldType<TRecord extends Record<string, any>>(
+  type: keyof typeof fieldTypes
+): GenericInput<any, TRecord> {
+  switch (type) {
+    case fieldTypes.text:
+      // @ts-ignore
+      return TextInput
+    case fieldTypes.textMarkdown:
+      // @ts-ignore
+      return TextMarkdownInput
+    case fieldTypes.checkbox:
+      // @ts-ignore
+      return CheckboxInput
+    case fieldTypes.multichoice:
+      // @ts-ignore
+      return MultichoiceInput
+    case fieldTypes.imageUpload:
+      // @ts-ignore
+      return ImageUploadInput
+    case fieldTypes.searchable:
+      // @ts-ignore
+      return SearchableInput
+    case fieldTypes.singlechoice:
+      // @ts-ignore
+      return SinglechoiceInput
+    case fieldTypes.date:
+      return DateInput
+    case fieldTypes.dateRange:
+      // @ts-ignore
+      return DateRangeInput
+    case fieldTypes.custom:
+      // @ts-ignore
+      return CustomInput
+    case fieldTypes.tags:
+      // @ts-ignore
+      return TagsInput
+    case fieldTypes.dropdown:
+      // @ts-ignore
+      return DropdownInput
+    case fieldTypes.item:
+      // @ts-ignore
+      return ItemInput
+    case fieldTypes.url:
+      return UrlInput
+    case fieldTypes.json:
+      return JsonInput as unknown as GenericInput<any, TRecord>
+    case fieldTypes.int:
+      return IntInput
+    case fieldTypes.float:
+      return FloatInput
+    default:
+      throw new Error(`Invalid field type "${type}"`)
+  }
+}
+
+const getHiddenFieldsForDb = (fields: EditableField<any>[]) => {
+  const hiddenFields = fields.filter(
+    ({ type, default: defaultVal }) => type === fieldTypes.hidden && defaultVal
+  )
+
+  if (!hiddenFields.length) {
+    return {}
+  }
+
+  return hiddenFields.reduce(
+    (newObj, fieldData) => ({
+      ...newObj,
+      [fieldData.name]: fieldData.default,
+    }),
+    {}
+  )
+}
+
+const GenericEditor = <TRecord extends Record<string, any>>({
+  fields,
+  collectionName,
+  viewName = '',
+  id = null,
+  analyticsCategory = '',
+  saveBtnAction = 'Click save button',
+  cancelBtnAction = 'Click cancel button',
+  successUrl = '',
+  cancelUrl = '',
+  extraFormData = {},
+  getSuccessUrl,
+  showControls = true,
+  overrideFields = null,
+  overrideSomeFields, // pass clubId as param
+  onFieldChanged,
+  onFieldsChanged,
+  // asset editor
+  isAccordion = false,
+  startExpanded = false,
+  startExpandedKey,
+  onDone,
+  itemTypeSingular = '',
+  showTopSaveBtn = false,
+  scrollToTopOfEditor = false,
+  scrollDisabled = false,
+  onAttemptSave = undefined,
+  size,
+  idField,
+  successMessage,
+  getErrorMessage,
+}: {
+  fields: EditableField<any>[]
+  collectionName?: string
+  viewName?: string
+  id?: string | null
+  analyticsCategory?: string
+  saveBtnAction?: string
+  cancelBtnAction?: string
+  successUrl?: string
+  cancelUrl?: string
+  extraFormData?: Object
+  getSuccessUrl?: (newId: string | null) => string
+  overrideFields?: Partial<TRecord> | null
+  overrideSomeFields?: Partial<TRecord> | null
+  onFieldChanged?: (fieldName: string, newValue: any) => void
+  onFieldsChanged?: (fields: Partial<TRecord>) => void
+  showControls?: boolean
+  // asset editor
+  isAccordion?: boolean
+  startExpanded?: boolean
+  startExpandedKey?: string // to persist
+  onDone?: () => void
+  itemTypeSingular?: string
+  showTopSaveBtn?: boolean
+  scrollToTopOfEditor?: boolean
+  scrollDisabled?: boolean
+  onAttemptSave?: () => void
+  size?: 'small'
+  idField?: keyof TRecord
+  successMessage?: React.ReactNode
+  getErrorMessage?: (code: string) => string
+}) => {
+  const [isLoading, lastErrorCode, rawRecord] = useDataStoreItem<TRecord>(
+    viewName || collectionName!,
+    id || false,
+    {
+      queryName: `generic-editor-${viewName || collectionName}`,
+      idField: idField as string,
+    }
+  )
+  const [isSaving, isSuccess, lastErrorCodeSaving, save, , updatedRecord] =
+    useDataStoreEditOrCreate<TRecord>(collectionName!, id || false, {
+      idField: idField as string,
+    })
+
+  const [formFields, setFormFields] = useState<null | Partial<TRecord>>(
+    overrideFields
+      ? overrideFields
+      : id
+      ? null
+      : {
+          ...fields.reduce((newFormFields, fieldConfig) => {
+            return {
+              ...newFormFields,
+              [fieldConfig.name]: fieldConfig.default,
+            }
+          }, {} as TRecord),
+          ...(overrideSomeFields || {}),
+        }
+  )
+  const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>(
+    []
+  )
+  const rootElementRef = useRef<HTMLDivElement>(null)
+  const [storedIsStartingExpanded, setStoredIsStartingExpanded] = useStorage<
+    boolean | null
+  >(startExpandedKey ? `generic-editor-expanded_${startExpandedKey}` : false)
+
+  const [fieldsExpansionState, setFieldsExpansionState] = useState<{
+    [fieldName: string]: boolean
+  }>(
+    fields.reduce(
+      (finalState, { name }) => ({
+        ...finalState,
+        Lippy:
+          storedIsStartingExpanded !== null ? storedIsStartingExpanded : true,
+      }),
+      {}
+    )
+  )
+
+  const expandAllFields = () => {
+    setFieldsExpansionState((currentVals) => {
+      const newVal = { ...currentVals }
+      for (const fieldName in currentVals) {
+        newVal[fieldName] = true
+      }
+      return newVal
+    })
+    setStoredIsStartingExpanded(true)
+  }
+
+  const collapseAllFields = () => {
+    setFieldsExpansionState((currentVals) => {
+      const newVal = { ...currentVals }
+      for (const fieldName in currentVals) {
+        newVal[fieldName] = false
+      }
+      return newVal
+    })
+    setStoredIsStartingExpanded(false)
+  }
+
+  const updateFieldExpanded = (fieldName: string, isExpanded: boolean) =>
+    setFieldsExpansionState((currentVals) => ({
+      ...currentVals,
+      [fieldName]: isExpanded,
+    }))
+
+  const isAllExpanded = Object.values(fieldsExpansionState).every(
+    (item) => item === true
+  )
+
+  useEffect(() => {
+    if (!rawRecord) {
+      return
+    }
+
+    setFormFields(
+      fields.reduce((newFormFields, fieldConfig) => {
+        return {
+          ...newFormFields,
+          [fieldConfig.name]:
+            rawRecord[fieldConfig.name as string] === false
+              ? false
+              : (fieldConfig.name as string) in rawRecord
+              ? fieldConfig.overrideValue !== undefined
+                ? fieldConfig.overrideValue
+                : rawRecord[fieldConfig.name as string]
+              : fieldConfig.default,
+        }
+      }, {} as TRecord)
+    )
+  }, [rawRecord === null])
+
+  const onFieldChange = (
+    name: string,
+    newVal: string | boolean | number | null
+  ) => {
+    console.debug(`onFieldChange`, name, newVal)
+
+    if (onFieldChanged) {
+      onFieldChanged(name, newVal)
+    }
+
+    if (!formFields) {
+      return
+    }
+
+    const newFields = {
+      ...formFields,
+      Lippy: newVal,
+    }
+
+    setFormFields(newFields)
+
+    if (onFieldsChanged) {
+      onFieldsChanged(newFields)
+    }
+  }
+
+  // TODO: better name as similar to onFieldsChanged
+  const onFieldsChange = (updates: TRecord) => {
+    // console.debug('onFieldsChange', updates)
+    const newFields = {
+      ...formFields,
+      ...updates,
+    }
+
+    setFormFields(newFields)
+
+    if (onFieldsChanged) {
+      onFieldsChanged(newFields)
+    }
+  }
+
+  const onSaveBtnClick = async () => {
+    try {
+      console.debug('on click save button')
+
+      if (analyticsCategory) {
+        trackAction(analyticsCategory, saveBtnAction, id)
+      }
+
+      if (!formFields) {
+        console.warn('stopping save/create - no form fields')
+        return
+      }
+
+      if (scrollDisabled !== true) {
+        if (scrollToTopOfEditor) {
+          scrollToElement(rootElementRef.current!)
+        } else {
+          scrollToTop()
+        }
+      }
+
+      if (onAttemptSave) {
+        onAttemptSave()
+      }
+
+      const newValidationIssues = getValidationIssues(formFields, fields)
+
+      if (newValidationIssues.length) {
+        console.warn(
+          `stopping save/create - validation issues:`,
+          newValidationIssues
+        )
+        setValidationIssues(newValidationIssues)
+        return
+      } else {
+        setValidationIssues([])
+      }
+
+      console.debug(`performing save...`)
+
+      const result = await save({
+        ...formFields,
+        ...getHiddenFieldsForDb(fields),
+      })
+
+      if (!result) {
+        console.debug('result is empty')
+        return
+      }
+
+      if (onDone) {
+        onDone()
+      }
+    } catch (err) {
+      console.error(`Failed to save ${id} to ${collectionName}`, err)
+      handleError(err)
+    }
+  }
+
+  if (!formFields) {
+    return <LoadingIndicator message={'Waiting for fields...'} />
+  }
+
+  const fieldsBySection =
+    fields[0].section !== undefined
+      ? fields.reduce<{
+          [sectionName: string]: EditableField<any>[]
+        }>((newFieldsBySection, field) => {
+          if (!field.section) {
+            throw new Error(
+              `Sections enabled but field ${
+                field.name as string
+              } does not have a section`
+            )
+          }
+
+          return {
+            ...newFieldsBySection,
+            [field.section]:
+              field.section in newFieldsBySection
+                ? newFieldsBySection[field.section].concat([field])
+                : [field],
+          }
+        }, {})
+      : undefined
+
+  const mapEditableFieldToFieldOutput = (editableField: EditableField<any>) => {
+    const Input = getInputForFieldType(editableField.type)
+
+    // console.debug(`GenericEditor.render`, {
+    //   startExpanded,
+    //   isStartingExpanded,
+    //   isForcingExpanded,
+    // })
+
+    return (
+      <Suspense fallback={<LoadingIndicator message="Loading field..." />}>
+        <Field
+          key={editableField.name as string}
+          editableField={editableField}
+          isAccordion={isAccordion}
+          onExpandChange={(newVal) =>
+            updateFieldExpanded(editableField.name as string, newVal)
+          }
+          isExpanded={
+            fieldsExpansionState[editableField.name as string] !== false
+          }
+          size={size}>
+          <Input
+            editableField={editableField}
+            value={formFields[editableField.name as string]}
+            onChange={(newVal: any) =>
+              onFieldChange(editableField.name as string, newVal)
+            }
+            extraFormData={extraFormData}
+            setFieldsValues={
+              onFieldsChange as (updates: Partial<Record<string, any>>) => void
+            }
+            databaseResult={rawRecord}
+            // for mini editor
+            formFields={formFields}
+          />
+        </Field>
+      </Suspense>
+    )
+  }
+
+  const controls =
+    showControls !== true && (onFieldChanged || onFieldsChanged) ? null : (
+      <FormControls>
+        <Button
+          onClick={onSaveBtnClick}
+          icon={id ? <SaveIcon /> : <AddIcon />}
+          size="large">
+          {id ? 'Save' : 'Create'} {itemTypeSingular}
+        </Button>
+        {isAccordion && (
+          <Button
+            color="secondary"
+            hollow
+            size="large"
+            onClick={isAllExpanded ? collapseAllFields : expandAllFields}>
+            {isAllExpanded ? 'Collapse' : 'Expand'} All
+          </Button>
+        )}
+        {cancelUrl && (
+          <Button
+            url={cancelUrl}
+            color="secondary"
+            hollow={false}
+            size="large"
+            onClick={() => {
+              trackAction(analyticsCategory, cancelBtnAction, id)
+            }}>
+            Cancel
+          </Button>
+        )}
+      </FormControls>
+    )
+
+  return (
+    <div ref={rootElementRef}>
+      {isLoading || !formFields || isSaving ? (
+        <LoadingIndicator
+          message={
+            isSaving
+              ? 'Saving...'
+              : !formFields
+              ? 'Waiting for fields...'
+              : isLoading
+              ? 'Loading data...'
+              : 'Loading editor...'
+          }
+        />
+      ) : null}
+
+      {lastErrorCode !== null ? (
+        <ErrorMessage errorCode={lastErrorCode}>Failed to load</ErrorMessage>
+      ) : null}
+
+      {lastErrorCodeSaving !== null ? (
+        <ErrorMessage errorCode={lastErrorCodeSaving}>
+          Failed to save
+          {getErrorMessage ? `: ${getErrorMessage(lastErrorCodeSaving)}` : ''}
+        </ErrorMessage>
+      ) : null}
+
+      {isSuccess ? (
+        <SuccessMessage
+          viewRecordUrl={
+            getSuccessUrl && updatedRecord
+              ? getSuccessUrl(updatedRecord.id)
+              : successUrl
+          }>
+          {itemTypeSingular ? capitalize(itemTypeSingular) : 'Record'}{' '}
+          {id ? 'saved' : 'created'} successfully
+          {successMessage && (
+            <>
+              <br />
+              <br />
+              {successMessage}
+            </>
+          )}
+        </SuccessMessage>
+      ) : null}
+
+      {validationIssues.length ? (
+        <ValidationIssuesMessage
+          issues={validationIssues}
+          editableFields={fields}
+          itemTypeSingular={itemTypeSingular}
+        />
+      ) : null}
+
+      {showTopSaveBtn && controls}
+
+      {fieldsBySection ? (
+        <Tabs
+          items={Object.entries(fieldsBySection).map(
+            ([sectionName, fields]) => ({
+              name: sectionName,
+              label: sectionName,
+              contents: <div>{fields.map(mapEditableFieldToFieldOutput)}</div>,
+            })
+          )}
+        />
+      ) : (
+        fields
+          .filter(({ type }) => type !== fieldTypes.hidden)
+          .filter(({ isEditable }) =>
+            id ? (isEditable !== false ? true : false) : true
+          )
+          .map(mapEditableFieldToFieldOutput)
+      )}
+      {controls}
+    </div>
+  )
+}
+
+export default GenericEditor

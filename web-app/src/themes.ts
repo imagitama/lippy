@@ -1,0 +1,224 @@
+import { createTheme, Theme } from '@mui/material/styles'
+import { mediaQueryForTabletsOrBelow } from './media-queries'
+
+const LIP_COLOR = '#FF1616'
+export const colorBrand = '#c20000' // slightly darker than lips
+export const colorBrandLight = '#ff5c5c'
+export const colorBrandDark = '#8a0000'
+
+export const colorTertiary = '#a67250'
+export const colorTertiaryDark = '#6e4c35'
+
+export const colorGrey = 'rgb(75, 75, 75)'
+export const colorGreyedOut = 'rgb(180, 180, 180)'
+
+export const colorFree = 'rgb(100, 150, 100)'
+export const colorAiDark = 'rgb(65, 130, 165)'
+export const colorAiLight = 'rgb(88, 178, 226)'
+export const colorAiVeryDark = 'rgb(29, 60, 76)'
+
+export const patreonGoldDark = '#b1a200'
+export const patreonGold = '#ffea00'
+
+export const specialFontFamily = '"Prompt", sans-serif'
+
+export type CustomTheme = Theme
+
+export const darkTheme: CustomTheme = createTheme({
+  typography: {
+    fontFamily: 'sans-serif',
+    fontWeightRegular: 400,
+  },
+  palette: {
+    mode: 'dark',
+    primary: {
+      light: colorBrandLight,
+      main: colorBrand,
+      dark: colorBrandDark,
+    },
+    secondary: {
+      light: '#FFF',
+      main: '#e0e0e0',
+      dark: '#bdbdbd',
+    },
+    tertiary: {
+      light: colorTertiary,
+      main: colorTertiary,
+      dark: colorTertiaryDark,
+    },
+    // @ts-ignore
+    ai: {
+      light: colorAiDark,
+      main: colorAiDark,
+      dark: colorAiDark,
+    },
+    background: {
+      default: '#282828',
+    },
+  },
+  components: {
+    MuiTypography: {
+      styleOverrides: {
+        h1: {
+          fontSize: '2rem',
+          margin: '0 0 1rem',
+        },
+        h2: {
+          fontSize: '1.5rem',
+          margin: '1rem 0 1rem',
+        },
+        h3: {
+          fontSize: '1.25rem',
+          margin: '1rem 0 1rem',
+        },
+        h4: {
+          fontSize: '1.1rem',
+          margin: '0.5rem 0 0.5rem',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#424242',
+        },
+      },
+    },
+    MuiCssBaseline: {
+      styleOverrides: {
+        html: {
+          WebkitFontSmoothing: 'auto',
+          overflowX: 'hidden', // fix mobile drawer
+        },
+        body: {
+          backgroundColor: '#282828',
+          fontSize: '14px',
+        },
+        a: {
+          color: colorBrandLight,
+          textDecoration: 'underline', // relying on color alone is bad accessibility
+          textDecorationColor:
+            'color-mix(in srgb, currentColor 50%, transparent)',
+        },
+        strong: {
+          fontWeight: 600,
+        },
+        blockquote: {
+          margin: '1rem',
+          padding: '0.2rem 0.2rem 0.2rem 1rem',
+          borderLeft: `4px solid #5a5a5a`,
+          background: '#383838',
+        },
+      },
+    },
+    MuiCardContent: {
+      styleOverrides: {
+        root: {
+          padding: '0.75rem',
+          '&:last-child': {
+            paddingBottom: '0.75rem',
+          },
+          [mediaQueryForTabletsOrBelow]: {
+            '&, &:last-child': {
+              padding: '0.5rem',
+            },
+          },
+        },
+      },
+    },
+    MuiButtonBase: {
+      styleOverrides: {
+        root: {
+          fontFamily: 'inherit',
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          padding: '4px 10px',
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        root: {},
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          '&:hover fieldset': {
+            borderColor: 'rgb(150,150,150) !important',
+          },
+        },
+      },
+    },
+    MuiSvgIcon: {
+      styleOverrides: {
+        root: {
+          fontSize: '100%',
+        },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: colorGrey,
+        },
+        arrow: {
+          color: colorGrey,
+        },
+      },
+    },
+    MuiCheckbox: {
+      styleOverrides: {
+        root: {
+          '&.Mui-checked': {
+            color: colorBrandLight,
+          },
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          'tr:last-child &': {
+            borderBottom: 'none',
+          },
+        },
+        head: {
+          color: colorGreyedOut,
+        },
+      },
+    },
+    MuiDialogContent: {
+      styleOverrides: {
+        root: {
+          padding: '0.5rem',
+          [mediaQueryForTabletsOrBelow]: {
+            padding: '0.25rem',
+          },
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: colorBrandLight,
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          '&.Mui-focused': {
+            color: colorBrandLight,
+          },
+        },
+      },
+    },
+  },
+})

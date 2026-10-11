@@ -1,0 +1,26 @@
+import React from 'react'
+import useUserRecord from '@/hooks/useUserRecord'
+import { getIsUserBanned } from '@/utils/users'
+import ErrorMessage from '@/components/error-message'
+
+const BannedNotice = () => {
+  const [, , user] = useUserRecord()
+
+  if (user && getIsUserBanned(user)) {
+    return (
+      <ErrorMessage title="Your account has been banned">
+        You will not be able to perform any actions on the site including
+        commenting and submitting clus/performers/events.
+        <br />
+        <br />
+        <strong>Reason: {user.banreason || '(none)'}</strong>
+        <br />
+        <br />
+      </ErrorMessage>
+    )
+  }
+
+  return null
+}
+
+export default BannedNotice

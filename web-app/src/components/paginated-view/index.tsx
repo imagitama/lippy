@@ -1,0 +1,680 @@
+import React, {
+  Fragment,
+  useContext,
+  createContext,
+  useCallback,
+  useState,
+  Suspense,
+  useEffect,
+} from 'react'
+import { useParams } from 'react-router'
+import { makeStyles } from '@mui/styles'
+import AddIcon from '@mui/icons-material/Add'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
+import { SupabaseClient } from '@supabase/supabase-js'
+
+import { mediaQueryForMobiles } from '@/media-queries'
+import { Refresh as RefreshIcon } from '@/icons'
+import {
+  ActiveFilter,
+  EqualActiveFilter,
+  Filter,
+  FilterSubType,
+  FilterType,
+  MultichoiceActiveFilter,
+  NotEqualActiveFilter,
+} from '@/filters'
+import { GetQuery, PostgRESTErrorCode } from '@/data-store'
+
+import useFilters from '@/hooks/useFilters'
+import useStorage from '@/hooks/useStorage'
+import useHistory from '@/hooks/useHistory'
+import useSorting from '@/hooks/useSorting'
+import useDataStore from '@/hooks/useDataStore'
+import useIsModerator from '@/hooks/useIsModerator'
+import {
+  Operators,
+  OrderDirections,
+  WhereClause,
+} from '@/hooks/useDatabaseQuery'
+import useScrollMemory from '@/hooks/useScrollMemory'
+
+import SortControls, { SortOption } from '@/components/sort-controls'
+import PagesNavigation from '@/components/pages-navigation'
+import ErrorMessage from '@/components/error-message'
+import NoResultsMessage from '@/components/no-results-message'
+import LoadingIndicator from '@/components/loading-indicator'
+import Button, { ButtonProps } from '@/components/button'
+import WarningMessage from '@/components/warning-message'
+import ErrorBoundary from '@/components/error-boundary'
+import Filters from '@/components/filters'
+import FormControls from '../form-controls'
+
+const useStyles = makeStyles({
+  root: {
+    position: 'relative',
+    marginTop: '0.5rem',
+  },
+  controls: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  controlsLeft: {
+    display: 'flex',
+    marginRight: 'auto',
+    '& > *:first-child': {
+      marginLeft: 'auto',
+    },
+    [mediaQueryForMobiles]: {
+      width: '100%',
+      flexShrink: 1,
+    },
+  },
+  controlsRight: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'end',
+    '& > *:first-child': {
+      marginLeft: 'auto',
+    },
+  },
+  controlGroup: {
+    display: 'flex',
+    marginLeft: '0.5rem',
+    flexWrap: 'wrap',
+    [mediaQueryForMobiles]: {
+      margin: '0.1rem',
+    },
+  },
+  control: {
+    marginLeft: '0.5rem',
+  },
+  rendererWrapper: {
+    marginTop: '0.5rem',
+  },
+  hydrateIcon: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    cursor: 'pointer',
+    padding: '0.5rem',
+    fontSize: '2rem !important',
+    transition: '100ms all',
+    '&:hover': {
+      transform: 'scale(1.1)',
+    },
+  },
+})
+
+const limitPerPage = 50
+
+export type GetQueryFn<TRecord, SubViewEnum = any, TFilters = Filter<any>[]> = (
+  currentQuery: GetQuery<TRecord>,
+  selectedSubView: SubViewEnum | null,
+  activeFilters: ActiveFilter<any>[]
+) => GetQuery<TRecord> | Promise<GetQuery<TRecord>>
+
+interface SubViewConfig {
+  id: string
+  label: string
+  where?: WhereClause<any>[]
+}
+
+interface PaginatedViewData<TRecord extends Record<string, any>> {
+  name?: string
+  viewName?: string
+  moderatorViewName?: string
+  collectionName?: string
+  select: string
+  getQuery?: GetQueryFn<TRecord>
+  sortKey: string
+  defaultFieldName: keyof TRecord
+  defaultDirection?: OrderDirections
+  renderer: React.ReactElement
+  urlWithSubViewNameAndPageNumberVar: string
+  selectedSubView: string | null
+  filtersKey: string
+  filters: Filter<TRecord>[]
+  internalPageNumber: number | null
+  setInternalPageNumber: (newPageNumber: number) => void
+  subViews?: SubViewConfig[]
+  sortOptions?: SortOption<TRecord>[]
+  isRendererForLoading?: boolean
+  itemNamePlural?: string
+  onRefresh?: () => void
+}
+
+// @ts-ignore
+export const PaginatedViewContext = createContext<PaginatedViewData>()
+export const usePaginatedView = (): PaginatedViewData<any> =>
+  useContext(PaginatedViewContext)
+
+export interface RendererProps<T> {
+  items: T[] | null
+  hydrate: () => void
+  selectedSubView: string | null
+  activeFilters: ActiveFilter<any>[]
+}
+
+const ControlGroup = ({ children }: { children: React.ReactNode }) => {
+  const classes = useStyles()
+  return <div className={classes.controlGroup}>{children}</div>
+}
+
+const Control = ({ children }: { children: React.ReactNode }) => {
+  const classes = useStyles()
+  return <div className={classes.control}>{children}</div>
+}
+
+const SUB_VIEW_ID_ALL = 'all'
+
+const defaultSubViewConfigs: SubViewConfig[] = [
+  {
+    label: 'All',
+    id: SUB_VIEW_ID_ALL,
+  },
+]
+
+export interface PaginatedViewProps<TRecord extends Record<string, any>> {
+  name?: string
+  viewName?: string
+  moderatorViewName?: string
+  collectionName?: string
+  select?: string
+  getQuery?: GetQueryFn<TRecord>
+  sortOptions?: SortOption<TRecord>[]
+  defaultFieldName?: Extract<keyof TRecord, string>
+  defaultDirection?: OrderDirections
+  defaultSubView?: string
+  children?: React.ReactElement
+  extraControls?: React.ReactElement[]
+  extraControlsLeft?: React.ReactElement[] // todo: better name
+  urlWithSubViewNameAndPageNumberVar?: string
+  createUrl?: string
+  subViews?: SubViewConfig[]
+  filters?: Filter<TRecord>[]
+  isRendererForLoading?: boolean // items will be null
+  allowRandomSort?: boolean
+  itemNamePlural?: string
+  onRefresh?: () => void
+  form?: (props: {
+    items: TRecord[] | null
+    hydrate: () => void
+  }) => React.ReactElement // rendered above table
+  idFieldName?: string
+}
+
+const PaginatedView = <TRecord extends Record<string, any>>({
+  name, // for sort/filter keys
+  viewName,
+  moderatorViewName,
+  collectionName,
+  select = '*',
+  getQuery = undefined,
+  sortOptions: originalSortOptions = [],
+  defaultFieldName = undefined,
+  defaultDirection,
+  defaultSubView,
+  children: renderer,
+  extraControls = [],
+  extraControlsLeft = [],
+  urlWithSubViewNameAndPageNumberVar = '',
+  createUrl,
+  subViews,
+  filters,
+  isRendererForLoading,
+  allowRandomSort = false,
+  itemNamePlural,
+  onRefresh,
+  form,
+  idFieldName,
+}: PaginatedViewProps<TRecord>) => {
+  if (!renderer) {
+    throw new Error('Cannot render paginated view without a renderer')
+  }
+
+  const keyPrefix = name || viewName || collectionName
+
+  const {
+    pageNumber: pageNumberFromUrl = '1',
+    subViewName: subViewNameFromUrl,
+  } = useParams<{
+    pageNumber: string
+    subViewName: string
+  }>()
+
+  // console.debug(`PaginatedView.render`, {
+  //   pageNumberFromUrl,
+  //   subViewNameFromUrl,
+  // })
+
+  const [selectedSubView, setSelectedSubView] = useStorage<string | null>(
+    `${keyPrefix}_subview`,
+    defaultSubView ? defaultSubView : SUB_VIEW_ID_ALL
+  )
+
+  const activeSubView: SubViewConfig | null =
+    subViews?.find((subView) => subView.id === selectedSubView) || null
+
+  useEffect(() => {
+    if (subViewNameFromUrl) {
+      setSelectedSubView(subViewNameFromUrl)
+    }
+  }, [])
+
+  const classes = useStyles()
+  const { push } = useHistory()
+
+  const currentPageNumber = parseInt(pageNumberFromUrl)
+
+  // for views that do not want to use the URL to track page number
+  // eg users/abc/assets
+  const [internalPageNumber, setInternalPageNumber] = useState<number | null>(
+    urlWithSubViewNameAndPageNumberVar ? null : currentPageNumber
+  )
+
+  const sortOptions = allowRandomSort
+    ? originalSortOptions.concat([
+        {
+          label: 'Random',
+          fieldName: 'random',
+          withDirections: false,
+        },
+      ])
+    : originalSortOptions
+
+  const isMod = useIsModerator()
+  const [activeFilters] = useFilters(`${keyPrefix}_filters`, filters)
+  const [sorting] = useSorting(
+    `${keyPrefix}_sorting`,
+    defaultFieldName as string,
+    defaultDirection
+  )
+  const isSortingValid =
+    sorting?.fieldName === defaultFieldName || sortOptions === undefined
+      ? true
+      : sortOptions
+      ? sortOptions.find(
+          (sortOption) => sortOption.fieldName === sorting?.fieldName
+        )
+      : false
+
+  const rangeStart = (currentPageNumber - 1) * limitPerPage
+  const rangeEnd = rangeStart + limitPerPage - 1
+
+  const pageGetQuery = useCallback(
+    async (supabase: SupabaseClient) => {
+      const isAscending =
+        sorting && isSortingValid
+          ? sorting.direction === OrderDirections.ASC
+          : false
+
+      // TODO: Fix type safety
+      let query: any
+
+      // "exact" gives us correct count at a cost of performance
+      // "estimated" is better for performance but is always capped at the max read number (1000)
+      const selectOptions: {
+        count: 'exact' | 'planned' | 'estimated' | null | undefined
+      } = { count: 'exact' }
+
+      if (!collectionName && !viewName) {
+        throw new Error(
+          'Cannot query for paginated results - need collection name or view name!'
+        )
+      }
+
+      if (viewName) {
+        query = supabase.from(
+          (isMod && moderatorViewName
+            ? moderatorViewName
+            : viewName
+          ).toLowerCase()
+        )
+        query = query.select('*', selectOptions)
+
+        // supabase does not have support for "views" but the underlying REST API does so jam it in here
+        // TODO: Investigate as apparently supported: https://github.com/supabase/supabase/issues/190#issuecomment-689591527
+        // query.url = new URL(`${supabase.restUrl}/${viewName.toLowerCase()}`)
+      } else if (collectionName) {
+        query = supabase.from(collectionName)
+        query = query.select(select, selectOptions)
+      }
+
+      if (getQuery) {
+        query = getQuery(query, selectedSubView, activeFilters)
+      }
+
+      if (activeSubView && activeSubView.where) {
+        for (const whereClause of activeSubView.where) {
+          switch (whereClause[1]) {
+            case Operators.EQUALS:
+              query = query.eq(whereClause[0], whereClause[2])
+              break
+            default:
+              console.warn(`Sub view where clause not supported`, activeSubView)
+          }
+        }
+      }
+
+      for (const activeFilter of activeFilters) {
+        switch (activeFilter.type) {
+          case FilterType.Equal:
+            if ((activeFilter as EqualActiveFilter<any>).value) {
+              query = query.eq(
+                activeFilter.fieldName,
+                (activeFilter as EqualActiveFilter<any>).value
+              )
+            }
+            break
+
+          case FilterType.NotEqual:
+            if ((activeFilter as NotEqualActiveFilter<any>).value) {
+              if (activeFilter.subType === FilterSubType.Null) {
+                query = query.not(activeFilter.fieldName, 'is', null)
+              } else if (activeFilter.fieldValue !== undefined) {
+                query = query.neq(
+                  activeFilter.fieldName,
+                  activeFilter.fieldValue
+                )
+              } else {
+                query = query.neq(
+                  activeFilter.fieldName,
+                  (activeFilter as NotEqualActiveFilter<any>).value
+                )
+              }
+            }
+            break
+
+          case FilterType.Multichoice:
+            if ((activeFilter as MultichoiceActiveFilter<any, any>).value) {
+              query = query.in(
+                activeFilter.fieldName,
+                (activeFilter as MultichoiceActiveFilter<any, any>).value
+              )
+            }
+            break
+
+          default:
+            throw new Error(
+              `Unknown filter type: ${(activeFilter as any).type}`
+            )
+        }
+      }
+
+      // toLowerCase incase they saved an old camelCase field name which breaks SQL
+      query = query.range(rangeStart, rangeEnd)
+
+      if (sorting && isSortingValid) {
+        query = query.order(sorting.fieldName.toLowerCase(), {
+          ascending: isAscending,
+        })
+      }
+
+      // hack
+      if (sorting && sorting.fieldName === 'pluralname') {
+        query = query.order('title', {
+          ascending: true,
+        })
+      }
+
+      // sort by "ID" in case sort field name is identical (like users page)
+      // TODO: probably put this behind a flag in case it breaks some views that dont use ID
+      query = query.order(idFieldName || 'id', { ascending: false })
+
+      return query
+    },
+    [
+      viewName,
+      getQuery,
+      currentPageNumber,
+      sorting ? `${sorting.fieldName}.${sorting.direction}` : null,
+      selectedSubView,
+      Object.values(activeFilters)
+        .map(
+          (filter) =>
+            `${filter.fieldName}_${(
+              filter as EqualActiveFilter<any>
+            ).value.toString()}_${filter.direction}`
+        )
+        .join('+'),
+      isMod,
+    ]
+  )
+
+  const [isLoading, lastErrorCode, items, totalCount, hydrate] =
+    useDataStore<TRecord>(pageGetQuery, {
+      queryName: `paginated-view`,
+    })
+
+  useScrollMemory(isLoading ? false : `p${currentPageNumber}`)
+
+  const Page = () => {
+    if (lastErrorCode !== null) {
+      if (lastErrorCode === PostgRESTErrorCode.RangeNotSatisfiable) {
+        return (
+          <>
+            <NoResultsMessage>
+              No {itemNamePlural || 'results'} found for page{' '}
+              {currentPageNumber}
+            </NoResultsMessage>
+            <FormControls>
+              {urlWithSubViewNameAndPageNumberVar && (
+                <Button
+                  url={urlWithSubViewNameAndPageNumberVar
+                    .replace(':subViewName', selectedSubView || '')
+                    .replace(':pageNumber', '1')}>
+                  Go To Page 1
+                </Button>
+              )}
+            </FormControls>
+          </>
+        )
+      }
+      return (
+        <ErrorMessage errorCode={lastErrorCode}>
+          Failed to load page
+        </ErrorMessage>
+      )
+    }
+
+    if ((isLoading && !items) || !items) {
+      if (isRendererForLoading) {
+        return React.cloneElement<RendererProps<any>>(renderer, {
+          items,
+          hydrate,
+          selectedSubView,
+          activeFilters,
+        })
+      }
+
+      return (
+        <LoadingIndicator message={`Loading page ${currentPageNumber}...`} />
+      )
+    }
+
+    if (!items.length) {
+      return (
+        <NoResultsMessage>
+          No {itemNamePlural || 'results'} found
+        </NoResultsMessage>
+      )
+    }
+
+    return (
+      <>
+        {!isSortingValid && sorting && (
+          <WarningMessage>
+            Your previous sorting selection ({sorting?.fieldName}) appears to be
+            invalid and has been reset
+          </WarningMessage>
+        )}
+        <div className={classes.rendererWrapper}>
+          {React.cloneElement<RendererProps<any>>(renderer, {
+            items,
+            hydrate,
+            selectedSubView,
+            activeFilters,
+          })}
+        </div>
+        {totalCount ? (
+          <PagesNavigation
+            currentPageNumber={currentPageNumber}
+            pageCount={Math.ceil(totalCount / limitPerPage)}
+            onClickWithPageNumber={(newPageNumber) => {
+              if (urlWithSubViewNameAndPageNumberVar) {
+                push(
+                  urlWithSubViewNameAndPageNumberVar
+                    .replace(':subViewName', selectedSubView || '')
+                    .replace(':pageNumber', newPageNumber.toString())
+                )
+              } else {
+                setInternalPageNumber(newPageNumber)
+              }
+            }}
+          />
+        ) : null}
+      </>
+    )
+  }
+
+  return (
+    <ErrorBoundary>
+      <PaginatedViewContext.Provider
+        value={{
+          name,
+          viewName,
+          moderatorViewName,
+          collectionName,
+          select,
+          getQuery,
+          defaultFieldName,
+          defaultDirection,
+          renderer,
+          sortOptions,
+          urlWithSubViewNameAndPageNumberVar,
+          subViews,
+          selectedSubView,
+          filters,
+          internalPageNumber,
+          setInternalPageNumber,
+          isRendererForLoading,
+          itemNamePlural,
+          onRefresh,
+        }}>
+        <div className={classes.root}>
+          <div className={classes.controls}>
+            <Suspense>
+              <div className={classes.controlsLeft}>
+                {subViews ? (
+                  <ControlGroup>
+                    {defaultSubViewConfigs
+                      .concat(subViews)
+                      .map(({ label, id }, idx) => (
+                        <Fragment key={id}>
+                          {idx !== 0 ? <>&nbsp;</> : ''}
+                          <Button
+                            onClick={() => {
+                              // console.debug(`PaginatedView.subview.click`, {
+                              //   id,
+                              //   urlWithSubViewNameAndPageNumberVar,
+                              // })
+                              setSelectedSubView(id)
+                              if (urlWithSubViewNameAndPageNumberVar) {
+                                const url = urlWithSubViewNameAndPageNumberVar
+                                  .replace(':subViewName', id)
+                                  .replace(':pageNumber', pageNumberFromUrl)
+                                push(url, false)
+                              }
+                            }}
+                            color="secondary"
+                            size="small"
+                            icon={
+                              selectedSubView === id ? (
+                                <CheckBoxIcon />
+                              ) : (
+                                <CheckBoxOutlineBlankIcon />
+                              )
+                            }>
+                            {label}
+                          </Button>
+                        </Fragment>
+                      ))}
+                  </ControlGroup>
+                ) : null}
+                <ControlGroup>{extraControlsLeft}</ControlGroup>
+              </div>
+              <div className={classes.controlsRight}>
+                {extraControls ? (
+                  <ControlGroup>
+                    {extraControls.map((extraControl, idx) => (
+                      <Control key={idx}>
+                        {React.cloneElement<ButtonProps>(extraControl, {
+                          color: 'secondary',
+                          size: 'small',
+                        })}
+                      </Control>
+                    ))}
+                  </ControlGroup>
+                ) : null}
+                <ControlGroup>
+                  <Control>
+                    <Button
+                      icon={<RefreshIcon />}
+                      isIconSpinning={isLoading}
+                      onClick={hydrate}
+                      size="small"
+                      color="secondary"
+                      isDisabled={isLoading}
+                      title="Refresh"
+                    />
+                  </Control>
+                </ControlGroup>
+                {filters ? (
+                  <ControlGroup>
+                    <Control>
+                      <Filters
+                        filters={filters}
+                        storageKey={`${keyPrefix}_filters`}
+                      />
+                    </Control>
+                  </ControlGroup>
+                ) : null}
+                {sortOptions.length ? (
+                  <ControlGroup>
+                    <Control>
+                      <SortControls
+                        options={sortOptions}
+                        sortKey={`${keyPrefix}_sorting`}
+                        defaultFieldName={defaultFieldName}
+                        defaultDirection={defaultDirection}
+                      />
+                    </Control>
+                  </ControlGroup>
+                ) : null}
+                {createUrl ? (
+                  <ControlGroup>
+                    <Control>
+                      <Button
+                        icon={<AddIcon />}
+                        size="small"
+                        color="secondary"
+                        url={createUrl}>
+                        Create
+                      </Button>
+                    </Control>
+                  </ControlGroup>
+                ) : null}
+              </div>
+            </Suspense>
+          </div>
+          {form && form({ items, hydrate })}
+          <Page />
+        </div>
+      </PaginatedViewContext.Provider>
+    </ErrorBoundary>
+  )
+}
+
+export default PaginatedView

@@ -1,0 +1,19 @@
+declare module '*.svg' {
+  import * as React from 'react'
+
+  export const ReactComponent: React.FunctionComponent<
+    React.SVGProps<SVGSVGElement> & { title?: string }
+  >
+}
+
+declare module '*.svg?raw' {
+  export default String()
+}
+
+declare module '*.png' {
+  export default String()
+}
+
+declare module '*.webp' {
+  export default String()
+}

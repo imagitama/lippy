@@ -1,0 +1,103 @@
+import React, { Fragment } from 'react'
+import { TableCell } from '@/components/responsive-table'
+import { TableRow } from '@/components/responsive-table'
+
+import * as routes from '@/routes'
+import {
+  FullSupportTicket,
+  supportTicketCategoryMeta,
+} from 'shared/modules/supporttickets'
+
+import Link from '@/components/link'
+import FormattedDate from '@/components/formatted-date'
+// import GenericOutputItem from '@/components/generic-output-item'
+import ResolutionStatus from '@/components/resolution-status'
+import ShortId from '@/components/short-id'
+
+export default ({
+  supportTicket,
+  showRelatedDetails = true,
+  analyticsCategoryName = '',
+}: {
+  supportTicket: FullSupportTicket
+  showRelatedDetails?: boolean
+  showControls?: boolean
+  analyticsCategoryName?: string
+}) => {
+  const {
+    id: supportTicketId,
+    relatedtable: relatedTable,
+    relatedid: relatedId,
+    category,
+
+    createdat,
+    createdby,
+
+    // meta
+    resolutionstatus: resolutionStatus,
+
+    // view
+    parentdata,
+    createdbyusername: createdByUsername,
+    resolvedbyusername: resolvedByUsername,
+  } = supportTicket
+
+  return (
+    <Fragment key={supportTicketId}>
+      <TableRow key={supportTicketId} title={supportTicketId}>
+        <TableCell title={supportTicketId}>
+          <ShortId
+            url={routes.viewSupportTicketWithVar.replace(
+              ':supportTicketId',
+              supportTicketId
+            )}>
+            {supportTicketId}
+          </ShortId>
+          <br />
+          <Link
+            to={routes.viewSupportTicketWithVar.replace(
+              ':supportTicketId',
+              supportTicketId
+            )}>
+            View Support Ticket
+          </Link>
+        </TableCell>
+        {/* {showRelatedDetails && (
+          <TableCell label="Parent">
+            {relatedTable && relatedId ? (
+              <GenericOutputItem
+                type={relatedTable}
+                id={relatedId}
+                data={parentdata}
+                small
+              />
+            ) : (
+              '-'
+            )}
+          </TableCell>
+        )} */}
+        <TableCell label="Category">
+          {supportTicketCategoryMeta[category]?.label || '-'}
+        </TableCell>
+        <TableCell label="Created">
+          <FormattedDate date={createdat} />{' '}
+          {createdByUsername ? (
+            <>
+              by{' '}
+              <Link to={routes.viewUserWithVar.replace(':userId', createdby)}>
+                {createdByUsername}
+              </Link>
+            </>
+          ) : null}
+        </TableCell>
+        <TableCell label="Status">
+          {/* <ResolutionStatus
+            resolutionStatus={resolutionStatus}
+            resolvedByUsername={resolvedByUsername}
+          /> */}
+          Resolution status: {resolutionStatus} (by who - todo)
+        </TableCell>
+      </TableRow>
+    </Fragment>
+  )
+}

@@ -1,0 +1,140 @@
+import styled from '@emotion/styled'
+import {
+  CollectionNames,
+  EventForList,
+  PublicEvent,
+  ViewNames,
+} from 'shared/modules/events'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+
+import { routes } from '@/routes'
+import useEventFavoriting from '@/hooks/useEventFavoriting'
+
+import Button from '@/components/button'
+import PerformanceList from '@/components/performance-list'
+import NoResultsMessage from '@/components/no-results-message'
+import Link from '@/components/link'
+import CommentList from '@/components/comment-list'
+import LazyLoad from '@/components/lazy-load'
+import EventAttendanceList from '@/components/event-attendance-list'
+import Heading from '@/components/heading'
+import Markdown from '@/components/markdown'
+import TagList from '@/components/tag-list'
+import Dialog from '@/components/dialog'
+import Columns from '@/components/columns'
+import Column from '@/components/column'
+import VisitVrchatInstanceButton from '@/components/visit-vrchat-instance-button'
+import useDataStoreItem from '@/hooks/useDataStoreItem'
+import { useState } from 'react'
+import useInterval from '@/hooks/useInterval'
+
+const StyledClubDetails = styled.div`
+  font-size: 125%;
+`
+
+const Desc = styled.div`
+  margin: 0.5rem 0;
+`
+
+const EventPoster = styled.div`
+  padding: 0.5rem;
+`
+
+const FavButton = ({ eventId }: { eventId: string }) => {
+  const [isFaved, toggleFav] = useEventFavoriting(eventId)
+  return (
+    <Button
+      icon={isFaved ? <FavoriteBorderIcon /> : <FavoriteIcon />}
+      onClick={toggleFav}
+      color="secondary"
+      title="Highlights the event in the timeline (all local)">
+      {isFaved ? 'Unfav' : 'Fav'}
+    </Button>
+  )
+}
+
+const useEventPoll = (eventId: string): null | EventForList => {
+  const [cacheKey, setCacheKey] = useState<undefined | number>(undefined)
+  const [, , mostRecentEvent] = useDataStoreItem<EventForList>(
+    ViewNames.GetEventsForList,
+    cacheKey ? eventId : false,
+    {
+      cacheKey: cacheKey?.toString(),
+    }
+  )
+  useInterval(() => {
+    console.debug(`useEventPoll.poll`, eventId)
+    setCacheKey((val) => (val === undefined ? 0 : val + 1))
+  }, 10 * 1000)
+  return mostRecentEvent || null
+}
+
+const EventPanel = ({
+  event: incomingEvent,
+  onClose,
+}: {
+  event: EventForList
+  onClose: () => void
+}) => {
+  const mostRecentEvent = useEventPoll(incomingEvent.id)
+  const event = mostRecentEvent || incomingEvent
+  return (
+    <Dialog fullWidth onClose={onClose}>
+      <Columns>
+        <Column>
+          <EventPoster>
+            <img src={event.posterurl} alt="Event poster" width="100%" />
+          </EventPoster>
+        </Column>
+        <Column>
+          <StyledClubDetails>
+            Club{' '}
+            <Link to={routes.viewClubWithVar.replace(':clubId', event.clubid)}>
+              {event.clubname}
+            </Link>
+          </StyledClubDetails>
+          <Heading variant="h2">
+            <Link to={routes.viewEventWithVar.replace(':eventId', event.id)}>
+              {event.name}
+            </Link>{' '}
+            <FavButton eventId={event.id} />
+          </Heading>
+          <VisitVrchatInstanceButton
+            instance={event.vrchatinstancecache?.instance || null}
+            fetchedAt={event.vrchatinstancecache?.fetchedat}
+          />
+          <Heading variant="h3">Genres</Heading>
+          <TagList tags={event.genres} />
+          <Heading variant="h3">Tags</Heading>
+          <TagList tags={event.tags} />
+          <Heading variant="h3">Description</Heading>
+          <Desc>
+            <Markdown source={event.description} />
+          </Desc>
+          <Heading variant="h3">Performances</Heading>
+          {event.performances.length ? (
+            <PerformanceList performances={event.fullperformances} />
+          ) : (
+            <NoResultsMessage>
+              No performances configured for this event
+            </NoResultsMessage>
+          )}
+          <LazyLoad>
+            <Heading variant="h3">Attendees</Heading>
+            <EventAttendanceList eventId={event.id} showButton />
+          </LazyLoad>
+          <LazyLoad>
+            <Heading variant="h3">Comments</Heading>
+            <CommentList
+              collectionName={CollectionNames.Events}
+              parentId={event.id}
+            />
+          </LazyLoad>
+        </Column>
+      </Columns>
+    </Dialog>
+  )
+}
+
+export default EventPanel

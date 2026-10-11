@@ -1,0 +1,100 @@
+import React from 'react'
+import { makeStyles } from '@mui/styles'
+import WarningIcon from '@mui/icons-material/Warning'
+
+import { trackAction } from '@/analytics'
+import { Discord as DiscordIcon } from '@/icons'
+import { discordPurple } from '@/config'
+
+import Box from '@/components/box'
+import Button from '@/components/button'
+import { DiscordServerFields } from 'shared/modules/discordservers'
+
+const useStyles = makeStyles({
+  title: {
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    '& svg': {
+      marginRight: '0.25rem',
+    },
+  },
+  desc: {
+    padding: '0.25rem',
+  },
+  buttonWrapper: {
+    marginTop: '0.25rem',
+    '& > div:first-child': {
+      marginBottom: '0.25rem',
+      fontWeight: 'bold',
+    },
+  },
+})
+
+const DiscordServerMustJoinNotice = ({
+  discordServerId,
+  discordServerData,
+  analyticsCategoryName = undefined,
+  className = undefined,
+}: {
+  discordServerId: string
+  discordServerData?: DiscordServerFields
+  analyticsCategoryName?: string
+  className?: string
+}) => {
+  const classes = useStyles()
+  return (
+    <Box icon={<DiscordIcon />} color={discordPurple} className={className}>
+      <div className={classes.title}>
+        <WarningIcon /> Discord Server Required
+      </div>
+      <div className={classes.desc}>
+        To visit this URL you must be a member of the Discord server "
+        {discordServerData?.name || '(unnamed)'}"
+        <br />
+        {discordServerData?.requirespatreon && discordServerData.patreonurl ? (
+          <div className={classes.buttonWrapper}>
+            <div>You must be a Patreon: </div>
+            <a
+              href={discordServerData.patreonurl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                analyticsCategoryName &&
+                trackAction(
+                  analyticsCategoryName,
+                  'Click join Patreon link for Discord server',
+                  discordServerId
+                )
+              }>
+              Join Here
+            </a>
+          </div>
+        ) : discordServerData?.inviteurl ? (
+          <div className={classes.buttonWrapper}>
+            <div>You must accept this invite: </div>
+            <Button
+              size="small"
+              color="secondary"
+              url={discordServerData.inviteurl}
+              onClick={
+                analyticsCategoryName
+                  ? () =>
+                      trackAction(
+                        analyticsCategoryName,
+                        'Click join Discord server link',
+                        discordServerId
+                      )
+                  : undefined
+              }>
+              Join Server
+            </Button>
+          </div>
+        ) : // assume it is being lazy-loaded in
+        null}
+      </div>
+    </Box>
+  )
+}
+
+export default DiscordServerMustJoinNotice

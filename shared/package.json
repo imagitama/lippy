@@ -1,0 +1,15 @@
+{
+  "name": "shared",
+  "scripts": {
+    "copy-to-edge": "cpx './src/**/*' ../../supabase/functions/_shared/shared",
+    "build": "tsc && cpx package.json ./dist",
+    "start": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "cpx": "^1.5.0",
+    "prettier": "^3.9.9",
+    "typescript": "^6.0.3"
+  },
+  "type": "module"
+}

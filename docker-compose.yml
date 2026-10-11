@@ -1,0 +1,17 @@
+volumes:
+  webapp_node_modules:
+
+services:
+  web-app:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    working_dir: /workspace/web-app
+    volumes:
+      - .:/workspace
+      - webapp_node_modules:/workspace/web-app/node_modules
+      - ./shared/dist:/shared/dist
+    ports:
+      - "3000:3000"
+    command: /bin/sh -c "npm i --legacy-peer-deps && npm start"
+    restart: unless-stopped

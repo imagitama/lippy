@@ -1,0 +1,99 @@
+import React, { useRef, useState } from 'react'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+import ButtonGroup from '@mui/material/ButtonGroup'
+import CheckIcon from '@mui/icons-material/Check'
+
+import Button, { ButtonProps } from '@/components/button'
+import { ChevronDown } from '@/icons'
+
+export interface DropdownOption {
+  id: string
+  label: string | React.ReactElement
+}
+
+const ButtonDropdown = ({
+  options,
+  label = '',
+  selectedId = undefined,
+  selectedIds = [],
+  closeOnSelect = true,
+  onSelect,
+  children,
+  ...buttonProps
+}: {
+  options: DropdownOption[]
+  label?: string
+  selectedId?: string
+  selectedIds?: string[]
+  closeOnSelect?: boolean
+  onSelect: (newId: string, event: React.SyntheticEvent) => void
+} & ButtonProps) => {
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const onMainBtnClick = () => {
+    setIsDropdownOpen(!isDropdownOpen)
+  }
+
+  const onClickItem = (optionId: string, event: React.SyntheticEvent) => {
+    onSelect(optionId, event)
+
+    if (closeOnSelect) {
+      onClose()
+    }
+  }
+
+  const onClose = () => {
+    setIsDropdownOpen(false)
+  }
+
+  return (
+    <>
+      <ButtonGroup>
+        <Button
+          {...buttonProps}
+          icon={buttonProps.icon || <ChevronDown />}
+          onClick={(e) => {
+            onMainBtnClick()
+
+            if (buttonProps.onClick) {
+              buttonProps.onClick(e)
+            }
+          }}
+          ref={buttonRef}>
+          {label}
+        </Button>
+        {children}
+      </ButtonGroup>
+      {isDropdownOpen && (
+        <Menu
+          anchorEl={buttonRef.current}
+          open={isDropdownOpen}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'center',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
+          onClose={onClose}>
+          {options.map(({ id, label }) => (
+            <MenuItem key={id} onClick={(e) => onClickItem(id, e)}>
+              {label}
+              {selectedId === id || selectedIds.includes(id) ? (
+                <>
+                  {' '}
+                  <CheckIcon />
+                </>
+              ) : null}
+            </MenuItem>
+          ))}
+        </Menu>
+      )}
+    </>
+  )
+}
+
+export default ButtonDropdown

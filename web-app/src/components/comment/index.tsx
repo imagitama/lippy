@@ -1,0 +1,246 @@
+import React, { useEffect, useRef, useState } from 'react'
+import Link from '@/components/link'
+import { makeStyles } from '@mui/styles'
+
+import * as routes from '@/routes'
+import { getIsRoleAStaffMember } from '@/utils/users'
+import { scrollToElement } from '@/utils'
+import { AccessStatus } from 'shared/modules/common'
+import { mediaQueryForTabletsOrBelow } from '@/media-queries'
+import { CollectionNames, FullComment } from 'shared/modules/comments'
+import { BanStatus } from 'shared/modules/users'
+
+import useIsLoggedIn from '@/hooks/useIsLoggedIn'
+import useIsModerator from '@/hooks/useIsModerator'
+
+import FormattedDate from '@/components/formatted-date'
+import Avatar, { AvatarSize } from '@/components/avatar'
+import LoadingShimmer from '@/components/loading-shimmer'
+import EditorRecordManager from '@/components/editor-record-manager'
+import ReportButton from '@/components/report-button'
+import MentionsOutput from '@/components/mentions-output'
+
+const useStyles = makeStyles({
+  cols: {
+    marginBottom: '1rem',
+    position: 'relative',
+    display: 'flex',
+  },
+  deleted: {
+    opacity: '0.5',
+  },
+  colLeft: {
+    width: '50px',
+    marginRight: '0.75rem',
+    [mediaQueryForTabletsOrBelow]: {
+      marginRight: '0.5rem',
+    },
+  },
+  colRight: {
+    flex: 1,
+  },
+  content: {
+    marginTop: '0.25rem',
+    flex: 1,
+    '& p:first-child': {
+      marginTop: 0,
+    },
+    '& p:last-child': {
+      marginBottom: 0,
+    },
+  },
+  deletedMessage: {
+    fontStyle: 'italic',
+    '& a': {
+      cursor: 'pointer',
+    },
+  },
+  date: {},
+  contentWrapper: {
+    display: 'flex',
+  },
+  controls: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
+  control: {},
+  meta: {
+    display: 'inline-block',
+  },
+  metaItems: {
+    marginLeft: '0.25rem',
+    fontSize: '75%',
+    display: 'flex',
+    alignItems: 'center',
+    '& > div': {
+      display: 'inline-block',
+      marginRight: '1rem',
+    },
+  },
+  highlighted: {
+    border: '1px dashed rgb(255, 255, 0)',
+    padding: '0.25rem',
+  },
+})
+
+const maxLength = 100
+
+const shortenComment = (contents: string): string => {
+  if (contents.length >= maxLength) {
+    return `${contents.substr(0, maxLength)}...`
+  }
+  return contents
+}
+
+const MIN_SUSPICION = 0.5
+
+export default ({
+  comment,
+  isHighlighted = false,
+  performScroll = false,
+  shimmer = false,
+  hydrate = undefined,
+  showControls = true,
+  shorten = false,
+}: {
+  comment?: FullComment
+  isHighlighted?: boolean
+  performScroll?: boolean
+  shimmer?: boolean
+  hydrate?: () => void
+  showControls?: boolean
+  shorten?: boolean
+}) => {
+  const classes = useStyles()
+  const htmlElementRef = useRef(null)
+  const isLoggedIn = useIsLoggedIn()
+  const isMod = useIsModerator()
+  const [showSuspiciousComment, setShowSuspiciousComment] = useState(false)
+
+  useEffect(() => {
+    if (!performScroll) {
+      return
+    }
+
+    console.debug(`scrolling to comment "${id}"...`)
+
+    if (htmlElementRef.current) {
+      scrollToElement(htmlElementRef.current)
+    }
+  }, [performScroll])
+
+  const {
+    id,
+    comment: commentText,
+    // meta
+    accessstatus: accessStatus,
+    modnotes: modNotes,
+    createdat: createdAt,
+    createdby: createdBy,
+    // suspicionamount: suspicionAmount,
+    // view
+    mentions,
+    createdbyusername: createdByUsername,
+    createdbyavatarurl: createdByAvatarUrl,
+    createdbyrole: createdByRole,
+    // createdbybanstatus: createdByBanStatus,
+  } = comment || {}
+
+  const suspicionAmount = null // TODO
+
+  const isDeleted = accessStatus === AccessStatus.Deleted
+
+  return (
+    <div
+      className={`${classes.cols} ${isDeleted ? classes.deleted : ''} ${
+        isHighlighted ? classes.highlighted : ''
+      }`}
+      title={id}
+      ref={htmlElementRef}>
+      <div className={classes.colLeft}>
+        {shimmer ? (
+          <LoadingShimmer width={50} height={50} />
+        ) : (
+          <Avatar url={createdByAvatarUrl} size={AvatarSize.Tiny} />
+        )}
+      </div>
+      <div className={classes.colRight}>
+        {shimmer ? (
+          <LoadingShimmer width={100} height={25} />
+        ) : createdBy ? (
+          <Link to={routes.viewUserWithVar.replace(':userId', createdBy)}>
+            {createdByUsername || 'User'}
+          </Link>
+        ) : (
+          '(no creator)'
+        )}{' '}
+        {/* {createdByRole && getIsRoleAStaffMember(createdByRole) && (
+          <StaffBadge isSmall />
+        )} */}
+        {/* {createdByBanStatus === BanStatus.Banned && <BannedBadge isSmall />} */}
+        {shimmer ? null : (
+          <div className={classes.meta}>
+            <div className={classes.metaItems}>
+              <div className={classes.date}>
+                {createdAt ? <FormattedDate date={createdAt} /> : null}
+              </div>
+            </div>
+          </div>
+        )}
+        <div className={classes.contentWrapper}>
+          {shimmer ? (
+            <LoadingShimmer width={400} height={25} />
+          ) : isDeleted ? (
+            <div className={classes.deletedMessage}>
+              Comment deleted
+              {isMod && (
+                <>
+                  <br />
+                  <br />
+                  Original message: {commentText}
+                </>
+              )}
+            </div>
+          ) : suspicionAmount !== null &&
+            suspicionAmount !== undefined &&
+            suspicionAmount < MIN_SUSPICION &&
+            showSuspiciousComment !== true ? (
+            <div className={classes.deletedMessage}>
+              Comment looks like spam{' '}
+              <a onClick={() => setShowSuspiciousComment(true)}>Show Comment</a>
+            </div>
+          ) : (
+            <div className={classes.content}>
+              <MentionsOutput
+                text={shorten ? shortenComment(commentText!) : commentText!}
+                mentions={mentions || []}
+              />
+            </div>
+          )}
+          {showControls && isLoggedIn && id ? (
+            <ReportButton
+              id={id}
+              type={CollectionNames.Comments}
+              small
+              hollow
+            />
+          ) : null}
+          {showControls && !shimmer && isMod && id && (
+            <div className={classes.controls}>
+              <div className={classes.control}>
+                <EditorRecordManager
+                  id={id}
+                  metaCollectionName={CollectionNames.CommentsMeta}
+                  showAccessButtons
+                  existingAccessStatus={accessStatus}
+                  existingEditorNotes={modNotes}
+                  onDone={hydrate ? hydrate : undefined}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,52 @@
+import React, { useEffect } from 'react'
+import { useHistory } from 'react-router-dom'
+import { Helmet } from '@unhead/react/helmet'
+
+import { logout } from '@/auth'
+import * as routes from '@/routes'
+import { trackAction } from '@/analytics'
+import { handleError } from '@/error-handling'
+import { formHideDelay } from '@/config'
+
+import useQueryParams from '@/hooks/useQueryParams'
+import SuccessMessage from '@/components/success-message'
+
+export default () => {
+  const { push } = useHistory()
+  const queryParams = useQueryParams()
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        console.debug('logging out user...')
+
+        await logout()
+
+        trackAction('Logout', 'Auto-logout user')
+
+        const fromPath = queryParams.get('from')
+
+        console.debug(`user was logged out successfully, redirecting...`, {
+          from: fromPath,
+        })
+
+        setTimeout(() => {
+          push(fromPath || routes.home)
+        }, formHideDelay)
+      } catch (err) {
+        console.error(err)
+        handleError(err)
+      }
+    })()
+  }, [])
+
+  return (
+    <>
+      <Helmet>
+        <title>Logout of your account</title>
+        <meta name="description" content="Logout of your account." />
+      </Helmet>
+      <SuccessMessage>You are now logged out. Redirecting...</SuccessMessage>
+    </>
+  )
+}

@@ -1,0 +1,141 @@
+import React, { useState } from 'react'
+import CheckIcon from '@mui/icons-material/Check'
+import ClearIcon from '@mui/icons-material/Clear'
+
+import useDataStoreEdit from '@/hooks/useDataStoreEdit'
+
+import { handleError } from '@/error-handling'
+import useDataStoreItem from '@/hooks/useDataStoreItem'
+import {
+  CollectionNames,
+  ReportsMeta,
+  ResolutionStatus,
+} from 'shared/modules/reports'
+import useUserId from '@/hooks/useUserId'
+
+import LoadingIndicator from '@/components/loading-indicator'
+import Button from '@/components/button'
+import TextInput from '@/components/text-input'
+
+export default ({
+  id,
+  metaCollectionName = CollectionNames.ReportsMeta,
+  existingResolutionStatus,
+  existingResolutionNotes,
+  onClick,
+  onDone,
+}: {
+  id: string
+  metaCollectionName?: string
+  existingResolutionStatus?: ResolutionStatus
+  existingResolutionNotes?: string | null
+  onClick?: (newValue: string) => void
+  onDone?: () => void
+}) => {
+  const [isLoading, lastErrorCodeLoading, metaRecord] =
+    useDataStoreItem<ReportsMeta>(
+      metaCollectionName,
+      existingResolutionStatus ? false : id,
+      { queryName: 'resolve-button' }
+    )
+  const [isSaving, , lastErrorCodeSaving, save] = useDataStoreEdit<ReportsMeta>(
+    metaCollectionName,
+    id
+  )
+  const userId = useUserId()
+  const [newResolutionNotes, setNewResolutionNotes] = useState(
+    existingResolutionNotes || ''
+  )
+
+  if (isLoading || isSaving) {
+    return <LoadingIndicator message={isLoading ? 'Loading...' : 'Saving...'} />
+  }
+
+  if (!existingResolutionStatus && !metaRecord) {
+    console.warn(
+      'Cannot render resolution controls: no existing resolution status and no meta record'
+    )
+    return null
+  }
+
+  const resolutionStatus =
+    existingResolutionStatus ||
+    (!existingResolutionStatus && metaRecord
+      ? metaRecord.resolutionstatus
+      : null)
+
+  if (lastErrorCodeLoading !== null) {
+    return <>Failed to load record (code {lastErrorCodeLoading})</>
+  }
+
+  if (!resolutionStatus) {
+    return <>Failed to load record (invalid resolution status)</>
+  }
+
+  if (lastErrorCodeSaving !== null) {
+    return <>Failed to save record (code {lastErrorCodeSaving})</>
+  }
+
+  const toggle = async () => {
+    try {
+      if (!resolutionStatus) {
+        throw new Error('Cannot toggle access - invalid initial status!')
+      }
+
+      const newResolutionStatus =
+        resolutionStatus === ResolutionStatus.Pending
+          ? ResolutionStatus.Resolved
+          : ResolutionStatus.Pending
+      const newResolvedAt =
+        newResolutionStatus === ResolutionStatus.Resolved ? new Date() : null
+      const newResolvedBy =
+        newResolutionStatus === ResolutionStatus.Resolved ? userId : null
+
+      if (onClick) {
+        onClick(newResolutionStatus)
+      }
+
+      await save({
+        resolutionstatus: newResolutionStatus,
+        resolutionnotes: newResolutionNotes,
+      })
+
+      if (onDone) {
+        onDone()
+      }
+    } catch (err) {
+      console.error('Failed to toggle deleted status', err)
+      handleError(err)
+    }
+  }
+
+  return (
+    <>
+      <TextInput
+        label="Resolution notes (public)"
+        fullWidth
+        minRows={5}
+        multiline
+        onChange={(e) => setNewResolutionNotes(e.target.value)}
+        value={newResolutionNotes}
+      />
+      <Button
+        marginTop
+        color="secondary"
+        onClick={toggle}
+        icon={
+          resolutionStatus === ResolutionStatus.Pending ? (
+            <CheckIcon />
+          ) : resolutionStatus === ResolutionStatus.Resolved ? (
+            <ClearIcon />
+          ) : undefined
+        }>
+        {resolutionStatus === ResolutionStatus.Pending
+          ? 'Resolve (with notes)'
+          : resolutionStatus === ResolutionStatus.Resolved
+          ? 'Return To Pending (with notes)'
+          : `Unknown status: ${resolutionStatus}`}
+      </Button>
+    </>
+  )
+}

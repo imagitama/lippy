@@ -1,0 +1,148 @@
+import React from 'react'
+import { Helmet } from '@unhead/react/helmet'
+import Link from '@/components/link'
+import { makeStyles } from '@mui/styles'
+import AddIcon from '@mui/icons-material/Add'
+
+import * as routes from '@/routes'
+import { Event, PublicEvent, ViewNames } from 'shared/modules/events'
+import { getIsDateInFuture, getIsDateInPast } from '@/utils/dates'
+
+import useIsLoggedIn from '@/hooks/useIsLoggedIn'
+import useIsAdultContentEnabled from '@/hooks/useIsAdultContentEnabled'
+
+import Heading from '@/components/heading'
+import BodyText from '@/components/body-text'
+import Button from '@/components/button'
+import EventResults from '@/components/event-results'
+import ErrorMessage from '@/components/error-message'
+import LoadingIndicator from '@/components/loading-indicator'
+import NoResultsMessage from '@/components/no-results-message'
+import Calendar from '@/components/calendar'
+import useDatabaseQuery, { Operators } from '@/hooks/useDatabaseQuery'
+
+// TODO: move to component
+const useStyles = makeStyles({
+  root: {
+    position: 'relative',
+  },
+})
+
+function Events() {
+  const isAdultContentEnabled = useIsAdultContentEnabled()
+  const [isLoading, lastErrorCode, events] = useDatabaseQuery<PublicEvent>(
+    ViewNames.GetPublicEvents,
+    // TODO: filter by calendar range
+    isAdultContentEnabled === false
+      ? [['isadult', Operators.EQUALS, false]]
+      : []
+  )
+
+  if (isLoading || !events) {
+    return <LoadingIndicator message="Loading events..." />
+  }
+
+  if (lastErrorCode !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCode}>
+        Failed to load events
+      </ErrorMessage>
+    )
+  }
+
+  const { pastEvents, currentEvents, futureEvents } = events.reduce<{
+    pastEvents: Event[]
+    currentEvents: Event[]
+    futureEvents: Event[]
+  }>(
+    (newOutput, event) => {
+      const startsAt = event.startsat
+      const endsAt = event.endsat
+
+      if (!startsAt || !endsAt) {
+        return newOutput
+      }
+
+      if (getIsDateInFuture(startsAt) && getIsDateInFuture(endsAt)) {
+        return {
+          ...newOutput,
+          futureEvents: newOutput.futureEvents.concat([event]),
+        }
+      }
+
+      if (getIsDateInPast(startsAt) && getIsDateInFuture(endsAt)) {
+        return {
+          ...newOutput,
+          currentEvents: newOutput.currentEvents.concat([event]),
+        }
+      }
+
+      return {
+        ...newOutput,
+        pastEvents: newOutput.pastEvents.concat([event]),
+      }
+    },
+    {
+      pastEvents: [],
+      currentEvents: [],
+      futureEvents: [],
+    }
+  )
+
+  return (
+    <>
+      <Heading variant="h2">Calendar</Heading>
+      <Calendar events={events} />
+      {currentEvents.length ? (
+        <>
+          <Heading variant="h2">Today</Heading>
+          <EventResults events={currentEvents} />
+        </>
+      ) : null}
+      {/* <Heading variant="h2">Upcoming</Heading>
+      {futureEvents.length ? (
+        <EventResults events={futureEvents} />
+      ) : (
+        <NoResultsMessage />
+      )}
+      <Heading variant="h2">Past</Heading>
+      {pastEvents.length ? (
+        <EventResults events={pastEvents} />
+      ) : (
+        <NoResultsMessage />
+      )} */}
+    </>
+  )
+}
+
+export default () => {
+  const classes = useStyles()
+  const isLoggedIn = useIsLoggedIn()
+
+  return (
+    <>
+      <Helmet>
+        <title>View all events</title>
+        <meta
+          name="description"
+          content="Browse the events that are being hosted in or about VRChat and other VR social games."
+        />
+      </Helmet>
+      <div className={classes.root}>
+        <Heading variant="h1">
+          <Link to={routes.events}>Events</Link>
+        </Heading>
+        <BodyText>A list of all past, present and future events.</BodyText>
+        {/* {isLoggedIn && (
+          <>
+            <br />
+            <Button url={routes.createEvent} icon={<AddIcon />}>
+              Create Event
+            </Button>
+          </>
+        )} */}
+        <Events />
+      </div>
+    </>
+  )
+}

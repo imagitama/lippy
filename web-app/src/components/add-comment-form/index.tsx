@@ -1,0 +1,131 @@
+import React, { useEffect, useRef, useState } from 'react'
+import CreateIcon from '@mui/icons-material/Create'
+import CheckIcon from '@mui/icons-material/Check'
+
+import useDataStoreCreate from '@/hooks/useDataStoreCreate'
+import useUserId from '@/hooks/useUserId'
+import { handleError } from '@/error-handling'
+import {
+  CollectionNames,
+  Comment,
+  CommentFields,
+} from 'shared/modules/comments'
+
+import FormControls from '@/components/form-controls'
+import MentionsInput from '@/components/mentions-input'
+import ErrorMessage from '@/components/error-message'
+import SuccessMessage from '@/components/success-message'
+import LoadingIndicator from '@/components/loading-indicator'
+import Button from '@/components/button'
+import useIsBanned from '@/hooks/useIsBanned'
+import NoPermissionMessage from '@/components/no-permission-message'
+import useAccountVerification from '@/hooks/useAccountVerification'
+
+const AddCommentForm = ({
+  collectionName,
+  parentId,
+  onAddClick = undefined,
+  onDone = undefined,
+  asPrivate = false,
+}: {
+  collectionName: string
+  parentId: string
+  onAddClick?: () => void
+  onDone?: () => void
+  asPrivate?: boolean
+}) => {
+  const [textFieldValue, setTextFieldValue] = useState('')
+  const userId = useUserId()
+  const [isSaving, isSuccess, lastErrorCode, create, clear] =
+    useDataStoreCreate<CommentFields, Comment>(CollectionNames.Comments)
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>()
+  const isVerified = useAccountVerification()
+  const isBanned = useIsBanned()
+
+  useEffect(
+    () => () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    },
+    []
+  )
+
+  if (!userId) {
+    return (
+      <FormControls>
+        <Button size="large" icon={<CreateIcon />} isDisabled>
+          Log in to comment
+        </Button>
+      </FormControls>
+    )
+  }
+
+  if (isBanned || isVerified === false) {
+    return <NoPermissionMessage />
+  }
+
+  if (isSaving) {
+    return <LoadingIndicator message="Adding your comment..." />
+  }
+
+  if (isSuccess) {
+    return <SuccessMessage>Added your comment successfully</SuccessMessage>
+  }
+
+  if (lastErrorCode !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCode} onRetry={clear}>
+        Error adding your comment
+      </ErrorMessage>
+    )
+  }
+
+  const onAddCommentBtnClick = async () => {
+    try {
+      if (onAddClick) {
+        onAddClick()
+      }
+
+      if (!textFieldValue.trim()) {
+        console.warn('Cannot add comment without a message')
+        return
+      }
+
+      await create({
+        parenttable: collectionName,
+        parentid: parentId,
+        comment: textFieldValue.trim(),
+      })
+
+      setTextFieldValue('')
+
+      if (onDone) {
+        onDone()
+      }
+    } catch (err) {
+      console.error('Failed to add comment', err)
+      handleError(err)
+    }
+  }
+
+  return (
+    <div>
+      <MentionsInput
+        value={textFieldValue}
+        onChange={(newVal) => setTextFieldValue(newVal)}
+        isDisabled={isSaving}
+      />
+      <FormControls extraTopMargin>
+        <Button
+          onClick={onAddCommentBtnClick}
+          isDisabled={!textFieldValue.trim()}
+          icon={<CheckIcon />}>
+          Add{asPrivate ? ' Private' : ''} Comment
+        </Button>
+      </FormControls>
+    </div>
+  )
+}
+
+export default AddCommentForm

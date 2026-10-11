@@ -1,0 +1,111 @@
+import React from 'react'
+import { makeStyles } from '@mui/styles'
+import LazyLoad from '@/components/lazy-load'
+import Link from '@/components/link'
+import { getIsUrlAbsolute } from '@/utils'
+import {
+  mediaQueryForMobiles,
+  mediaQueryForTabletsOrBelow,
+} from '@/media-queries'
+import ErrorBoundary from '@/components/error-boundary'
+import { CustomTheme } from '@/themes'
+
+const useStyles = makeStyles<CustomTheme>((theme) => ({
+  root: {
+    padding: '1rem',
+    // backgroundColor: '#282828', // when rendered inside ExperimentalArea dont want big areas of green
+    [mediaQueryForTabletsOrBelow]: {
+      padding: '0.5rem',
+    },
+    [mediaQueryForMobiles]: {
+      padding: '0.25rem',
+    },
+  },
+  titleWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '0.5rem',
+  },
+  title: {
+    flex: '1 0 auto',
+    fontSize: '150%',
+    fontWeight: '200',
+    marginRight: '0.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    '& a': {
+      color: 'inherit',
+      display: 'flex',
+      alignItems: 'center',
+      textDecoration: 'none',
+    },
+    '&:hover $icon': {
+      display: 'flex',
+    },
+    [mediaQueryForMobiles]: {
+      padding: '0.25rem',
+      marginRight: '0.25rem',
+    },
+  },
+  icon: {
+    display: 'none', // to flex
+    transition: 'all 100ms',
+    marginLeft: '0.25rem',
+    alignItems: 'center',
+  },
+  border: {
+    borderTop: `1px solid rgba(255,255,255,0.25)`,
+    width: '100%',
+  },
+}))
+
+const Block = ({
+  title,
+  children,
+  url,
+  icon: Icon,
+  className,
+}: {
+  title?: string
+  children: React.ReactNode
+  url?: string
+  icon?: React.ReactElement
+  className?: string
+}) => {
+  const classes = useStyles()
+
+  const titleToRender = (
+    <>
+      <span>{title}</span>
+      {Icon && <span className={classes.icon}>{Icon}</span>}
+    </>
+  )
+
+  return (
+    <ErrorBoundary>
+      <LazyLoad>
+        <div className={`${classes.root} ${className}`}>
+          <div className={classes.titleWrapper}>
+            <h2 className={classes.title}>
+              {url ? (
+                getIsUrlAbsolute(url) ? (
+                  <a href={url} target="_blank" rel="noopener noreferrer">
+                    {titleToRender}
+                  </a>
+                ) : (
+                  <Link to={url}>{titleToRender}</Link>
+                )
+              ) : (
+                titleToRender
+              )}
+            </h2>
+            <div className={classes.border} />
+          </div>
+          {children}
+        </div>
+      </LazyLoad>
+    </ErrorBoundary>
+  )
+}
+
+export default Block

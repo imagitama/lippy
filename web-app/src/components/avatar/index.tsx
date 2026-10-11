@@ -1,0 +1,119 @@
+import React from 'react'
+import { makeStyles } from '@mui/styles'
+import LazyLoad from '@/components/lazy-load'
+import LoadingIndicator from '@/components/loading-indicator'
+import DefaultAvatar from '@/components/default-avatar'
+import { ReactComponent as ChristmasHat } from '@/assets/images/christmas-hat.svg'
+import { getIsChristmasTime } from '@/utils'
+import { CustomTheme } from '@/themes'
+
+export enum AvatarSize {
+  ExtraTiny = 'extratiny', // timeline
+  Tiny = 'tiny',
+  Small = 'small',
+  Medium = 'medium',
+  Large = 'large', // max size (eg. user overview)
+}
+
+const useStyles = makeStyles<CustomTheme>((theme) => ({
+  root: {
+    position: 'relative',
+    '&:hover .hat': {
+      top: '-5%',
+    },
+    '& > *': {
+      width: '100%',
+      height: '100%',
+    },
+  },
+  imageWrapper: {
+    width: '100%',
+    height: '100%',
+    borderRadius: theme.shape.borderRadius,
+    overflow: 'hidden',
+    display: 'flex',
+  },
+  [AvatarSize.ExtraTiny]: {
+    width: '25px',
+    height: '25px',
+  },
+  [AvatarSize.Tiny]: {
+    width: '50px',
+    height: '50px',
+  },
+  [AvatarSize.Small]: {
+    width: '100px',
+    height: '100px',
+  },
+  [AvatarSize.Medium]: {
+    width: '200px',
+    height: '200px',
+  },
+  [AvatarSize.Large]: {
+    // max
+    width: '300px',
+    height: '300px',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  hat: {
+    width: '100%',
+    height: 'auto',
+    position: 'absolute',
+    top: 0,
+    transition: '100ms all',
+    left: '50%',
+    transform: 'translate(-32%, -75%) scale(1.75, 1) rotate(-5deg)',
+  },
+}))
+
+const Avatar = ({
+  url = undefined,
+  username = undefined,
+  size = AvatarSize.Medium,
+  className = undefined,
+  lazy = true,
+  noHat = false,
+}: {
+  url?: string | null
+  username?: string
+  size?: AvatarSize
+  className?: string
+  lazy?: boolean
+  noHat?: boolean
+}) => {
+  const classes = useStyles()
+
+  const elem = (
+    <>
+      {getIsChristmasTime() && noHat !== true && (
+        <ChristmasHat className={classes.hat} />
+      )}
+      <div className={classes.imageWrapper}>
+        {url ? (
+          <img
+            src={url}
+            alt={`Avatar for ${username || 'a user'}`}
+            className={classes.image}
+          />
+        ) : (
+          <DefaultAvatar stringForDecision={username} />
+        )}
+      </div>
+    </>
+  )
+
+  return (
+    <div className={`${classes.root} ${classes[size]} ${className}`}>
+      {lazy ? (
+        <LazyLoad placeholder={<LoadingIndicator />}>{elem}</LazyLoad>
+      ) : (
+        elem
+      )}
+    </div>
+  )
+}
+
+export default Avatar

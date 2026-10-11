@@ -1,0 +1,65 @@
+import React from 'react'
+import { useParams } from 'react-router'
+import { Helmet } from '@unhead/react/helmet'
+
+import { CollectionNames } from 'shared/modules/users'
+import * as routes from '@/routes'
+import usersEditableFields from '@/editable-fields/users'
+import usersMetaEditableFields from '@/editable-fields/users-meta'
+
+import usePermissions from '@/hooks/usePermissions'
+
+import GenericEditor from '@/components/generic-editor'
+import Heading from '@/components/heading'
+import NoPermissionMessage from '@/components/no-permission-message'
+
+const View = () => {
+  const { userId } = useParams<{ userId: string }>()
+
+  if (!usePermissions(routes.editUserWithVar)) {
+    return <NoPermissionMessage />
+  }
+
+  return (
+    <>
+      <Heading variant="h1">Edit User</Heading>
+      <GenericEditor
+        fields={usersEditableFields}
+        collectionName={CollectionNames.Users}
+        id={userId}
+        analyticsCategory="EditUser"
+        saveBtnAction="Click save button"
+        cancelBtnAction="Click cancel button"
+        successUrl={routes.viewUserWithVar.replace(':userId', userId)}
+        cancelUrl={routes.viewUserWithVar.replace(':userId', userId)}
+        extraFormData={{
+          userId,
+        }}
+      />
+      <Heading variant="h1">Edit Metadata</Heading>
+      <GenericEditor
+        fields={usersMetaEditableFields}
+        collectionName={CollectionNames.UsersMeta}
+        id={userId}
+        analyticsCategory="EditUserMeta"
+        saveBtnAction="Click save button"
+        cancelBtnAction="Click cancel button"
+        successUrl={routes.viewUserWithVar.replace(':userId', userId)}
+        cancelUrl={routes.viewUserWithVar.replace(':userId', userId)}
+        extraFormData={{
+          userId,
+        }}
+      />
+    </>
+  )
+}
+
+export default () => (
+  <>
+    <Helmet>
+      <title>Edit a user</title>
+      <meta name="description" content="Use this form to edit a user." />
+    </Helmet>
+    <View />
+  </>
+)

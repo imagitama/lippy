@@ -1,0 +1,394 @@
+import React, { Suspense, SyntheticEvent, forwardRef } from 'react'
+import { keyframes } from '@emotion/react'
+import MaterialButton from '@mui/material/Button'
+import { makeStyles } from '@mui/styles'
+import classnames from 'classnames'
+
+import SaveIcon from '@mui/icons-material/Save'
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined'
+import AddIcon from '@mui/icons-material/Add'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ClearIcon from '@mui/icons-material/Clear'
+
+import {
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+} from '@/icons'
+import { CustomTheme } from '@/themes'
+
+import Link from '@/components/link'
+import Tooltip from '@/components/tooltip'
+
+export interface ButtonProps {
+  children?: React.ReactNode
+  onClick?: (e: SyntheticEvent) => Promise<void> | void
+  url?: string
+  icon?: React.ReactElement
+  isDisabled?: boolean
+  className?: string
+  iconSide?: 'left' | 'center' | 'right'
+  isIconSpinning?: boolean
+  isLoading?: boolean
+  size?: 'small' | 'medium' | 'large'
+  // everything after undefined is not standard
+  color?: 'inherit' | 'primary' | 'secondary' | undefined | 'tertiary' | 'ai'
+  title?: string
+  checked?: boolean
+  hollow?: boolean
+  margin?: boolean // mainly for asset overview
+  marginTop?: boolean
+  openInNewTab?: boolean
+  downloadFilename?: string
+  /**
+   * @deprecated Now checks if children undefined
+   */
+  iconOnly?: boolean
+  /**
+   * @deprecated use iconSide
+   */
+  switchIconSide?: boolean
+}
+
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`
+
+const useStyles = makeStyles<CustomTheme>((theme) => ({
+  root: {
+    whiteSpace: 'nowrap',
+    minWidth: 0,
+    height: '34px',
+    display: 'flex',
+    alignItems: 'center',
+    '&&': {
+      minWidth: 'auto',
+      textTransform: 'none',
+    },
+  },
+  iconLeft: {
+    '& $icon': {
+      marginLeft: '-0.25rem',
+      marginRight: '0.25rem',
+    },
+  },
+  iconCenter: {
+    '& $icon': {},
+  },
+  iconRight: {
+    flexDirection: 'row-reverse',
+    '& $icon': {
+      marginLeft: '0.25rem',
+      marginRight: '0rem',
+    },
+    '&$small $icon': {
+      marginLeft: '0rem',
+      marginRight: '-0.4rem',
+    },
+  },
+  icon: {
+    display: 'flex', // fix line height issue
+    alignItems: 'center',
+    '& svg': {
+      fontSize: '150%',
+      width: '1em',
+      height: '1em',
+      fill: 'currentColor', // fix custom icons (MUI icons work fine)
+    },
+  },
+  spinning: {
+    animation: '$spin 1s linear infinite',
+  },
+  '@keyframes spin': {
+    '0%': {
+      transform: 'rotate(0deg)',
+    },
+    '100%': {
+      transform: 'rotate(360deg)',
+    },
+  },
+  small: {
+    height: '24px',
+    '&&': {
+      paddingLeft: '8px',
+      paddingRight: '8px',
+    },
+  },
+  large: {
+    height: '40px',
+    '&&': {
+      paddingLeft: '12px',
+      paddingRight: '12px',
+    },
+  },
+  smallIcon: {
+    marginLeft: '0.25rem',
+  },
+  switchIconSide: {
+    marginLeft: 0,
+    marginRight: '0.5rem',
+    '&$small': {
+      marginRight: 0,
+    },
+  },
+  tertiary: {
+    color: '#FFF',
+    // @ts-ignore
+    backgroundColor: theme.palette.tertiary
+      ? // @ts-ignore
+        theme.palette.tertiary.main
+      : '#000',
+    '&:hover': {
+      // @ts-ignore
+      backgroundColor: theme.palette.tertiary
+        ? // @ts-ignore
+          theme.palette.tertiary.dark
+        : '#111',
+    },
+  },
+  ai: {
+    color: '#FFF',
+    // @ts-ignore
+    backgroundColor: theme.palette.tertiary
+      ? // @ts-ignore
+        theme.palette.tertiary.main
+      : '#000',
+    '&:hover': {
+      // @ts-ignore
+      backgroundColor: theme.palette.tertiary
+        ? // @ts-ignore
+          theme.palette.tertiary.dark
+        : '#111',
+    },
+  },
+  loading: {
+    filter: 'blur(2px)',
+  },
+  noMargin: {
+    margin: 0,
+    '& svg': {
+      margin: 0,
+    },
+  },
+  iconOnly: {
+    minWidth: 'auto !important',
+    paddingLeft: '0.25rem !important',
+    paddingRight: '0.25rem !important',
+  },
+  hollow: {
+    '&&': {
+      border: '1px solid rgba(255,255,255,0.25)',
+      color: '#FFF',
+      backgroundColor: 'rgba(255,255,255,0)',
+      '&:hover': {
+        backgroundColor: 'rgba(255,255,255,0.15)',
+      },
+    },
+    '&&:hover': {
+      borderRightColor: 'rgba(255,255,255,0.25) !important', // tried overriding but failed
+    },
+  },
+  margin: {
+    '&&': {
+      margin: '0 0.25rem 0.25rem 0',
+    },
+  },
+  marginTop: {
+    '&&': {
+      marginTop: '0.25rem',
+    },
+  },
+  disabled: {
+    '&&': {
+      borderColor: 'transparent',
+    },
+  },
+}))
+
+// when provided as LinkComponent is given all props the Button root element would usually get (no type for it)
+const Anchor = ({
+  href: url,
+  children,
+  openInNewTab = true,
+  downloadFilename,
+  ...props
+}: {
+  href: string
+  children: React.ReactNode
+  openInNewTab?: boolean
+  downloadFilename?: string
+}) =>
+  url.startsWith('/') ? (
+    <Link to={url} {...props}>
+      {children}
+    </Link>
+  ) : (
+    <a
+      href={url || undefined}
+      target={openInNewTab ? '_blank' : undefined}
+      rel="noopener noreferrer"
+      download={downloadFilename}
+      {...props}>
+      {children}
+    </a>
+  )
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      children,
+      onClick = undefined,
+      url = '',
+      icon = undefined,
+      isDisabled = false,
+      className = '',
+      switchIconSide = false,
+      isLoading = false,
+      title,
+      checked,
+      hollow,
+      iconSide = 'left',
+      isIconSpinning,
+      ...props
+    }: ButtonProps,
+    ref
+  ) => {
+    const classes = useStyles(props)
+    const isHollow =
+      hollow === true || (props.color === 'secondary' && hollow === undefined)
+
+    const iconToUse = (
+      <Suspense>
+        <span
+          className={classnames(classes.icon, {
+            [classes.spinning]: isIconSpinning,
+          })}>
+          {checked === true ? (
+            isHollow ? (
+              <CheckBoxOutlinedIcon />
+            ) : (
+              <CheckBoxIcon />
+            )
+          ) : checked === false ? (
+            <CheckBoxOutlineBlankIcon />
+          ) : (
+            icon
+          )}
+        </span>
+      </Suspense>
+    )
+
+    const isIconOnly = children === undefined
+
+    const contents = (
+      <MaterialButton
+        ref={ref}
+        LinkComponent={Anchor}
+        variant="contained"
+        // @ts-ignore
+        color="primary"
+        onClick={onClick}
+        disabled={isDisabled}
+        className={classnames({
+          [classes.root]: true,
+          [classes.tertiary]: props.color === 'tertiary',
+          [classes.ai]: props.color === 'ai',
+          [classes.iconOnly]: isIconOnly,
+          [classes.hollow]: isHollow,
+          [classes.small]: props.size === 'small',
+          [classes.large]: props.size === 'large',
+          [classes.margin]: props.margin,
+          [classes.marginTop]: props.marginTop,
+          [classes.iconLeft]: iconSide === 'left' && !isIconOnly,
+          [classes.iconCenter]: iconSide === 'center' || isIconOnly,
+          [classes.iconRight]: iconSide === 'right' && !isIconOnly,
+          [classes.isLoading]: isLoading,
+          [className]: true,
+        })}
+        classes={{
+          disabled: classes.disabled,
+        }}
+        href={url}
+        {...props}>
+        {iconToUse}
+        <span>
+          {' '}
+          {/* wrap in span to support multiple children like visit source btn */}
+          {children}
+        </span>
+      </MaterialButton>
+    )
+
+    const contentsWithTitle = title ? (
+      <Tooltip title={title}>{contents}</Tooltip>
+    ) : (
+      contents
+    )
+
+    return contentsWithTitle
+  }
+)
+
+export const CreateButton = (args: ButtonProps) => (
+  <Button
+    icon={<AddIcon />}
+    color="secondary"
+    hollow
+    iconSide="left"
+    {...args}
+  />
+)
+
+export const ClearButton = (args: ButtonProps) => (
+  <Button
+    icon={<ClearIcon />}
+    color="secondary"
+    hollow
+    iconSide="left"
+    {...args}>
+    Clear
+  </Button>
+)
+
+export const SaveButton = (args: ButtonProps) => (
+  <Button icon={<SaveIcon />} color="secondary" {...args}>
+    {args.children || 'Save'}
+  </Button>
+)
+
+export const EditButton = (args: ButtonProps) => (
+  <Button icon={<EditIcon />} color="secondary" {...args}>
+    {args.children || 'Edit'}
+  </Button>
+)
+
+export const DeleteButton = (args: ButtonProps) => (
+  <Button icon={<DeleteIcon />} color="secondary" {...args}>
+    {args.children || 'Delete'}
+  </Button>
+)
+
+export const RefreshButton = (args: ButtonProps) => (
+  <Button icon={<RefreshIcon />} color="secondary" {...args}>
+    {args.children || 'Refresh'}
+  </Button>
+)
+
+export const GoToButton = (args: ButtonProps) => (
+  <Button
+    icon={<ChevronRightIcon />}
+    color="secondary"
+    hollow
+    iconSide="right"
+    {...args}
+  />
+)
+
+export default Button

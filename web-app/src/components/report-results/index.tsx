@@ -1,0 +1,49 @@
+import React from 'react'
+import Table from '@/components/responsive-table'
+import { TableHead } from '@/components/responsive-table'
+import TableBody from '@mui/material/TableBody'
+import { TableCell } from '@/components/responsive-table'
+import { TableRow } from '@/components/responsive-table'
+
+import { FullReport } from 'shared/modules/reports'
+import ReportResultsItem from '@/components/report-results-item'
+import ErrorMessage from '@/components/error-message'
+
+export default ({
+  reports,
+  showParentDetails = true,
+  showControls = false,
+  analyticsCategoryName = '',
+}: {
+  reports: FullReport[]
+  showParentDetails?: boolean
+  showControls?: boolean
+  analyticsCategoryName?: string
+}) =>
+  reports.length ? (
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell></TableCell>
+          {showParentDetails && <TableCell>Parent</TableCell>}
+          <TableCell>Reason</TableCell>
+          <TableCell>Metadata</TableCell>
+          <TableCell>Status</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {reports.map((report) => (
+          <ReportResultsItem
+            key={report.id}
+            report={report}
+            showParentDetails={showParentDetails}
+            showControls={showControls}
+            analyticsCategoryName={analyticsCategoryName}
+          />
+        ))}
+      </TableBody>
+    </Table>
+  ) : (
+    // TODO: use TableRow with colSpan
+    <ErrorMessage>No reports</ErrorMessage>
+  )

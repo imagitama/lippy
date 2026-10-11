@@ -1,0 +1,30 @@
+import React, { ImgHTMLAttributes } from 'react'
+import { makeStyles } from '@mui/styles'
+import { CustomTheme } from '@/themes'
+
+import Tooltip from '@/components/tooltip'
+
+const useStyles = makeStyles<CustomTheme>((theme) => ({
+  root: {
+    display: 'flex',
+    borderRadius: theme.shape.borderRadius,
+    overflow: 'hidden',
+  },
+}))
+
+const Image = (props: ImgHTMLAttributes<HTMLImageElement>) => {
+  const classes = useStyles()
+  const content = (
+    <span className={classes.root}>
+      <img {...props} />
+    </span>
+  )
+
+  if (props.title) {
+    return <Tooltip title={props.title}>{content}</Tooltip>
+  }
+
+  return content
+}
+
+export default Image

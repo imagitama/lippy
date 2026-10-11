@@ -1,0 +1,362 @@
+import React, { useState } from 'react'
+import { makeStyles } from '@mui/styles'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
+
+import {
+  ActiveFilter,
+  EqualFilter,
+  Filter,
+  FilterSubType,
+  FilterType,
+  MultichoiceFilter,
+} from '@/filters'
+import useFilters from '@/hooks/useFilters'
+import useUserId from '@/hooks/useUserId'
+import { Filter as FilterIcon } from '@/icons'
+
+import Button from '@/components/button'
+import TextInput from '@/components/text-input'
+import Select, { MenuItem } from '@/components/select'
+import ButtonDropdown from '@/components/button-dropdown'
+import CheckboxInput from '@/components/checkbox-input'
+
+const useStyles = makeStyles({
+  root: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  filters: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  filter: {
+    padding: '0.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+})
+
+const UserIdInput = ({
+  onChange,
+  value,
+}: {
+  onChange: (value: null | string, event: React.SyntheticEvent) => void
+  value: any
+}) => {
+  const myUserId = useUserId()
+  const [userIdText, setUserIdText] = useState(value)
+
+  return (
+    <>
+      <TextInput
+        label="Filter By User ID"
+        value={userIdText}
+        onChange={(e) => {
+          setUserIdText(e.target.value)
+          onChange(e.target.value, e)
+        }}
+        size="small"
+      />
+      {myUserId ? (
+        <Button
+          onClick={(e) => {
+            setUserIdText(myUserId)
+            onChange(myUserId, e)
+          }}
+          color="secondary"
+          size="small">
+          Use Mine
+        </Button>
+      ) : null}
+    </>
+  )
+}
+
+const EqualInput = ({
+  filter,
+  onChange,
+  value,
+}: {
+  filter: EqualFilter<any>
+  onChange: (value: null | string, event: React.SyntheticEvent) => void
+  value: any
+}) => {
+  if (filter.subType === FilterSubType.UserId) {
+    return (
+      <UserIdInput value={value} onChange={(newId, e) => onChange(newId, e)} />
+    )
+  }
+
+  return (
+    <>
+      <TextInput
+        label={filter.label || 'Equals'}
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value, e)
+        }}
+        size="small"
+      />
+      {filter.suggestions ? (
+        <Select label="Suggestions" size="small">
+          {filter.suggestions.map((suggestion) => (
+            <MenuItem key={suggestion} onClick={(e) => onChange(suggestion, e)}>
+              {suggestion}
+            </MenuItem>
+          ))}
+        </Select>
+      ) : null}
+    </>
+  )
+}
+
+const NotEqualInput = ({
+  filter,
+  onChange,
+  value,
+}: {
+  filter: EqualFilter<any>
+  onChange: (
+    value: null | string | boolean,
+    event: React.SyntheticEvent
+  ) => void
+  value: any
+}) => {
+  if (filter.subType === FilterSubType.UserId) {
+    return (
+      <UserIdInput value={value} onChange={(newId, e) => onChange(newId, e)} />
+    )
+  }
+
+  if (filter.subType === FilterSubType.Null) {
+    return null
+  }
+
+  if (filter.fieldValue)
+    return (
+      <CheckboxInput
+        value={value}
+        onChange={(newVal, e) => onChange(!value, e)}
+        label="Enabled"
+      />
+    )
+
+  return (
+    <>
+      <TextInput
+        label={filter.label || 'Equals'}
+        value={value}
+        onChange={(e) => onChange(e.target.value, e)}
+        size="small"
+      />
+      {filter.suggestions ? (
+        <Select label="Suggestions" size="small">
+          {filter.suggestions.map((suggestion) => (
+            <MenuItem key={suggestion} onClick={(e) => onChange(suggestion, e)}>
+              {suggestion}
+            </MenuItem>
+          ))}
+        </Select>
+      ) : null}
+    </>
+  )
+}
+
+const FilterRenderer = ({
+  filter,
+  onChange,
+  value,
+}: {
+  filter: Filter<any>
+  onChange: (value: null | any, event: React.SyntheticEvent) => void
+  value: any
+}) => {
+  switch (filter.type) {
+    case FilterType.Equal:
+      return (
+        <EqualInput
+          filter={filter as EqualFilter<any>}
+          value={value}
+          onChange={onChange}
+        />
+      )
+    case FilterType.NotEqual:
+      return (
+        <NotEqualInput
+          filter={filter as EqualFilter<any>}
+          value={value}
+          onChange={onChange}
+        />
+      )
+    case FilterType.Multichoice:
+      return (
+        <MultichoiceInput
+          filter={filter as MultichoiceFilter<any, any>}
+          value={value}
+          onChange={onChange}
+        />
+      )
+    default:
+      return <>Unknown filter "{JSON.stringify(filter)}"</>
+  }
+}
+
+const MultichoiceInput = ({
+  filter,
+  value,
+  onChange,
+}: {
+  filter: MultichoiceFilter<any, any>
+  value: any[]
+  onChange: (newVal: any[], event: React.SyntheticEvent) => void
+}) => {
+  const actualValue = value || filter.defaultValue
+
+  const onSelect = (id: string, event: React.SyntheticEvent) =>
+    onChange(
+      actualValue.includes(id)
+        ? actualValue.filter((subId) => subId !== id)
+        : actualValue.concat([id]),
+      event
+    )
+
+  return (
+    <ButtonDropdown
+      label={filter.label || 'Select an option'}
+      color="secondary"
+      options={filter.options.map((enumKey) => ({
+        id: enumKey,
+        label: enumKey,
+      }))}
+      selectedIds={actualValue}
+      onSelect={onSelect}
+      closeOnSelect={false}
+      size="small"
+    />
+  )
+}
+
+function FilterControl({
+  filter,
+  value,
+  isEnabled,
+  onToggle,
+  onChange,
+  onApply,
+}: {
+  filter: Filter<any>
+  value: any
+  isEnabled: boolean
+  onToggle: (event: React.SyntheticEvent) => void
+  onChange: (newVal: any, event: React.SyntheticEvent) => void
+  onApply: () => void
+}) {
+  const classes = useStyles()
+  return (
+    <div className={classes.filter}>
+      <FormControlLabel
+        control={
+          <Switch size="small" checked={isEnabled} onChange={onToggle} />
+        }
+        label={filter.label}
+      />
+      {isEnabled ? (
+        <FilterRenderer filter={filter} value={value} onChange={onChange} />
+      ) : null}
+      <Button size="small" onClick={onApply}>
+        Apply Filter
+      </Button>
+    </div>
+  )
+}
+
+const Filters = <T,>({
+  filters,
+  storageKey,
+}: {
+  filters: Filter<T>[]
+  storageKey: string
+}) => {
+  const [activeFilters, setActiveFilters] = useFilters<T>(storageKey, filters)
+  const [unappliedFilters, setUnappliedFilters] =
+    useState<ActiveFilter<T>[]>(activeFilters)
+
+  const toggleFilter = (filter: Filter<T>) => {
+    const newFilters =
+      unappliedFilters.find(
+        (activeFilter) => activeFilter.fieldName === filter.fieldName
+      ) !== undefined
+        ? unappliedFilters.filter(
+            (activeFilter) => activeFilter.fieldName !== filter.fieldName
+          )
+        : unappliedFilters.concat([
+            {
+              ...filter,
+              // for subtype null any value which is null is considered "off"
+              value: filter.subType === FilterSubType.Null ? true : null,
+            },
+          ])
+
+    setUnappliedFilters(newFilters)
+  }
+
+  const changeFilter = (filter: Filter<T>, newVal: null | any) => {
+    const newFilters = unappliedFilters.map((unappliedFilter) =>
+      unappliedFilter.fieldName === filter.fieldName
+        ? {
+            ...unappliedFilter,
+            value: newVal,
+          }
+        : unappliedFilter
+    )
+
+    setUnappliedFilters(newFilters)
+  }
+
+  const onApply = () => {
+    const newActiveFilters = unappliedFilters.filter(
+      (filter) => filter.value !== null
+    )
+
+    setActiveFilters(newActiveFilters)
+  }
+
+  return (
+    <ButtonDropdown
+      label="Filters"
+      closeOnSelect={false}
+      color="secondary"
+      size="small"
+      onSelect={() => {}}
+      options={filters.map((filter) => ({
+        id: filter.fieldName,
+        label: (
+          <FilterControl
+            key={filter.fieldName as string}
+            filter={filter}
+            isEnabled={
+              unappliedFilters
+                ? unappliedFilters.find(
+                    (activeFilter) =>
+                      activeFilter.fieldName === filter.fieldName
+                  ) !== undefined
+                : false
+            }
+            value={
+              unappliedFilters.find(
+                (unappliedFilter) =>
+                  unappliedFilter.fieldName === filter.fieldName
+              )?.value
+            }
+            onToggle={(e) => toggleFilter(filter)}
+            onChange={(newVal, e) => changeFilter(filter, newVal)}
+            onApply={onApply}
+          />
+        ),
+      }))}
+    />
+  )
+}
+
+export default Filters

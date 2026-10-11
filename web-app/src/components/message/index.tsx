@@ -1,0 +1,159 @@
+import React from 'react'
+import Paper from '@mui/material/Paper'
+import CloseIcon from '@mui/icons-material/Close'
+import { makeStyles } from '@mui/styles'
+import useNotice from '@/hooks/useNotice'
+import { CONTENT_MAX_WIDTH_PX } from '@/config'
+import classNames from 'classnames'
+
+const useStyles = makeStyles(() => ({
+  root: {
+    margin: '1rem 0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leftAlign: {
+    justifyContent: 'flex-start',
+  },
+  paper: {
+    position: 'relative',
+    padding: '1rem',
+    width: '100%',
+    maxWidth: `${CONTENT_MAX_WIDTH_PX}px`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    '&&': {
+      backgroundColor: 'transparent',
+    },
+  },
+  text: {
+    width: '100%',
+    zIndex: 10,
+  },
+  icon: {
+    height: '100%',
+    marginRight: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  iconToTop: {
+    alignItems: 'baseline',
+  },
+  title: {
+    fontSize: '125%',
+    fontWeight: 100,
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 50,
+  },
+  children: {
+    marginTop: '0.25rem',
+    '& > *:first-child': {
+      marginTop: 0,
+    },
+    '& > *:last-child': {
+      marginBottom: 0,
+    },
+  },
+  controls: {
+    marginTop: '1rem',
+    display: 'flex',
+    justifyContent: 'center',
+    '& > *': {
+      margin: '0 0.1rem !important', // important for button margin: 0px
+    },
+  },
+  // at end to override
+  noMargin: {
+    margin: 0,
+  },
+  noTopMargin: {
+    marginTop: 0,
+  },
+  hideBtn: {
+    position: 'absolute',
+    padding: '0.5rem',
+    top: 0,
+    right: 0,
+    zIndex: 50,
+    '&:hover': {
+      cursor: 'pointer',
+    },
+  },
+  small: {
+    padding: '0.5rem',
+  },
+}))
+
+export interface MessageProps {
+  children?: React.ReactNode
+  title?: React.ReactNode
+  icon?: React.ReactNode
+  controls?: React.ReactNode | React.ReactNode[]
+  color?: string
+  leftAlign?: boolean
+  noMargin?: boolean
+  noTopMargin?: boolean
+  paperClassName?: string
+  className?: string
+  hideId?: string
+  small?: boolean
+}
+
+export default ({
+  title,
+  children,
+  icon,
+  controls,
+  color = '',
+  leftAlign = false,
+  noMargin = false,
+  noTopMargin = false,
+  paperClassName = undefined,
+  className,
+  hideId,
+  small = false,
+}: MessageProps) => {
+  const [isHidden, hideMessage] = useNotice(hideId)
+  const classes = useStyles()
+
+  if (isHidden) {
+    return null
+  }
+
+  return (
+    <div
+      className={classNames(classes.root, className, {
+        [classes.leftAlign]: leftAlign,
+        [classes.noMargin]: noMargin,
+        [classes.noTopMargin]: noTopMargin,
+      })}>
+      <Paper
+        className={classNames(classes.paper, paperClassName, {
+          [classes.small]: small,
+        })}
+        style={{ backgroundColor: color }}>
+        {icon && <div className={classes.icon}>{icon}</div>}
+        <div className={classes.text}>
+          {title && <div className={classes.title}>{title}</div>}
+          {children && (
+            <div
+              className={`${classes.children} ${
+                title ? '' : classes.noTopMargin
+              }`}>
+              {children}
+            </div>
+          )}
+          {controls && <div className={classes.controls}>{controls}</div>}
+        </div>
+        {hideId ? (
+          <div className={classes.hideBtn} onClick={hideMessage}>
+            <CloseIcon />
+          </div>
+        ) : null}
+      </Paper>
+    </div>
+  )
+}

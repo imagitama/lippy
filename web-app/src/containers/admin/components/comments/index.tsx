@@ -1,0 +1,276 @@
+import React, { useState } from 'react'
+import Table from '@/components/responsive-table'
+import TableBody from '@mui/material/TableBody'
+import { TableCell } from '@/components/responsive-table'
+import { TableHead } from '@/components/responsive-table'
+import { TableRow } from '@/components/responsive-table'
+import DeleteIcon from '@mui/icons-material/Delete'
+import ClearIcon from '@mui/icons-material/Clear'
+
+import {
+  CollectionNames,
+  FullComment,
+  ViewNames,
+} from 'shared/modules/comments'
+import LoadingIndicator from '@/components/loading-indicator'
+import Markdown from '@/components/markdown'
+import Button from '@/components/button'
+import ErrorMessage from '@/components/error-message'
+import NoResultsMessage from '@/components/no-results-message'
+import FormattedDate from '@/components/formatted-date'
+import UsernameLink from '@/components/username-link'
+import Avatar, { AvatarSize } from '@/components/avatar'
+import EditorRecordManager from '@/components/editor-record-manager'
+import Message from '@/components/message'
+import { handleError } from '@/error-handling'
+import useSupabaseClient from '@/hooks/useSupabaseClient'
+import { AccessStatus } from 'shared/modules/common'
+import CheckboxInput from '@/components/checkbox-input'
+import { routes } from '@/routes'
+import PaginatedView, { RendererProps } from '@/components/paginated-view'
+import { FilterSubType, FilterType } from '@/filters'
+import { BanStatus } from 'shared/modules/users'
+import Heading from '@/components/heading'
+import { getDataStoreErrorCodeFromError } from '@/data-store'
+
+const BulkControls = ({
+  ids,
+  cancel,
+  onDone,
+}: {
+  ids: string[]
+  cancel: () => void
+  onDone: () => void
+}) => {
+  const [wantsToDelete, setWantsToDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [lastErrorCode, setLastErrorCode] = useState<null | string>(null)
+  const supabase = useSupabaseClient()
+
+  if (!ids.length) {
+    return null
+  }
+
+  const performBulkDelete = async () => {
+    try {
+      setIsDeleting(true)
+      setLastErrorCode(null)
+
+      console.debug(`Deleting ${ids.length} comments...`)
+
+      // TODO: use hook or something
+      const { error } = await supabase
+        .from(CollectionNames.CommentsMeta)
+        .update({
+          accessstatus: AccessStatus.Deleted,
+        })
+        .in('id', ids)
+
+      if (error) {
+        throw error
+      }
+
+      onDone()
+    } catch (err) {
+      setIsDeleting(false)
+      setLastErrorCode(getDataStoreErrorCodeFromError(err))
+      console.error(err)
+      handleError(err)
+    }
+  }
+
+  if (isDeleting) {
+    return <LoadingIndicator message="Bulk deleting..." />
+  }
+
+  if (lastErrorCode !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCode}>
+        Failed to bulk delete
+      </ErrorMessage>
+    )
+  }
+
+  if (wantsToDelete) {
+    return (
+      <Message noMargin>
+        Are you sure you want to delete {ids.length} comments?
+        <br />
+        <br />
+        <Button onClick={performBulkDelete} icon={<DeleteIcon />}>
+          Yes I am sure
+        </Button>{' '}
+        <Button color="secondary" onClick={() => cancel()} icon={<ClearIcon />}>
+          Cancel
+        </Button>
+      </Message>
+    )
+  }
+
+  const bulkDelete = () => setWantsToDelete(true)
+
+  return (
+    <Message noMargin>
+      <Button onClick={bulkDelete} icon={<DeleteIcon />}>
+        Bulk Delete ({ids.length})
+      </Button>
+    </Message>
+  )
+}
+
+const CommentsByUser = ({
+  comments,
+  hydrate,
+}: {
+  comments: FullComment[]
+  hydrate: () => void
+}) => {
+  const [selectedCommentIds, setSelectedCommentIds] = useState<string[]>([])
+
+  if (!comments.length) {
+    return <NoResultsMessage>The user has made no comments</NoResultsMessage>
+  }
+
+  const toggleIsSelected = (id: string) =>
+    setSelectedCommentIds((currentVal) =>
+      currentVal.includes(id)
+        ? currentVal.filter((itemId) => itemId !== id)
+        : currentVal.concat([id])
+    )
+
+  const clearSelectedCommentIds = () => setSelectedCommentIds([])
+
+  const onBulkDelete = () => {
+    hydrate()
+    clearSelectedCommentIds()
+  }
+
+  const isSelectingAll = selectedCommentIds.length === comments.length
+
+  const toggleSelectAll = () =>
+    setSelectedCommentIds(
+      isSelectingAll ? [] : comments.map((comment) => comment.id)
+    )
+
+  return (
+    <>
+      <BulkControls
+        ids={selectedCommentIds}
+        cancel={clearSelectedCommentIds}
+        onDone={onBulkDelete}
+      />
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>User</TableCell>
+            <TableCell>Parent</TableCell>
+            <TableCell>Comment</TableCell>
+            <TableCell>Date</TableCell>
+            <TableCell>Controls</TableCell>
+            <TableCell>
+              <CheckboxInput
+                value={isSelectingAll}
+                onChange={() => toggleSelectAll()}
+              />
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {comments.map((comment) => (
+            <TableRow
+              key={comment.id}
+              selected={selectedCommentIds.includes(comment.id)}>
+              <TableCell label="User">
+                <Avatar
+                  url={comment.createdbyavatarurl}
+                  size={AvatarSize.Tiny}
+                />
+                <UsernameLink
+                  username={comment.createdbyusername}
+                  id={comment.createdby}
+                />
+              </TableCell>
+              {/* <TableCell label="Parent">
+                <GenericOutputItem
+                  type={comment.parenttable}
+                  id={comment.parentid}
+                />
+              </TableCell> */}
+              <TableCell label="Comment">
+                <Markdown source={comment.comment} />
+              </TableCell>
+              <TableCell label="Date">
+                <FormattedDate date={comment.createdat} />
+              </TableCell>
+              <TableCell>
+                <EditorRecordManager
+                  id={comment.id}
+                  collectionName={CollectionNames.Comments}
+                  metaCollectionName={CollectionNames.CommentsMeta}
+                  showAccessButtons
+                  existingAccessStatus={comment.accessstatus}
+                  showEditorNotes
+                  existingEditorNotes={comment.modnotes}
+                  onDone={hydrate}
+                />
+              </TableCell>
+              <TableCell>
+                <CheckboxInput
+                  value={selectedCommentIds.includes(comment.id)}
+                  onChange={() => toggleIsSelected(comment.id)}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <BulkControls
+        ids={selectedCommentIds}
+        cancel={clearSelectedCommentIds}
+        onDone={onBulkDelete}
+      />
+    </>
+  )
+}
+
+const Renderer = ({ items, hydrate }: RendererProps<FullComment>) => {
+  return <CommentsByUser comments={items!} hydrate={hydrate} />
+}
+
+export default () => (
+  <>
+    <Heading variant="h1">Comment Moderation</Heading>
+    <PaginatedView<FullComment>
+      name="admin-comments"
+      viewName={ViewNames.GetFullComments}
+      sortOptions={[
+        {
+          label: 'Created at',
+          fieldName: 'createdat',
+        },
+      ]}
+      defaultFieldName={'createdat'}
+      urlWithSubViewNameAndPageNumberVar={routes.adminWithTabNameVarAndPageNumberVar.replace(
+        ':tabName',
+        'comments'
+      )}
+      filters={[
+        {
+          fieldName: 'createdby',
+          label: 'User',
+          type: FilterType.Equal,
+          subType: FilterSubType.UserId,
+        },
+        {
+          fieldName: 'createdbybanstatus',
+          label: 'Banned',
+          type: FilterType.NotEqual,
+          fieldValue: BanStatus.Banned,
+          defaultActive: true,
+        },
+      ]}>
+      {/* @ts-ignore */}
+      <Renderer />
+    </PaginatedView>
+  </>
+)

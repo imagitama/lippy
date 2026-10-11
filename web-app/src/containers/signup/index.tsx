@@ -1,0 +1,39 @@
+import React from 'react'
+import { useHistory } from 'react-router-dom'
+import { Helmet } from '@unhead/react/helmet'
+
+import * as routes from '@/routes'
+import { trackAction } from '@/analytics'
+
+import useUserRecord from '@/hooks/useUserRecord'
+
+import LoginForm from '@/components/login-form'
+import ErrorMessage from '@/components/error-message'
+
+export default () => {
+  const [, , user] = useUserRecord()
+  const { push } = useHistory()
+
+  if (user) {
+    return <ErrorMessage>You are already logged in</ErrorMessage>
+  }
+
+  return (
+    <>
+      <Helmet>
+        <title>Sign up to create an account</title>
+        <meta
+          name="description"
+          content="Create an account on the site to upload and manage clubs, events, comment and more."
+        />
+      </Helmet>
+      <LoginForm
+        isSignUp
+        onSuccess={() => {
+          trackAction('Signup', 'Click sign-up button')
+          push(routes.setupProfile)
+        }}
+      />
+    </>
+  )
+}

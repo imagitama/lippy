@@ -1,0 +1,180 @@
+import React, { useState } from 'react'
+import TextField from '@mui/material/TextField'
+import { makeStyles } from '@mui/styles'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+
+import Markdown from '@/components/markdown'
+import ImageUploader from '@/components/image-uploader'
+import Button from '@/components/button'
+import Tabs from '@/components/tabs'
+import { BucketNames } from 'shared/modules/attachments'
+
+const useStyles = makeStyles({
+  input: {
+    width: '100%',
+    marginBottom: '1rem',
+  },
+  controls: {
+    textAlign: 'center',
+  },
+  root: {
+    display: 'flex',
+  },
+  col: {
+    width: '50%',
+    padding: '1rem',
+    height: '100vh',
+    '&:last-child > *': {
+      height: '100%',
+      overflow: 'auto',
+    },
+  },
+})
+
+export default ({
+  content = '',
+  onChange,
+  isDisabled = false,
+  allowImages = true,
+}: {
+  content: string
+  onChange: (newText: string) => void
+  isDisabled?: boolean
+  allowImages?: boolean
+}) => {
+  const classes = useStyles()
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false)
+
+  // TODO: Insert where cursor is
+  const addToMarkdown = (txt: string) => {
+    const newContent = (content ? content : '') + `\n\n${txt}`
+    onChange(newContent)
+  }
+
+  const onImageUploadedWithUrl = (urls: string[]) => {
+    addToMarkdown(
+      `:::image{url="${urls[0]}"}
+This is a caption
+:::`
+    )
+    setIsImageEditorOpen(false)
+  }
+
+  const onClickAddButtonWithUrl = () =>
+    addToMarkdown(
+      `:::button{url="https://www.google.com"}
+  Click me!
+:::`
+    )
+
+  const onClickAddWarning = () =>
+    addToMarkdown(
+      `:::warning
+  This is a warning
+:::`
+    )
+
+  const onClickAddInfo = () =>
+    addToMarkdown(
+      `:::info
+  This is some info
+:::`
+    )
+
+  const onClickAddTab = () =>
+    addToMarkdown(
+      `:::tab
+  Tab A
+:::`
+    )
+
+  const onClickAddTabContents = () =>
+    addToMarkdown(
+      `:::tabContents
+  Contents of my tab.
+:::`
+    )
+
+  const onClickAddImage = () =>
+    setIsImageEditorOpen((currentVal) => !currentVal)
+
+  return (
+    <Tabs
+      items={[
+        {
+          name: 'editor',
+          label: 'Editor',
+          noLazy: true,
+          contents: (
+            <>
+              <TextField
+                value={content}
+                onChange={(e) => onChange(e.target.value)}
+                multiline
+                minRows={75}
+                maxRows={25}
+                className={classes.input}
+                variant="outlined"
+                disabled={isDisabled}
+              />
+              <a href="https://www.markdownguide.org/" target="_blank">
+                Markdown <OpenInNewIcon />
+              </a>{' '}
+              supported{' '}
+              <Button
+                size="small"
+                color="secondary"
+                onClick={onClickAddButtonWithUrl}>
+                Button (URL)
+              </Button>{' '}
+              <Button size="small" color="secondary" onClick={onClickAddInfo}>
+                Info
+              </Button>{' '}
+              <Button
+                size="small"
+                color="secondary"
+                onClick={onClickAddWarning}>
+                Warning
+              </Button>{' '}
+              {allowImages && (
+                <Button
+                  size="small"
+                  color="secondary"
+                  onClick={onClickAddImage}>
+                  Image
+                </Button>
+              )}{' '}
+              <Button size="small" color="secondary" onClick={onClickAddTab}>
+                Tab
+              </Button>{' '}
+              <Button
+                size="small"
+                color="secondary"
+                onClick={onClickAddTabContents}>
+                Tab contents
+              </Button>{' '}
+              {isImageEditorOpen ? (
+                <>
+                  <br />
+                  <br />
+                  <ImageUploader
+                    // TODO: Better bucket
+                    bucketName={BucketNames.Attachments}
+                    onDone={onImageUploadedWithUrl}
+                    // TODO: Better path
+                    directoryPath="pages"
+                  />
+                </>
+              ) : null}
+            </>
+          ),
+        },
+        {
+          name: 'preview',
+          label: 'Preview',
+          contents: <Markdown source={content} replaceImagesWithButtons />,
+        },
+      ]}
+    />
+  )
+}

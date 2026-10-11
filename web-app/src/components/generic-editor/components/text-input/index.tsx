@@ -1,0 +1,29 @@
+import React from 'react'
+
+import TextInput from '@/components/text-input'
+import { TextEditableField } from '@/editable-fields'
+
+export default ({
+  editableField,
+  onChange,
+  value,
+}: {
+  editableField: TextEditableField<any>
+  value: string
+  onChange: (newStr: string | null) => void
+}) => (
+  <TextInput
+    onChange={(e) =>
+      onChange(
+        editableField.emptyAsNull && e.target.value === ''
+          ? null
+          : e.target.value
+      )
+    }
+    value={value || ''}
+    multiline={editableField.multiline === true}
+    minRows={editableField.multiline ? 3 : 0}
+    fullWidth
+    isDisabled={editableField.isEditable === false}
+  />
+)

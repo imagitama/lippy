@@ -1,0 +1,131 @@
+import React from 'react'
+
+import useDatabaseQuery, {
+  OrderDirections,
+  Operators,
+} from '@/hooks/useDatabaseQuery'
+import { HistoryEntry, ViewNames } from 'shared/modules/history'
+
+import HistoryResults from '@/components/history-results'
+import ErrorMessage from '@/components/error-message'
+import LoadingIndicator from '@/components/loading-indicator'
+import NoResultsMessage from '@/components/no-results-message'
+import Heading from '@/components/heading'
+import Button from '../button'
+import { routes } from '@/routes'
+
+const History = ({
+  id,
+  type,
+  limit,
+}: {
+  id?: string
+  type?: string
+  limit: number
+}) => {
+  const [isLoading, lastErrorCode, results] = useDatabaseQuery<HistoryEntry>(
+    ViewNames.GetFullHistory,
+    id && type
+      ? [
+          ['parenttable', Operators.EQUALS, type],
+          ['parentid', Operators.EQUALS, id],
+        ]
+      : [],
+    {
+      limit: limit,
+      orderBy: ['createdat', OrderDirections.DESC],
+      queryName: 'admin-history',
+    }
+  )
+
+  if (isLoading || !results || !Array.isArray(results)) {
+    return <LoadingIndicator />
+  }
+
+  if (lastErrorCode !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCode}>
+        Failed to load history
+      </ErrorMessage>
+    )
+  }
+
+  if (!results.length) {
+    return <NoResultsMessage>No history found</NoResultsMessage>
+  }
+
+  return <HistoryResults results={results} />
+}
+
+const MetaHistory = ({
+  id,
+  type,
+  limit,
+}: {
+  id?: string
+  type?: string
+  limit?: number
+}) => {
+  const [isLoading, lastErrorCode, results] = useDatabaseQuery<HistoryEntry>(
+    ViewNames.GetFullHistory,
+    id && type
+      ? [
+          ['parenttable', Operators.EQUALS, type],
+          ['parentid', Operators.EQUALS, id],
+        ]
+      : [],
+    {
+      limit: limit,
+      orderBy: ['createdat', OrderDirections.DESC],
+      queryName: 'admin-history',
+    }
+  )
+
+  if (isLoading || !results || !Array.isArray(results)) {
+    return <LoadingIndicator />
+  }
+
+  if (lastErrorCode !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCode}>
+        Failed to load history
+      </ErrorMessage>
+    )
+  }
+
+  if (!results.length) {
+    return <NoResultsMessage>No history found</NoResultsMessage>
+  }
+
+  return <HistoryResults results={results} />
+}
+
+const AdminGenericHistory = ({
+  id,
+  type,
+  metaType,
+  limit = 20,
+}: {
+  id?: string
+  type?: string
+  metaType?: string
+  limit?: number
+}) => (
+  <>
+    <Button
+      url={routes.adminHistoryWithQueryParamVars
+        .replace(':userId', '')
+        .replace(':parentType', type || '')
+        .replace(':parentId', id || '')}
+      size="small"
+      color="secondary">
+      View In History
+    </Button>
+    <Heading variant="h3">Basic Details</Heading>
+    <History id={id} type={type} limit={limit} />
+    <Heading variant="h3">Metadata</Heading>
+    <MetaHistory id={id} type={metaType} limit={limit} />
+  </>
+)
+
+export default AdminGenericHistory

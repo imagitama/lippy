@@ -1,0 +1,25 @@
+import { fieldTypes } from '@/generic-forms'
+import { Page } from 'shared/modules/pages'
+import type { EditableField } from './'
+
+const fields: EditableField<Page>[] = [
+  {
+    name: 'title',
+    label: 'Title',
+    type: fieldTypes.text,
+    isRequired: true,
+  },
+  {
+    name: 'description',
+    label: 'Description',
+    type: fieldTypes.text,
+    default: '',
+  },
+  {
+    name: 'content',
+    label: 'Content',
+    type: fieldTypes.textMarkdown,
+  },
+]
+
+export default fields

@@ -1,0 +1,64 @@
+import React from 'react'
+import { useParams } from 'react-router'
+import { Helmet } from '@unhead/react/helmet'
+
+import { BanStatus, FullUser, ViewNames } from 'shared/modules/users'
+
+import useDataStoreItem from '@/hooks/useDataStoreItem'
+import useIsModerator from '@/hooks/useIsModerator'
+
+import UserOverview from '@/components/user-overview'
+import LoadingIndicator from '@/components/loading-indicator'
+import ErrorMessage from '@/components/error-message'
+import UserOverviewForEditor from '@/components/user-overview-for-editor'
+
+export default () => {
+  const { userId } = useParams<{ userId: string }>()
+  const isMod = useIsModerator()
+  const [isLoadingUser, lastErrorCodeLoadingUser, user] =
+    useDataStoreItem<FullUser>(ViewNames.GetFullUsers, userId, {
+      queryName: 'user-overview',
+    })
+
+  if (isLoadingUser) {
+    return <LoadingIndicator message="Loading user profile..." />
+  }
+
+  if (lastErrorCodeLoadingUser !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCodeLoadingUser}>
+        Failed to the user
+      </ErrorMessage>
+    )
+  }
+
+  if (!user) {
+    return <ErrorMessage>Failed to load the user (invalid user)</ErrorMessage>
+  }
+
+  if (user.banstatus === BanStatus.Banned && !isMod)
+    return <ErrorMessage>User is banned.</ErrorMessage>
+
+  return (
+    <>
+      <Helmet>
+        <title>View {user.username}'s profile</title>
+        <meta
+          name="description"
+          content={`View the user profile of ${user.username}.`}
+        />
+      </Helmet>
+      {user.banstatus === BanStatus.Banned && isMod && (
+        <ErrorMessage>
+          User is banned. You can view their profile because you are a staff
+          member.
+        </ErrorMessage>
+      )}
+      {isMod ? (
+        <UserOverviewForEditor user={user} />
+      ) : (
+        <UserOverview user={user} />
+      )}
+    </>
+  )
+}

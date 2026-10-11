@@ -1,0 +1,267 @@
+import React, { useEffect, useState } from 'react'
+import CheckIcon from '@mui/icons-material/Check'
+import CloseIcon from '@mui/icons-material/Close'
+import { makeStyles } from '@mui/styles'
+import RefreshIcon from '@mui/icons-material/Refresh'
+
+import { ReactComponent as PatreonIcon } from '@/assets/images/icons/patreon.svg'
+import { handleError } from '@/error-handling'
+import { callFunction } from '@/supabase'
+import { UserMeta } from 'shared/modules/users'
+import { CollectionNames } from 'shared/modules/users'
+
+import useUserId from '@/hooks/useUserId'
+import useIsPatron from '@/hooks/useIsPatron'
+import useDataStoreItem from '@/hooks/useDataStoreItem'
+
+import Button from '@/components/button'
+import LoadingIndicator from '@/components/loading-indicator'
+import ErrorMessage from '@/components/error-message'
+import Paper from '@/components/paper'
+import Heading from '@/components/heading'
+import NoResultsMessage from '@/components/no-results-message'
+import SuccessMessage from '@/components/success-message'
+import useUserPreferences from '@/hooks/useUserPreferences'
+import UserPreferenceEditor from '../user-preference-editor'
+
+const patreonOAuthUrl = `https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${process.env.REACT_APP_PATREON_CLIENT_ID}&redirect_uri=${process.env.REACT_APP_PATREON_REDIRECT_URI}&scope=identity%20campaigns.members`
+let oauthCode
+
+interface GetPatreonUserPayload {
+  code: string
+}
+
+interface GetPatreonUserInfoResult {
+  rewardIds: string[]
+}
+
+// TODO: Move to module
+enum FunctionNames {
+  GetPatreonUserInfo = 'getpatreonuserinfo',
+}
+
+const getPatreonUserInfoWithCode = async (
+  oauthCode: string
+): Promise<GetPatreonUserInfoResult> => {
+  const { data } = await callFunction<
+    GetPatreonUserPayload,
+    GetPatreonUserInfoResult
+  >(FunctionNames.GetPatreonUserInfo, {
+    code: oauthCode,
+  })
+  return data
+}
+
+const useStyles = makeStyles({
+  connectedMessage: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  icon: {
+    fontSize: '150%',
+    marginRight: '1rem',
+  },
+  rewardItem: {
+    marginBottom: '0.5rem',
+  },
+})
+
+interface RewardMeta {
+  title: string
+  description: string
+}
+
+const rewardMetaById: { [key: number]: RewardMeta } = {
+  // 4508629: {
+  //   title: 'Pedestals',
+  //   description:
+  //     'When you edit an asset you can upload a special 360 degree video of your asset to show it off. Instructions are in our Discord server under #patrons.',
+  // },
+  // 4508436: {
+  //   title: 'Shout-out on the site',
+  //   description:
+  //     'Your name and avatar is listed on the Patreons page on this site (click More in navigation and click Patreon).',
+  // },
+  // 5934668: {
+  //   title: 'Feature Asset',
+  //   description:
+  //     'When editing your assets you can click the Feature button and it will be randomly selected to be shown on the homepage.',
+  // },
+}
+
+enum ErrorCode {
+  Unknown,
+}
+
+const ShowPatreonPublicallyToggle = () => (
+  <UserPreferenceEditor
+    name="ispatronpublic"
+    label="Show my Patreon patron status publically"
+    defaultValue={true}
+  />
+)
+
+const PatreonConnectForm = () => {
+  const userId = useUserId()
+  const [isLoadingMeta, lastErrorCodeLoadingMeta, metaResult, hydrate] =
+    useDataStoreItem<UserMeta>(CollectionNames.UsersMeta, userId || false, {
+      queryName: 'usermeta-patreon',
+    })
+  const [isComplete, setIsComplete] = useState<boolean | null>(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [lastErrorCode, setLastErrorCode] = useState<null | ErrorCode>(null)
+  const classes = useStyles()
+  const isPatron = useIsPatron()
+
+  const clear = () => {
+    setLastErrorCode(null)
+    setIsLoading(false)
+    setIsComplete(null)
+  }
+
+  useEffect(() => {
+    async function main() {
+      try {
+        let queryParams: any = window.location.search
+
+        if (!queryParams) {
+          return
+        }
+
+        queryParams = queryParams.replace('?', '')
+        queryParams = queryParams.split('&')
+        queryParams = queryParams
+          // @ts-ignore
+          .map((paramWithEquals) => paramWithEquals.split('='))
+          // @ts-ignore
+          .reduce((params, [key, val]) => ({ ...params, [key]: val }), {})
+
+        if (!queryParams.code) {
+          return
+        }
+
+        setIsLoading(true)
+        setLastErrorCode(null)
+        setIsComplete(false)
+
+        oauthCode = queryParams.code
+
+        const { rewardIds } = await getPatreonUserInfoWithCode(oauthCode)
+
+        if (!rewardIds) {
+          throw new Error(
+            'Function failed to get patreon user info with code (maybe 401?)'
+          )
+        }
+
+        setIsLoading(false)
+        setLastErrorCode(null)
+
+        setIsComplete(true)
+
+        hydrate()
+      } catch (err) {
+        console.error(err)
+        setIsLoading(false)
+        setLastErrorCode(ErrorCode.Unknown) // TODO: Map this
+        setIsComplete(false)
+        handleError(err)
+      }
+    }
+
+    main()
+  }, [])
+
+  const TryAgainButton = () => <Button onClick={clear}>Start Again</Button>
+
+  if (isLoading || isLoadingMeta) {
+    return <LoadingIndicator message="Loading data..." />
+  }
+
+  if (lastErrorCode !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCode as unknown as string}>
+        Failed to talk to Patreon
+        <br />
+        <br />
+        <TryAgainButton />
+      </ErrorMessage>
+    )
+  }
+
+  if (lastErrorCodeLoadingMeta !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCodeLoadingMeta}>
+        Failed to talk to Patreon (meta)
+        <br />
+        <br />
+        <TryAgainButton />
+      </ErrorMessage>
+    )
+  }
+
+  if (isComplete || isPatron) {
+    if (isPatron) {
+      return (
+        <>
+          <SuccessMessage icon={<CheckIcon />}>
+            You have successfully connected your account with Patreon!
+            <br />
+            <br />
+            It may take up to 30 minutes for your account to be shown on our
+            Patreon page and your profile to be updated.
+          </SuccessMessage>
+          <p>
+            You can click this button to refresh your account:
+            <br />
+            <br />
+            <Button
+              url={patreonOAuthUrl}
+              openInNewTab={false}
+              icon={<RefreshIcon />}
+              color="secondary">
+              Refresh with Patreon
+            </Button>
+          </p>
+          <p>
+            <ShowPatreonPublicallyToggle />
+          </p>
+        </>
+      )
+    } else {
+      return (
+        <>
+          <Paper>
+            <div className={classes.icon}>
+              <CloseIcon />
+            </div>
+            <div>
+              We successfully found your Patreon account but failed to identify
+              you as a patreon member. Please ensure you are a patron and try
+              again. If it still doesn't work please contact our staff in our
+              Discord.
+            </div>
+            <br />
+            <TryAgainButton />
+          </Paper>
+        </>
+      )
+    }
+  }
+
+  return (
+    <div>
+      <p>Click the button below to open Patreon and connect your account.</p>
+      <Button
+        url={patreonOAuthUrl}
+        openInNewTab={false}
+        size="large"
+        icon={<PatreonIcon />}
+        switchIconSide>
+        Connect with Patreon
+      </Button>
+    </div>
+  )
+}
+
+export default PatreonConnectForm

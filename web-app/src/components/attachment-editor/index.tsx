@@ -1,0 +1,425 @@
+import React, { useEffect, useState } from 'react'
+import { makeStyles } from '@mui/styles'
+import SaveIcon from '@mui/icons-material/Save'
+
+import useDataStoreEdit from '@/hooks/useDataStoreEdit'
+import { handleError } from '@/error-handling'
+import {
+  Attachment,
+  AttachmentFields,
+  AttachmentReason,
+  AttachmentType,
+  BucketNames,
+  CollectionNames,
+} from 'shared/modules/attachments'
+
+import ImageUploader from '@/components/image-uploader'
+import LoadingIndicator from '@/components/loading-indicator'
+import ErrorMessage from '@/components/error-message'
+import SuccessMessage from '@/components/success-message'
+import TextInput from '@/components/text-input'
+import CheckboxInput from '@/components/checkbox-input'
+import TagInput from '@/components/tag-input'
+import Button from '@/components/button'
+import FormControls from '@/components/form-controls'
+import AttachmentOutput from '@/components/attachment'
+import InfoMessage from '@/components/info-message'
+import { getYouTubeVideoIdFromUrl, getIsUrlAYoutubeVideo } from '@/utils'
+import { THUMBNAIL_HEIGHT, THUMBNAIL_WIDTH } from '@/config'
+import { CustomTheme } from '@/themes'
+import useIsBanned from '@/hooks/useIsBanned'
+import NoPermissionMessage from '@/components/no-permission-message'
+import useDataStoreItem from '@/hooks/useDataStoreItem'
+import useDataStoreEditOrCreate from '@/hooks/useDataStoreEditOrCreate'
+import TagsInput from '../tags-input'
+
+const attachmentTypesMeta: { [key: string]: { name: string } } = {
+  [AttachmentType.Image]: {
+    name: 'Image',
+  },
+  [AttachmentType.Url]: {
+    name: 'URL (YouTube video, social media post, etc)',
+  },
+}
+
+const useStyles = makeStyles<CustomTheme>((theme) => ({
+  content: {
+    margin: '2rem 0',
+  },
+  attachmentTypes: {
+    marginTop: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attachmentType: {
+    padding: '1rem',
+    margin: '0 0.5rem',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    '&:hover': {
+      cursor: 'pointer',
+      background: theme.palette.action.hover,
+    },
+  },
+  textInput: {
+    width: '100%',
+    margin: '0.5rem 0',
+  },
+  outputWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetBtn: {
+    margin: '0.5rem 0',
+    textAlign: 'center',
+  },
+  typeData: {
+    margin: '1rem 0 0.5rem',
+    fontSize: '150%',
+    textShadow: '1px 1px 1px #000',
+    textAlign: 'center',
+  },
+  attachmentImage: {
+    width: '50%',
+    margin: '2rem',
+    border: '2px solid #FFF',
+  },
+  title: {
+    fontSize: '150%',
+    textAlign: 'center',
+  },
+  expandBtnWrapper: {
+    textAlign: 'center',
+  },
+}))
+
+function TypeSelector({
+  onSelectedType,
+}: {
+  onSelectedType: (type: AttachmentType) => void
+}) {
+  const classes = useStyles()
+
+  return (
+    <div>
+      <div className={classes.title}>Select a type:</div>
+      <div className={classes.attachmentTypes}>
+        {Object.entries(attachmentTypesMeta).map(([typeName, { name }]) => (
+          <div
+            key={typeName}
+            className={classes.attachmentType}
+            onClick={() => onSelectedType(typeName as AttachmentType)}>
+            {name}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const getPreloadImageUrl = (url: string): string | undefined => {
+  if (getIsUrlAYoutubeVideo(url)) {
+    return `https://i.ytimg.com/vi/${getYouTubeVideoIdFromUrl(
+      url
+    )}/hqdefault.jpg`
+  }
+}
+
+const AttachmentEditor = ({
+  attachmentId,
+  reason,
+  parentTable,
+  parentId,
+  existingAttachment,
+  onDone = undefined,
+  onCancel = undefined,
+  isPreExpanded = false,
+  allowEmptyIsAdult = true,
+}: {
+  reason: AttachmentReason
+  attachmentId?: string
+  parentTable?: string
+  parentId?: string
+  existingAttachment?: Attachment
+  onDone?: (fields: Attachment) => void
+  onCancel?: () => void
+  isPreExpanded?: boolean
+  allowEmptyIsAdult?: boolean
+}) => {
+  const emptyRecord: AttachmentFields = {
+    reason,
+    type: null,
+    url: '',
+    thumbnailurl: '',
+    title: '',
+    description: '',
+    isadult: allowEmptyIsAdult ? null : false, // null to inherit
+    license: null,
+    tags: [],
+    sourceurl: null,
+    parenttable: parentTable || null,
+    parentid: parentId || null,
+  }
+
+  const [fields, setFields] = useState<AttachmentFields>(
+    existingAttachment
+      ? {
+          reason: existingAttachment.reason,
+          url: existingAttachment.url,
+          type: existingAttachment.type,
+          thumbnailurl: existingAttachment.thumbnailurl,
+          title: existingAttachment.title,
+          description: existingAttachment.description,
+          license: existingAttachment.license,
+          isadult: existingAttachment.isadult,
+          tags: existingAttachment.tags,
+          sourceurl: existingAttachment.sourceurl,
+          parenttable: existingAttachment.parenttable,
+          parentid: existingAttachment.parentid,
+        }
+      : emptyRecord
+  )
+  const [isSaving, isSaveSuccess, lastErrorCodeSaving, saveOrCreate] =
+    useDataStoreEditOrCreate<Attachment>(
+      CollectionNames.Attachments,
+      attachmentId || false
+    )
+  const classes = useStyles()
+  const [newUrl, setNewUrl] = useState('')
+  const [isExpanded, setIsExpanded] = useState(isPreExpanded)
+  const [isLoading, lastErrorCodeLoading, attachment] =
+    useDataStoreItem<Attachment>(
+      CollectionNames.Attachments,
+      !existingAttachment && attachmentId ? attachmentId : false,
+      {
+        queryName: `attachment-${attachmentId || ''}`,
+      }
+    )
+
+  useEffect(() => {
+    if (!attachment) {
+      return
+    }
+    setFields(attachment)
+  }, [JSON.stringify(attachment)])
+
+  if (useIsBanned()) {
+    return <NoPermissionMessage />
+  }
+
+  const setField = (name: keyof AttachmentFields, newVal: any) =>
+    setFields((currentVal) => ({
+      ...currentVal,
+      Lippy: newVal,
+    }))
+
+  const onFileUploadedWithUrl = async (urls: string[]) => {
+    setField('url', urls[0])
+  }
+
+  const reset = () =>
+    setFields({
+      ...emptyRecord,
+    })
+
+  const onSaveClick = async () => {
+    try {
+      console.debug(`AttachmentEditor.onSaveClick`, { fields })
+
+      const newAttachment = await saveOrCreate(fields)
+
+      if (!newAttachment) throw new Error('Did not get an attachment')
+
+      if (onDone) {
+        onDone(newAttachment)
+      }
+    } catch (err) {
+      console.error(err)
+      handleError(err)
+    }
+  }
+
+  if (isSaving) {
+    return (
+      <LoadingIndicator
+        message={`${attachmentId ? 'Saving' : 'Creating'} attachment...`}
+      />
+    )
+  }
+
+  if (isSaveSuccess) {
+    return (
+      <SuccessMessage>
+        Attachment has been {attachmentId ? 'edited' : 'created'} successfully
+      </SuccessMessage>
+    )
+  }
+
+  if (lastErrorCodeSaving !== null) {
+    return (
+      <ErrorMessage errorCode={lastErrorCodeSaving}>
+        Failed to save attachment
+      </ErrorMessage>
+    )
+  }
+
+  const onSelectedType = (newType: AttachmentType) =>
+    setFields((currentVal) => ({
+      ...currentVal,
+      type: newType,
+    }))
+
+  if (!fields.type) {
+    return <TypeSelector onSelectedType={onSelectedType} />
+  }
+
+  const clearType = () =>
+    setFields((currentFields) => ({ ...currentFields, type: null }))
+
+  if (!fields.url) {
+    switch (fields.type) {
+      case AttachmentType.Image:
+        return (
+          <ImageUploader
+            bucketName={BucketNames.Attachments}
+            directoryPath={''}
+            onDone={onFileUploadedWithUrl}
+            onCancel={clearType}
+          />
+        )
+      case AttachmentType.Url:
+        return (
+          <>
+            <TextInput
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              className={classes.textInput}
+              placeholder="eg. https://www.youtube.com/abcdef"
+              label="Enter the URL"
+            />
+            <InfoMessage>
+              Only YouTube videos will be embedded (everything else will show a
+              button to visit the URL)
+            </InfoMessage>
+            <FormControls>
+              <Button onClick={() => setField('url', newUrl)}>Done</Button>
+              <Button onClick={clearType} color="secondary">
+                Cancel
+              </Button>
+            </FormControls>
+          </>
+        )
+      default:
+        return <>Unknown type "{fields.type}"</>
+    }
+  }
+
+  const SaveButton = () => (
+    <FormControls>
+      <Button onClick={() => onSaveClick()} icon={<SaveIcon />}>
+        {attachmentId ? 'Save' : 'Create'} Attachment
+      </Button>
+      <Button onClick={reset} color="secondary">
+        Start Again
+      </Button>
+      {onCancel && (
+        <Button onClick={() => onCancel()} color="secondary">
+          Cancel
+        </Button>
+      )}
+    </FormControls>
+  )
+
+  return (
+    <div>
+      <div>
+        <div className={classes.content}>
+          <div>
+            <div className={classes.outputWrapper}>
+              <AttachmentOutput
+                attachmentId={attachmentId}
+                attachment={fields}
+                showFileUrls
+              />
+            </div>
+            <div className={classes.typeData}>
+              {/* @ts-ignore */}
+              Attachment: {attachmentTypesMeta[fields.type].name}{' '}
+            </div>
+          </div>
+          {isExpanded ? (
+            <>
+              Thumbnail
+              {fields.thumbnailurl ? (
+                <div>
+                  <img src={fields.thumbnailurl} alt="Thumbnail" />
+                  <br />
+                  <Button
+                    color="secondary"
+                    onClick={() => setField('thumbnailurl', null)}>
+                    Clear
+                  </Button>
+                </div>
+              ) : (
+                <ImageUploader
+                  onDone={(urls) => setField('thumbnailurl', urls[0])}
+                  bucketName={BucketNames.AttachmentThumbnails}
+                  preloadImageUrl={getPreloadImageUrl(fields.url)}
+                  requiredWidth={THUMBNAIL_WIDTH}
+                  requiredHeight={THUMBNAIL_HEIGHT}
+                />
+              )}
+              <TextInput
+                label="Title"
+                value={fields.title}
+                onChange={(e) => setField('title', e.target.value)}
+                className={classes.textInput}
+              />
+              <TextInput
+                label="Description"
+                value={fields.description}
+                onChange={(e) => setField('description', e.target.value)}
+                className={classes.textInput}
+                multiline
+                minRows={5}
+              />
+              Tags (optional)
+              <TagsInput
+                currentTags={fields.tags}
+                onChange={(newTags) => setField('tags', newTags)}
+                showRecommendedTags={false}
+              />
+              <CheckboxInput
+                label="Is adult content"
+                value={fields.isadult === true}
+                onChange={(newBool) => setField('isadult', newBool)}
+              />
+              {parentTable ? (
+                <>
+                  <br />
+                  <em>
+                    Note: If the parent is also flagged as adult it may override
+                    this setting
+                  </em>
+                </>
+              ) : null}
+            </>
+          ) : (
+            <div className={classes.expandBtnWrapper}>
+              <Button
+                onClick={() => setIsExpanded(true)}
+                color="secondary"
+                size="small">
+                Add Extra Metadata...
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+      <SaveButton />
+    </div>
+  )
+}
+
+export default AttachmentEditor

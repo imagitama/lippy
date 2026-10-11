@@ -1,0 +1,91 @@
+import React, { forwardRef } from 'react'
+import { makeStyles } from '@mui/styles'
+import MaterialDialog, {
+  DialogProps as MaterialDialogProps,
+} from '@mui/material/Dialog'
+import CloseIcon from '@mui/icons-material/Close'
+
+import { mediaQueryForTabletsOrBelow } from '@/media-queries'
+
+const useStyles = makeStyles({
+  root: {
+    padding: '0.5rem',
+    [mediaQueryForTabletsOrBelow]: {
+      padding: '0.25rem',
+    },
+  },
+  paper: {
+    maxWidth: '100%',
+    padding: '0.5rem',
+    [mediaQueryForTabletsOrBelow]: {
+      width: '100%',
+      padding: '0.25rem',
+      '&&': {
+        margin: '0.25rem',
+        maxHeight: 'calc(100% - 0.5rem)',
+      },
+    },
+  },
+  content: {
+    '& > &&': {
+      padding: '0.5rem',
+      [mediaQueryForTabletsOrBelow]: {
+        padding: '0.25rem',
+      },
+    },
+  },
+  fullWidth: {
+    '&&': {
+      maxWidth: '100%',
+      width: '100%',
+    },
+  },
+  hideBtn: {
+    width: '30px',
+    height: '30px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    padding: '0.5rem',
+    top: 0,
+    right: 0,
+    zIndex: 50,
+    cursor: 'pointer',
+    transition: '100ms all',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+  },
+})
+
+export interface DialogProps extends Omit<MaterialDialogProps, 'open'> {}
+
+const Dialog = forwardRef<HTMLDivElement, DialogProps>((props, ref) => {
+  const classes = useStyles()
+
+  // TODO: Default close button
+  return (
+    <MaterialDialog
+      open
+      {...props}
+      PaperProps={{
+        className: `${classes.paper} ${
+          props.fullWidth ? classes.fullWidth : ''
+        } ${props.PaperProps?.className}`,
+      }}
+      ref={ref}>
+      {props.onClose && (
+        <div
+          className={classes.hideBtn}
+          // @ts-ignore
+          onClick={(e) => props.onClose(e, 'closeClick')}>
+          <CloseIcon />
+        </div>
+      )}
+      <div className={classes.content}>{props.children}</div>
+    </MaterialDialog>
+  )
+})
+
+export default Dialog

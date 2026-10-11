@@ -1,0 +1,391 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { makeStyles } from '@mui/styles'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import Badge from '@mui/material/Badge'
+import NotificationsIcon from '@mui/icons-material/Notifications'
+import { useLocation } from 'react-router'
+import { SupabaseClient } from '@supabase/supabase-js'
+
+import { getUserId } from '@/auth'
+import { trackAction } from '@/analytics'
+import * as routes from '@/routes'
+import { handleError } from '@/error-handling'
+import { notifications as getItemsForNotifications } from './getItems'
+import { deleteRecord } from '@/data-store'
+import { CollectionNames } from 'shared/modules/notifications'
+
+import useIsLoggedIn from '@/hooks/useIsLoggedIn'
+import useUserId from '@/hooks/useUserId'
+import useUserRecord from '@/hooks/useUserRecord'
+import useSupabaseClient from '@/hooks/useSupabaseClient'
+
+import Menu, { MenuItemData } from '@/components/menu'
+import Avatar, { AvatarSize } from '@/components/avatar'
+import classNames from 'classnames'
+
+const useStyles = makeStyles({
+  root: {
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    '@media (max-width: 1300px)': {
+      flexWrap: 'wrap',
+      flexDirection: 'column-reverse',
+    },
+  },
+  items: {
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    '@media (max-width: 1300px)': {
+      width: '100%',
+      justifyContent: 'flex-end',
+      // '&:last-child': {
+      //   marginBottom: '0.5rem',
+      // },
+    },
+  },
+  item: {
+    marginRight: '1rem',
+    transition: 'all 100ms',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    '& svg': {
+      fontSize: '150%',
+    },
+    '& a': {
+      textDecoration: 'none',
+    },
+  },
+  iconItem: {
+    '&:hover': {
+      transform: 'scale(1.1)',
+    },
+  },
+  mobileBtn: {
+    width: '100%',
+    marginRight: 0,
+    marginBottom: '0.5rem',
+    '& > *': {
+      width: '100%',
+    },
+  },
+  username: {
+    marginLeft: '0.5rem',
+  },
+  loggedIn: {
+    // fontWeight: 'bold',
+  },
+  submitBtn: {
+    '&&': {
+      marginRight: '1rem',
+      paddingRight: '0.25rem',
+    },
+    '& svg': {
+      marginLeft: '-4px',
+    },
+  },
+})
+
+interface MenuItemDetails {
+  label?: any
+  icon?: any
+  count?: null | number
+  items?: MenuItemData[]
+  getItems?: (supabase: SupabaseClient) => Promise<MenuItemData[]>
+  onClick?: (id: string) => void | Promise<void>
+  hideIfNone?: boolean
+  loggedInOnly?: boolean
+  noItemsMessage?: string
+  onClear?: () => void | Promise<void>
+  subscribe?: (callback: () => void) => void
+  badge?: boolean
+}
+
+const AvatarMenuItem = () => {
+  const classes = useStyles()
+  const [, , myUser] = useUserRecord()
+  const isLoggedIn = useIsLoggedIn()
+
+  return (
+    <>
+      {/* <Avatar
+        url={myUser?.avatarurl || undefined}
+        username={myUser?.username || undefined}
+        size={AvatarSize.Tiny}
+      /> */}
+      <span
+        className={classNames(classes.username, {
+          [classes.loggedIn]: myUser !== null,
+        })}>
+        {isLoggedIn
+          ? myUser
+            ? myUser.username
+              ? myUser.username
+              : 'Logged in'
+            : 'Logged in (no user)'
+          : 'Logged out'}
+      </span>
+      <KeyboardArrowDownIcon />
+    </>
+  )
+}
+
+const getLoggedInMenuItems = (currentPath: string, userId: string) => [
+  {
+    id: 'my-account',
+    url: routes.myAccount,
+    label: 'My Account',
+  },
+  {
+    id: 'events',
+    url: routes.myAccountWithTabNameVar.replace(':tabName', 'events'),
+    label: 'My Events',
+  },
+  {
+    id: 'clubs',
+    url: routes.myAccountWithTabNameVar.replace(':tabName', 'clubs'),
+    label: 'My Clubs',
+  },
+  {
+    id: 'clubs',
+    url: routes.myAccountWithTabNameVar.replace(':tabName', 'performers'),
+    label: 'My Performers',
+  },
+  {
+    id: 'sign-out',
+    url: routes.logoutWithVar.replace(':currentPath', currentPath),
+    label: 'Logout',
+  },
+]
+
+const getLoggedOutMenuItems = (currentPath: string) => [
+  {
+    id: 'login',
+    url: routes.loginWithVar.replace(':currentPath', currentPath),
+    label: 'Log In',
+  },
+  {
+    id: 'sign-up',
+    url: routes.signUp,
+    label: 'Sign Up',
+  },
+]
+
+const getMenu = (
+  supabase: SupabaseClient,
+  currentPath: string,
+  userId: string | null
+): { [id: string]: MenuItemDetails } => ({
+  notifications: {
+    icon: NotificationsIcon,
+    count: null,
+    getItems: getItemsForNotifications,
+    onClick: async (id) => {
+      if (id === 'clear-all') {
+        return
+      }
+      console.debug(`clicked notification ${id}...`)
+      await deleteRecord(supabase, CollectionNames.Notifications, id)
+    },
+    loggedInOnly: true,
+    noItemsMessage: 'No notifications',
+    onClear: async () => {
+      const userId = getUserId()
+
+      if (!userId) {
+        console.warn(`No user ID!`) // they could have signed out
+        return
+      }
+
+      console.debug(`Clearing all notifications...`)
+
+      await supabase
+        .from(CollectionNames.Notifications)
+        .delete()
+        .eq('recipient', userId)
+    },
+    subscribe: (callback) => {
+      setInterval(() => {
+        callback()
+      }, 30 * 60 * 1000) // 30 seconds TODO: replace with sync?
+    },
+  },
+  user: {
+    badge: false,
+    label: <AvatarMenuItem />,
+    items: userId
+      ? getLoggedInMenuItems(currentPath, userId)
+      : getLoggedOutMenuItems(currentPath),
+  },
+})
+
+export default ({
+  isMobile = false,
+  onClose = undefined,
+}: {
+  isMobile?: boolean
+  onClose?: () => void
+}) => {
+  const isLoggedIn = useIsLoggedIn()
+  const userId = useUserId()
+  const [openId, setOpenId] = useState<string | null>(null)
+  const classes = useStyles()
+  const buttonRefs = useRef<{ [id: string]: HTMLDivElement }>({})
+  const location = useLocation()
+  const [menuItems, setMenuItems] = useState<{ [id: string]: MenuItemData[] }>(
+    {}
+  )
+  const supabase = useSupabaseClient()
+
+  const toggleMenu = (id: string) => {
+    if (openId === id) {
+      closeAllDropdowns()
+    } else {
+      setOpenId(id)
+      trackAction('AccountMenu', 'Open dropdown', id)
+    }
+  }
+
+  const closeAllDropdowns = () => {
+    setOpenId(null)
+    if (onClose) {
+      onClose()
+    }
+  }
+
+  // console.debug(`account-menu.render`, { userId })
+
+  const menu = getMenu(supabase, location.pathname, userId)
+
+  const hydrateMenu = async (id: string) => {
+    try {
+      const menuDetails = menu[id]
+
+      if (!menuDetails || !menuDetails.getItems) {
+        return
+      }
+
+      const newItemsResult = await menuDetails.getItems(supabase)
+
+      setMenuItems((currentItems) => ({
+        ...currentItems,
+        [id]: newItemsResult,
+      }))
+    } catch (err) {
+      console.error(err)
+      handleError(err)
+    }
+  }
+
+  useEffect(() => {
+    for (const id in menu) {
+      ;(async () => {
+        try {
+          const menuDetails = menu[id]
+
+          hydrateMenu(id)
+
+          if (menuDetails.subscribe) {
+            menuDetails.subscribe(() => {
+              hydrateMenu(id)
+            })
+          }
+        } catch (err) {
+          console.error(err)
+          handleError(err)
+        }
+      })()
+    }
+  }, [isLoggedIn])
+
+  return (
+    <div className={classes.root}>
+      <div className={classes.items}>
+        {Object.entries(menu)
+          .filter(
+            ([id, { hideIfNone, loggedInOnly }]: [string, MenuItemDetails]) => {
+              if (loggedInOnly && !isLoggedIn) {
+                return false
+              }
+              if (hideIfNone && (!menuItems[id] || !menuItems[id].length)) {
+                return false
+              }
+              return true
+            }
+          )
+          .map(([id, { label, icon: Icon, badge }]) => (
+            <div
+              key={id}
+              ref={(elem) => {
+                if (!elem) {
+                  return
+                }
+                buttonRefs.current[id] = elem
+              }}
+              className={classes.item}
+              onClick={() => toggleMenu(id)}>
+              {badge !== false ? (
+                <Badge
+                  badgeContent={
+                    menuItems[id]
+                      ? menuItems[id].filter(
+                          (item) => item.includeInCount !== false
+                        ).length
+                      : null
+                  }
+                  color="primary">
+                  {label ? label : Icon ? <Icon /> : null}
+                </Badge>
+              ) : (
+                label
+              )}
+            </div>
+          ))}
+        {Object.entries(menu).map(
+          ([id, { items, onClick, noItemsMessage, onClear }]) => {
+            const clearItem = {
+              id: 'clear-all',
+              onClick: async () => {
+                if (!onClear) {
+                  return
+                }
+
+                await onClear()
+
+                hydrateMenu(id)
+              },
+              label: 'Clear All',
+            }
+            return (
+              <Menu
+                key={id}
+                isOpen={openId === id}
+                buttonRef={buttonRefs.current[id]}
+                onClose={() => closeAllDropdowns()}
+                items={
+                  items
+                    ? items.concat(onClear ? [clearItem] : [])
+                    : menuItems[id] && menuItems[id].length
+                    ? menuItems[id].concat(onClear ? [clearItem] : [])
+                    : noItemsMessage
+                    ? [
+                        {
+                          id: 'no-items',
+                          label: noItemsMessage,
+                          disabled: true,
+                        },
+                      ]
+                    : []
+                }
+                onClickItem={onClick}
+                onRemove={() => hydrateMenu(id)}
+              />
+            )
+          }
+        )}
+      </div>
+    </div>
+  )
+}
