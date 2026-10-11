@@ -5,6 +5,7 @@ import { store } from '@/store'
 import { USER_IS_LOADING, USER_LOADED, USER_UNLOADED } from '@/slices/user'
 import { readRecord } from '@/data-store'
 import { MyUser, ViewNames } from 'shared/modules/users'
+import { accountVerifySuccess } from './slices/app'
 
 export const loadUserIntoStore = async (userId: string | null) => {
   try {
@@ -68,6 +69,8 @@ client.auth.onAuthStateChange(async (event, session) => {
       case 'INITIAL_SESSION':
         // fires once on load, session is null if logged out
         if (session?.user) {
+          console.debug(`user found in the session, loading...`)
+
           loggedInUser = session.user
 
           await loadUserIntoStore(loggedInUser.id)
@@ -75,9 +78,17 @@ client.auth.onAuthStateChange(async (event, session) => {
           for (const cb of onAuthStateChangedCallbacks) {
             cb(true)
           }
+        } else {
+          console.debug(`no user in the session - skipping`)
         }
         break
       case 'SIGNED_IN':
+        const params = new URLSearchParams(window.location.hash.substring(1))
+        if (params.get('type') === 'signup') {
+          console.debug(`sign in was started from an email verification link`)
+          store.dispatch(accountVerifySuccess())
+        }
+
         loggedInUser = session!.user!
 
         await loadUserIntoStore(loggedInUser.id)
@@ -88,6 +99,9 @@ client.auth.onAuthStateChange(async (event, session) => {
         break
       case 'SIGNED_OUT':
         loggedInUser = null
+
+        await unloadUserFromStore()
+
         for (const cb of onAuthStateChangedCallbacks) {
           cb(false)
         }
@@ -149,6 +163,14 @@ export const signup = async (email: string, password: string) => {
   const { user, session } = data
 
   console.debug(`signup success!`)
+
+  if (!user) throw new Error('No user')
+
+  if (session) {
+    console.debug('user automatically signed in')
+  } else {
+    console.debug(`user needs to verify their account`)
+  }
 }
 
 export const getUserId = (): string | null => {

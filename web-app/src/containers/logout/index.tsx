@@ -30,8 +30,13 @@ export default () => {
           from: fromPath,
         })
 
+        const newRoute =
+          !fromPath || fromPath.includes(routes.myAccount)
+            ? routes.home
+            : fromPath
+
         setTimeout(() => {
-          push(fromPath || routes.home)
+          push(newRoute)
         }, formHideDelay)
       } catch (err) {
         console.error(err)

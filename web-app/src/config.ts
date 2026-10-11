@@ -9,8 +9,9 @@ export const EMAIL = 'contact@[todo]'
 export const GITHUB_REPO_URL = 'https://github.com/imagitama/lippy'
 export const DEFAULT_PAGE_DESC = 'Lippy'
 
-export const VRCHAT_GROUP_ID = 'Lippy.1234'
-export const VRCHAT_GROUP_URL = 'https://vrchat.com/home/group/grp_1234'
+export const VRCHAT_GROUP_ID = 'LIPPY.5986'
+export const VRCHAT_GROUP_URL =
+  'https://vrchat.com/home/group/grp_3cd9eaf5-e61d-4d74-a1a8-f10f1c9763c4'
 
 export const JOIN_VRCHAT_WORLD_URL = 'https://vrchat.com/WORLD_TODO'
 

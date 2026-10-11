@@ -44,7 +44,13 @@ export default () => {
         onSuccess={() => {
           trackAction('Login', 'Click login button')
           const fromPath = queryParams.get('from')
-          push(fromPath || routes.home)
+
+          const newRoute =
+            !fromPath || fromPath.includes(routes.login)
+              ? routes.home
+              : fromPath
+
+          push(newRoute)
         }}
       />
     </>

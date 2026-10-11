@@ -15,7 +15,7 @@ import UsernameEditor from '@/components/username-editor'
 import AdultContentToggle from '@/components/adult-content-toggle'
 import Heading from '@/components/heading'
 import NoPermissionMessage from '@/components/no-permission-message'
-import SocialMediaUsernamesEditor from '@/components/social-media-usernames-editor'
+import VrchatUsernameEditor from '@/components/vrchat-username-editor'
 import BioEditor from '@/components/bio-editor'
 import NotificationSettings from '@/components/notification-settings'
 import MyReports from '@/components/my-reports'
@@ -115,8 +115,8 @@ const View = () => {
                     trackAction(analyticsCategoryName, 'Click save bio button')
                   }
                 />
-                <Heading variant="h3">VR Games</Heading>
-                <VrPlatformChooser />
+                {/* <Heading variant="h3">VR Games</Heading>
+                <VrPlatformChooser /> */}
               </>
             ),
           },
@@ -160,24 +160,6 @@ const View = () => {
             ),
           },
           {
-            name: 'social',
-            label: 'Social',
-            contents: (
-              <>
-                <Heading variant="h2">Social Media</Heading>
-                <p>These are shown to everyone on your profile.</p>
-                <SocialMediaUsernamesEditor
-                  onSaveClick={() =>
-                    trackAction(
-                      analyticsCategoryName,
-                      'Click save social media'
-                    )
-                  }
-                />
-              </>
-            ),
-          },
-          {
             name: 'vrchat',
             label: 'VRChat',
             contents: (
@@ -186,25 +168,26 @@ const View = () => {
                 <Heading variant="h3">Group</Heading>
                 <VrchatGroupButton />
                 <Heading variant="h3">Link Account</Heading>
+                <VrchatUsernameEditor />
                 <LinkAccountWithVrchatForm />
               </>
             ),
           },
-          {
-            name: 'patreon',
-            label: 'Patreon',
-            contents: (
-              <>
-                <Heading variant="h2">Patreon</Heading>
-                <Heading variant="h3">Link Account</Heading>
-                <PatreonConnectForm />
-                <Heading variant="h3">Badge</Heading>
-                <SupporterBadgeForm
-                  route={routes.viewUserWithVar.replace(':userId', user.id)}
-                />
-              </>
-            ),
-          },
+          // {
+          //   name: 'patreon',
+          //   label: 'Patreon',
+          //   contents: (
+          //     <>
+          //       <Heading variant="h2">Patreon</Heading>
+          //       <Heading variant="h3">Link Account</Heading>
+          //       <PatreonConnectForm />
+          //       <Heading variant="h3">Badge</Heading>
+          //       <SupporterBadgeForm
+          //         route={routes.viewUserWithVar.replace(':userId', user.id)}
+          //       />
+          //     </>
+          //   ),
+          // },
           {
             name: 'reports',
             label: 'My Reports',

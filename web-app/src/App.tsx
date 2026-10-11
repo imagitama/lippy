@@ -9,6 +9,7 @@ import {
 import { makeStyles } from '@mui/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { useHead } from '@unhead/react'
+import { Club as ClubIcon, Performer as PerformerIcon } from '@/icons'
 
 import * as routes from './routes'
 
@@ -129,13 +130,19 @@ const WelcomeMessage = () => {
   if (isHidden) return null
   return (
     <Dialog onClose={() => setIsHidden(true)}>
-      <Heading variant="h1">Welcome</Heading>
-      <Heading variant="h2">Club Owners/Managers</Heading>
+      <Heading variant="h1" noTopMargin>
+        Welcome to Lippy
+      </Heading>
+      <Heading variant="h2">
+        <ClubIcon /> Club Owners/Managers
+      </Heading>
       <BodyText>
         Create an account, link it with VRChat and import your VRChat group.
         Then you can create events.
       </BodyText>
-      <Heading variant="h2">Event Performers</Heading>
+      <Heading variant="h2">
+        <PerformerIcon /> Event Performers
+      </Heading>
       <BodyText>
         Create an account, create a performer profile (stage name), then event
         organisers can assign you to events.

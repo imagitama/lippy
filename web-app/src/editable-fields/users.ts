@@ -25,53 +25,8 @@ const fields: EditableField<User>[] = [
     type: fieldTypes.textMarkdown,
   },
   {
-    name: 'vrchatuserid',
-    label: 'VRChat user ID',
-    type: fieldTypes.text,
-  },
-  {
     name: 'vrchatusername',
     label: 'VRChat username',
-    type: fieldTypes.text,
-  },
-  {
-    name: 'discordusername',
-    label: 'Discord username',
-    type: fieldTypes.text,
-  },
-  {
-    name: 'twitterusername',
-    label: 'Twitter username',
-    type: fieldTypes.text,
-  },
-  {
-    name: 'telegramusername',
-    label: 'Telegram username',
-    type: fieldTypes.text,
-  },
-  {
-    name: 'youtubechannelid',
-    label: 'Youtube channel ID',
-    type: fieldTypes.text,
-  },
-  {
-    name: 'twitchusername',
-    label: 'Twitch username',
-    type: fieldTypes.text,
-  },
-  {
-    name: 'neosvrusername',
-    label: 'NeosVR username',
-    type: fieldTypes.text,
-  },
-  {
-    name: 'chilloutvrusername',
-    label: 'ChilloutVR username',
-    type: fieldTypes.text,
-  },
-  {
-    name: 'patreonusername',
-    label: 'Patreon username',
     type: fieldTypes.text,
   },
 ]

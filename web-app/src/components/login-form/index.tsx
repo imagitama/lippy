@@ -109,6 +109,8 @@ const getUserFriendlyMessageFromCode = (code: AuthErrorCode): string => {
   switch (code!) {
     case 'invalid_credentials':
       return 'username or password is incorrect'
+    case 'email_not_confirmed':
+      return 'your email has not been confirmed yet'
   }
   return code as string
 }
@@ -359,8 +361,9 @@ const Form = ({
         url={isSignUp ? routes.login : routes.signUp}
         className={classes.signUpButton}
         icon={<PersonAddIcon />}
-        switchIconSide>
-        {isSignUp ? 'Login' : 'Sign Up'}
+        switchIconSide
+        color="secondary">
+        {isSignUp ? 'Return To Login' : 'Sign Up'}
       </Button>
     </div>
   )

@@ -14,6 +14,7 @@ import SuccessMessage from '@/components/success-message'
 import Paper from '@/components/paper'
 import Heading from '@/components/heading'
 import { FunctionNames } from '@/vrchat'
+import FormControls from '../form-controls'
 
 enum GenerateVrchatLinkCodeErrorCode {
   NeedVrchatUsername = 'NeedVrchatUsername',
@@ -230,12 +231,12 @@ const Form = () => {
   }
 
   return (
-    <>
+    <FormControls>
       <Button onClick={() => hydrateUser()} color="secondary">
         Refresh
-      </Button>
+      </Button>{' '}
       <Button onClick={onClickGenerateCode}>Generate Code</Button>
-    </>
+    </FormControls>
   )
 }
 
@@ -264,7 +265,7 @@ const LinkAccountWithVrchatForm = () => {
     <Paper>
       <div>To link your VRChat account with your account you must:</div>
       <ol>
-        <li>Add your VRChat username to your account (go to Social tab)</li>
+        <li>Add your VRChat username to your account (see above)</li>
         <li>Generate a unique 4 digit code</li>
         <li>
           Add the code somewhere in your VRChat in-game status (not your bio)

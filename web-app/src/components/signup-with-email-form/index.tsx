@@ -15,6 +15,8 @@ import Button from '@/components/button'
 import LoadingIndicator from '@/components/loading-indicator'
 import ErrorMessage from '@/components/error-message'
 import { signup } from '@/auth'
+import SuccessMessage from '../success-message'
+import { routes } from '@/routes'
 
 const useStyles = makeStyles({
   root: {
@@ -132,6 +134,7 @@ const SignUpWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [passwordVal, setPasswordVal] = useState('')
   const classes = useStyles()
 
+  const [isSuccess, setIsSuccess] = useState<boolean | null>(null)
   const [lastResult, setLastResult] = useState<null>(null)
   const [lastErrorCode, setLastErrorCode] = useState<null>(null)
 
@@ -145,6 +148,7 @@ const SignUpWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
       })
 
       setIsWorking(true)
+      setIsSuccess(null)
 
       // const recaptchaToken = await getRecaptchaToken()
 
@@ -154,11 +158,14 @@ const SignUpWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
       await signup(usernameVal, passwordVal)
 
-      onSuccess()
+      // onSuccess()
+
+      setIsSuccess(true)
     } catch (err) {
       console.error(err)
       handleError(err)
       setIsWorking(false)
+      setIsSuccess(false)
     }
   }
 
@@ -166,6 +173,35 @@ const SignUpWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
     if (e.key == 'Enter') {
       console.debug(`user pressed enter, submitting...`)
       submit()
+    }
+  }
+
+  if (isSuccess !== null) {
+    if (isSuccess) {
+      return (
+        <SuccessMessage>
+          You have signed up successfully.
+          <br />
+          <br />
+          <strong>
+            You must now verify your email address and login again.
+          </strong>
+          <br />
+          <br />
+          <FormControls>
+            <Button url={routes.login} color="secondary">
+              Go To Login
+            </Button>
+          </FormControls>
+        </SuccessMessage>
+      )
+    } else {
+      return (
+        <ErrorMessage>
+          Something failed with the signup. Please report this to our Discord
+          server to have it looked into.
+        </ErrorMessage>
+      )
     }
   }
 

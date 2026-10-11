@@ -21,8 +21,6 @@ import SuccessMessage from '@/components/success-message'
 import LoadingIndicator from '@/components/loading-indicator'
 import Button from '@/components/button'
 import Heading from '@/components/heading'
-import VrPlatformChooser from '@/components/vr-platform-chooser'
-import CheckboxInput from '@/components/checkbox-input'
 import FormControls from '@/components/form-controls'
 import UsernameEditor from '@/components/username-editor'
 import Tabs, { useTabs } from '@/components/tabs'
@@ -31,6 +29,8 @@ import { CONTENT_MAX_WIDTH_PX } from '@/config'
 import AdultContentToggle from '../adult-content-toggle'
 import BodyText from '../body-text'
 import Link from '../link'
+import Paper from '../paper'
+import { Club as ClubIcon, Performer as PerformerIcon } from '@/icons'
 
 const useStyles = makeStyles({
   root: {
@@ -81,17 +81,11 @@ const TabPanel = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-const TabControls = ({
-  onFinish,
-  isCreating,
-}: {
-  onFinish: () => void
-  isCreating: boolean
-}) => {
+const TabControls = ({ onFinish }: { onFinish: () => void }) => {
   const { count, activeTabIdx, back, next } = useTabs()
   const [, , user] = useUserRecord()
   const classes = useStyles()
-  const canFinish = !isCreating && user && user.username
+  const canFinish = user && user.username
   return (
     <FormControls className={classes.formControls}>
       <Button
@@ -110,7 +104,7 @@ const TabControls = ({
           size="large"
           color="tertiary"
           icon={<FlagIcon />}>
-          Finish
+          Finish {!canFinish ? '(you must set a username)' : ''}
         </Button>
       ) : (
         <Button
@@ -128,28 +122,38 @@ const TabControls = ({
 
 const WelcomeMessage = () => (
   <>
-    <Heading variant="h3">Welcome to Lippy</Heading>
-    <Heading variant="h4">Club Owners / Managers</Heading>
-    <BodyText>
-      Connect your account with VRChat{' '}
-      <Link to={routes.myAccountWithTabNameVar.replace(':tabName', 'vrchat')}>
-        here
-      </Link>{' '}
-      then go to <Link to={routes.clubs}>Clubs</Link> and click Create to get
-      started.
-    </BodyText>
-    <Heading variant="h4">Performers</Heading>
-    <BodyText>
-      A user on this site can have as many performers (stage names) as they
-      like. Club owners/managers will search by name and add you to events. Get
-      started by going to <Link to={routes.performers}>Performers</Link> and
-      click Create.
-    </BodyText>
-    <Heading variant="h4">Attendees</Heading>
-    <BodyText>
-      Go to <Link to={routes.home}>Events</Link> (the homepage) and attend
-      events, follow clubs and follow performers.
-    </BodyText>
+    <Paper>
+      <Heading variant="h4" noTopMargin>
+        <ClubIcon /> Club Owners/Managers
+      </Heading>
+      <BodyText>
+        Connect your account with VRChat{' '}
+        <Link to={routes.myAccountWithTabNameVar.replace(':tabName', 'vrchat')}>
+          here
+        </Link>{' '}
+        then go to <Link to={routes.clubs}>Clubs</Link> and click Create to get
+        started.
+      </BodyText>
+    </Paper>
+    <Paper>
+      <Heading variant="h4" noTopMargin>
+        <PerformerIcon /> Performers
+      </Heading>
+      <BodyText>
+        A user on this site can have as many performers (stage names) as they
+        like. Club owners/managers will search by name and add you to events.
+        Get started by going to <Link to={routes.performers}>Performers</Link>{' '}
+        and click Create.
+      </BodyText>
+    </Paper>
+    <Paper>
+      <Heading variant="h4" noTopMargin>
+        Attendees
+      </Heading>
+      <BodyText>
+        Connecting your VRChat account is not required. Go nuts!
+      </BodyText>
+    </Paper>
   </>
 )
 
@@ -161,13 +165,13 @@ const SetupProfile = ({
   onDone: () => void
 }) => {
   const userId = useUserId()
-  const [isLoadingUser, , user, hydrateUser] = useUserRecord()
-  const [isCreating, isCreateSuccess, lastCreateErrorCode, save] =
-    useDataStoreEdit<UserPreferences>(
-      CollectionNames.UserPreferences,
-      userId || false
-    )
-  const [subscribeToDigest, setSubscribeToDigest] = useState(false)
+  // const [isLoadingUser, , user, hydrateUser] = useUserRecord()
+  // const [isSaving, isCreateSuccess, lastCreateErrorCode, save] =
+  //   useDataStoreEdit<UserPreferences>(
+  //     CollectionNames.UserPreferences,
+  //     userId || false
+  //   )
+  // const [subscribeToDigest, setSubscribeToDigest] = useState(false)
   const location = useLocation()
   const classes = useStyles()
 
@@ -179,79 +183,72 @@ const SetupProfile = ({
     return <LoadingIndicator message="Waiting for user ID..." />
   }
 
-  if (isLoadingUser || !user) {
-    return <LoadingIndicator message="Loading your details..." />
-  }
+  // if (isLoadingUser || !user) {
+  //   return <LoadingIndicator message="Loading your details..." />
+  // }
 
-  if (isCreating) {
-    return <LoadingIndicator message="Creating your profile..." />
-  }
+  // if (isSaving) {
+  //   return <LoadingIndicator message="Saving your profile..." />
+  // }
 
-  if (isCreateSuccess) {
-    return (
-      <SuccessMessage>
-        Profile has been setup successfully! Redirecting you...
-      </SuccessMessage>
-    )
-  }
+  // if (isCreateSuccess) {
+  //   return (
+  //     <SuccessMessage>
+  //       Profile has been setup successfully! Redirecting you...
+  //     </SuccessMessage>
+  //   )
+  // }
 
-  if (lastCreateErrorCode) {
-    return (
-      <ErrorMessage errorCode={lastCreateErrorCode}>
-        Failed to create your profile
-      </ErrorMessage>
-    )
-  }
+  // if (lastCreateErrorCode) {
+  //   return (
+  //     <ErrorMessage errorCode={lastCreateErrorCode}>
+  //       Failed to create your profile
+  //     </ErrorMessage>
+  //   )
+  // }
 
-  const onFinish = async () => {
-    try {
-      trackAction(analyticsCategory, 'Click finish button')
+  // const onFinish = async () => {
+  //   try {
+  //     trackAction(analyticsCategory, 'Click finish button')
 
-      const notificationPrefs = {
-        ...defaultNotificationPrefs,
-        events: {
-          ...defaultNotificationPrefs.events,
-          [NotificationEvent.DIGEST]: subscribeToDigest,
-        },
-      }
+  //     const notificationPrefs = {
+  //       ...defaultNotificationPrefs,
+  //       events: {
+  //         ...defaultNotificationPrefs.events,
+  //         [NotificationEvent.DIGEST]: subscribeToDigest,
+  //       },
+  //     }
 
-      await save({
-        notificationprefs: notificationPrefs,
-      })
+  //     await save({
+  //       notificationprefs: notificationPrefs,
+  //     })
 
-      hydrateUser()
+  //     hydrateUser()
 
-      onDone()
-    } catch (err) {
-      console.error('Failed to save preferences', err)
-      handleError(err)
-    }
-  }
+  //     onDone()
+  //   } catch (err) {
+  //     console.error('Failed to save preferences', err)
+  //     handleError(err)
+  //   }
+  // }
 
   return (
     <div className={classes.root}>
-      <Heading variant="h1">Welcome</Heading>
-      <Heading variant="h2">Set up your profile</Heading>
-
+      <Heading variant="h1" center>
+        Welcome to Lippy
+      </Heading>
+      <Heading variant="h2" center>
+        Set up your profile
+      </Heading>
       <Tabs
         horizontal
         items={[
           {
-            name: 'welcome',
-            label: 'Welcome',
+            name: 'username',
+            label: 'Username (required)',
             contents: (
               <TabPanel>
-                <WelcomeMessage />
-              </TabPanel>
-            ),
-          },
-          {
-            name: 'vr-platforms',
-            label: 'VR',
-            contents: (
-              <TabPanel>
-                {/* @ts-ignore */}
-                <VrPlatformChooser analyticsCategory={analyticsCategory} />{' '}
+                <UsernameEditor />
               </TabPanel>
             ),
           },
@@ -280,16 +277,27 @@ const SetupProfile = ({
             ),
           },
           {
-            name: 'username',
-            label: 'Username (required)',
+            name: 'how-it-works',
+            label: 'Next Steps',
             contents: (
               <TabPanel>
-                <UsernameEditor />
+                <WelcomeMessage />
               </TabPanel>
             ),
           },
+          // {
+          //   name: 'vr-platforms',
+          //   label: 'VR',
+          //   contents: (
+          //     <TabPanel>
+          //       {/* @ts-ignore */}
+          //       <VrPlatformChooser analyticsCategory={analyticsCategory} />{' '}
+          //     </TabPanel>
+          //   ),
+          // },
+          // },
         ]}>
-        <TabControls onFinish={onFinish} isCreating={isCreating} />
+        <TabControls onFinish={onDone} />
       </Tabs>
     </div>
   )

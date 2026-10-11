@@ -12,6 +12,8 @@ import useDataStoreEdit from '@/hooks/useDataStoreEdit'
 
 import ErrorMessage from '@/components/error-message'
 import CheckboxInput from '@/components/checkbox-input'
+import LoadingIndicator from '../loading-indicator'
+import SuccessMessage from '../success-message'
 
 const useStyles = makeStyles({
   savingState: {
@@ -72,7 +74,7 @@ const UserPreferenceEditor = ({
       setTempNewValue(newVal)
 
       await save({
-        Lippy: newVal,
+        [name]: newVal,
       })
 
       hydrate()
@@ -92,15 +94,17 @@ const UserPreferenceEditor = ({
         isDisabled={isLoadingUser || isSaving}
         label={label}
       />
-      <span className={classes.savingState}>
-        {isSaving
-          ? 'Saving...'
-          : isSaveSuccess
-          ? 'Saved!'
-          : lastSaveErrorCode !== null
-          ? `Failed to save (code ${lastSaveErrorCode})`
-          : ''}
-      </span>
+      {isSaving ? (
+        <LoadingIndicator message="Saving preferece..." />
+      ) : isSaveSuccess ? (
+        <SuccessMessage>Preference changed successfully</SuccessMessage>
+      ) : lastSaveErrorCode ? (
+        <ErrorMessage errorCode={lastSaveErrorCode}>
+          Failed to save preference
+        </ErrorMessage>
+      ) : (
+        ''
+      )}
     </div>
   )
 }

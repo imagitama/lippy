@@ -1,4 +1,4 @@
-import { AccessStatus } from './common.ts'
+import { AccessStatus, type SocialFields } from './common.ts'
 
 // minimal data shared between ALL views
 export interface CoreUserFields extends Record<string, unknown> {
@@ -12,27 +12,16 @@ export interface CoreUserFields extends Record<string, unknown> {
   createdat: string // date
 }
 
-export interface SocialMediaUsernames extends Record<string, unknown> {
-  // profile
-  vrchatuserid: string | null
-  vrchatusername: string | null
-  discordusername: string | null
-  twitterusername: string | null
-  telegramusername: string | null
-  youtubechannelid: string | null
-  twitchusername: string | null
-  neosvrusername: string | null
-  chilloutvrusername: string | null
-  patreonusername: string | null
-}
-
-export interface User extends CoreUserFields, SocialMediaUsernames {
+export interface User extends CoreUserFields {
   id: string
 
   // basic stuff
   username: string
   avatarurl: string | null
   bio: string | null
+
+  // linking
+  vrchatusername: string | null
 
   // meta
   lastmodifiedby: string | null

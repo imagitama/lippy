@@ -3,6 +3,7 @@ import Typography, { TypographyProps } from '@mui/material/Typography'
 import { makeStyles } from '@mui/styles'
 import { mediaQueryForTabletsOrBelow } from '@/media-queries'
 import { CustomTheme, specialFontFamily } from '@/themes'
+import classNames from 'classnames'
 
 function getFontSizeForVariant(variant?: string) {
   switch (variant) {
@@ -18,7 +19,13 @@ function getFontSizeForVariant(variant?: string) {
 }
 
 const useStyles = makeStyles<CustomTheme>((theme) => ({
-  heading: ({ variant }: { variant?: string }) => ({
+  heading: ({ variant, center }: { variant?: string; center?: boolean }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    '& svg': {
+      marginRight: '0.5rem',
+    },
+
     fontSize: getFontSizeForVariant(variant),
 
     [mediaQueryForTabletsOrBelow]: {
@@ -41,6 +48,9 @@ const useStyles = makeStyles<CustomTheme>((theme) => ({
   inline: {
     display: 'inline',
   },
+  center: {
+    justifyContent: 'center',
+  },
 }))
 
 interface Props extends TypographyProps {
@@ -51,6 +61,7 @@ interface Props extends TypographyProps {
   fakeLink?: boolean
   style?: Object
   inline?: boolean
+  center?: boolean
 }
 
 export default forwardRef<HTMLHeadingElement, Props>(
@@ -65,6 +76,7 @@ export default forwardRef<HTMLHeadingElement, Props>(
       fakeLink,
       style = {},
       inline,
+      center,
     },
     ref
   ) => {
@@ -73,11 +85,17 @@ export default forwardRef<HTMLHeadingElement, Props>(
     return (
       <Typography
         variant={variant}
-        className={`${classes.heading} ${
-          noTopMargin ? classes.noTopMargin : ''
-        } ${noMargin ? classes.noMargin : ''} ${className} ${
-          fakeLink ? classes.fakeLink : ''
-        } ${inline ? classes.inline : ''}`}
+        className={classNames(
+          classes.heading,
+          {
+            [classes.noTopMargin]: noTopMargin,
+            [classes.noMargin]: noMargin,
+            [classes.fakeLink]: fakeLink,
+            [classes.inline]: inline,
+            [classes.center]: center,
+          },
+          className
+        )}
         ref={ref}
         id={id}
         style={style}>

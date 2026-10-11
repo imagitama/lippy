@@ -76,6 +76,14 @@ export const Remove = React.lazy(() => import('@mui/icons-material/Remove').then
 export const Article = React.lazy(() => import('@mui/icons-material/Newspaper').then(result => result.default))
 export const SubEditor = React.lazy(() => import('@mui/icons-material/Rule').then(result => result.default))
 
+export const Event = React.lazy(() => import('@mui/icons-material/Event').then(result => result.default))
+export const Club = React.lazy(() => import('@mui/icons-material/Apartment').then(result => result.default))
+export const Performer = React.lazy(() => import('@mui/icons-material/EmojiPeople').then(result => result.default))
+export const VrchatJoin = React.lazy(() =>
+  import('@kurone-kito/launchpad-icons-react/dist/Join').then(result => ({ default: result.default })))
+export const VrchatGroup = React.lazy(() =>
+  import('@kurone-kito/launchpad-icons-react/dist/Group').then(result => ({ default: result.default }))
+)
 // approval queue
 export const Decline = React.lazy(() => import('@mui/icons-material/Cancel').then(result => result.default))
 export const Queue = React.lazy(() => import('@mui/icons-material/AccessTime').then(result => result.default))

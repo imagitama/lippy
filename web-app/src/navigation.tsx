@@ -1,12 +1,20 @@
 import React from 'react'
-import EventIcon from '@mui/icons-material/Event'
-import ApartmentIcon from '@mui/icons-material/Apartment'
-import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople'
-import JoinIcon from '@kurone-kito/launchpad-icons-react/dist/Join'
 
 import { MyUser, UserRoles } from 'shared/modules/users'
 import * as routes from './routes'
-import { DISCORD_URL, JOIN_VRCHAT_WORLD_URL } from './config'
+import {
+  DISCORD_URL,
+  JOIN_VRCHAT_WORLD_URL,
+  VRCHAT_GROUP_ID,
+  VRCHAT_GROUP_URL,
+} from './config'
+import {
+  VrchatJoin as VrchatJoinIcon,
+  VrchatGroup as VrchatGroupIcon,
+  Club as ClubIcon,
+  Performer as PerformerIcon,
+  Event as EventIcon,
+} from './icons'
 
 export interface MenuItem {
   id: string
@@ -65,7 +73,13 @@ const items: MenuItem[] = [
     id: 'vrc-world',
     url: JOIN_VRCHAT_WORLD_URL,
     label: 'VRC World',
-    icon: JoinIcon,
+    icon: VrchatJoinIcon,
+  },
+  {
+    id: 'vrc-group',
+    url: VRCHAT_GROUP_URL,
+    label: VRCHAT_GROUP_ID,
+    icon: VrchatGroupIcon,
   },
   {
     id: 'events',
@@ -77,13 +91,13 @@ const items: MenuItem[] = [
     id: 'clubs',
     url: routes.clubs,
     label: 'Clubs',
-    icon: ApartmentIcon,
+    icon: ClubIcon,
   },
   {
     id: 'performers',
     url: routes.performers,
     label: 'Performers',
-    icon: EmojiPeopleIcon,
+    icon: PerformerIcon,
   },
   {
     id: 'more',
