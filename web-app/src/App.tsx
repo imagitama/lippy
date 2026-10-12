@@ -131,6 +131,11 @@ const WelcomeMessage = () => {
       <Heading variant="h1" noTopMargin>
         Welcome to Lippy
       </Heading>
+      <Heading variant="h2">What is this place?</Heading>
+      <BodyText>
+        A VRChat world that lets you walk down a street and find clubs as real
+        buildings you can "walk into", complete with event info like posters.
+      </BodyText>
       <Heading variant="h2">
         <ClubIcon /> Club Owners/Managers
       </Heading>

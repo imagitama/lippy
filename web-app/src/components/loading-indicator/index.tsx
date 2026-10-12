@@ -3,6 +3,7 @@ import { makeStyles } from '@mui/styles'
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom'
 import styled from '@emotion/styled'
 import { keyframes } from '@emotion/react'
+import { specialFontFamily } from '@/themes'
 
 const useStyles = makeStyles(() => ({
   progress: {
@@ -12,8 +13,8 @@ const useStyles = makeStyles(() => ({
   message: {
     marginTop: '1rem',
     textAlign: 'center',
-    fontWeight: 100,
     fontSize: '125%',
+    fontFamily: specialFontFamily,
   },
   iconWrapper: {
     display: 'flex',
