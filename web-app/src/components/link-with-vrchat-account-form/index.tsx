@@ -100,7 +100,8 @@ const UnlinkAccountWithVrchatButton = (props: ButtonProps) => {
   if (lastErrorCodeUnlinking !== null || (unlinkResult && unlinkResult.error)) {
     return (
       <ErrorMessage onOkay={clearUnlinkResult}>
-        Failed to unlink: {unlinkResult.error}
+        Failed to unlink:{' '}
+        {unlinkResult ? unlinkResult.error : lastErrorCodeUnlinking}
       </ErrorMessage>
     )
   }
