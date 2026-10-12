@@ -17,6 +17,40 @@
     <link href="/index.css" rel="stylesheet" />
     <title data-react-helmet="true"></title>
     <meta name="description" content="" data-react-helmet="true" />
+
+    <style>
+      body {
+        background-color: #282828;
+        color: #fff;
+        margin: 0;
+        padding: 0;
+      }
+
+      body,
+      #root,
+      .js-loading {
+        min-height: 100vh;
+      }
+
+      .js-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 24px 'Prompt', 'Helvetica', 'Arial', sans-serif;
+        text-align: center;
+        opacity: 0.5;
+        animation: jsLoadingPulse 2s linear infinite alternate;
+      }
+
+      @keyframes jsLoadingPulse {
+        0% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
   <body>
     <noscript> You need to enable JavaScript to run this app. </noscript>
