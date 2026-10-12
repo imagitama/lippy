@@ -40,17 +40,19 @@ enum LinkWithVrchatAccountErrorCode {
   Unknown = 'Unknown',
 }
 
-interface LinkPayload {}
-interface LinkResult {
+interface LinkWithVrchatAccountPayload {}
+
+interface LinkWithVrchatAccountResponse {
   success: boolean
   vrchatUserId?: string
   errorCode?: LinkWithVrchatAccountErrorCode
 }
 
-interface UnlinkPayload {}
-interface UnlinkResult {
+interface UnlinkWithVrchatAccountPayload {}
+
+interface UnlinkWithVrchatAccountResponse {
   success: boolean
-  errorCode?: any // TODO
+  error?: string // TODO: errorCode
 }
 
 const getMessageForErrorCode = (code: string): string => {
@@ -78,9 +80,10 @@ const UnlinkAccountWithVrchatButton = (props: ButtonProps) => {
     unlinkResult,
     performUnlink,
     clearUnlinkResult,
-  ] = useSupabaseFunction<UnlinkPayload, UnlinkResult>(
-    FunctionNames.UnlinkWithVrchatAccount
-  )
+  ] = useSupabaseFunction<
+    UnlinkWithVrchatAccountPayload,
+    UnlinkWithVrchatAccountResponse
+  >(FunctionNames.UnlinkWithVrchatAccount)
 
   useEffect(() => {
     if (!unlinkResult || !unlinkResult.success) {
@@ -94,16 +97,10 @@ const UnlinkAccountWithVrchatButton = (props: ButtonProps) => {
     return <LoadingIndicator message="Unlinking..." />
   }
 
-  if (
-    lastErrorCodeUnlinking !== null ||
-    (unlinkResult && unlinkResult.errorCode)
-  ) {
+  if (lastErrorCodeUnlinking !== null || (unlinkResult && unlinkResult.error)) {
     return (
       <ErrorMessage onOkay={clearUnlinkResult}>
-        Failed to unlink:{' '}
-        {unlinkResult && unlinkResult.errorCode
-          ? getMessageForErrorCode(unlinkResult.errorCode)
-          : 'Unknown'}
+        Failed to unlink: {unlinkResult.error}
       </ErrorMessage>
     )
   }
@@ -136,9 +133,10 @@ const Form = () => {
     linkResult,
     performLink,
     clearLinkResult,
-  ] = useSupabaseFunction<LinkPayload, LinkResult>(
-    FunctionNames.LinkWithVrchatAccount
-  )
+  ] = useSupabaseFunction<
+    LinkWithVrchatAccountPayload,
+    LinkWithVrchatAccountResponse
+  >(FunctionNames.LinkWithVrchatAccount)
   const [
     isGeneratingCode,
     lastErrorCodeGeneratingCode,
