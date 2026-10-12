@@ -1,4 +1,5 @@
 import { CollectionNames as CommentsCollectionNames } from './comments.ts'
+import { CollectionNames as EventsCollectionNames } from './events.ts'
 import { ResolutionStatus } from './common.ts'
 
 const commonReportReasonKeys = {
@@ -39,6 +40,7 @@ const commonReasons: ReportReason[] = [
 
 const reasonsByCollectionName: { [collectionName: string]: ReportReason[] } = {
   [CommentsCollectionNames.Comments]: [],
+  [EventsCollectionNames.Events]: [],
 }
 
 interface ReportReason {
@@ -50,13 +52,7 @@ interface ReportReason {
 export const getReasonsForCollectionName = (
   collectionName: string,
 ): ReportReason[] => {
-  const result = reasonsByCollectionName[collectionName]
-
-  if (!result) {
-    throw new Error(
-      `Could not find valid reasons for collection "${collectionName}"`,
-    )
-  }
+  const result = reasonsByCollectionName[collectionName] || []
 
   const withCommon = commonReasons.concat(result)
 

@@ -15,6 +15,7 @@ import navItems, {
 import { trackAction } from '@/analytics'
 import Link from '@/components/link'
 import { specialFontFamily } from '@/themes'
+import { getIsUrlAbsolute } from '@/utils'
 
 const useStyles = makeStyles({
   root: {
@@ -67,6 +68,12 @@ const MenuItemLabel = styled.span`
   }
 `
 
+const StyledMenuItem = styled(MenuItem)`
+  a {
+    color: inherit;
+  }
+`
+
 function Dropdown({
   label,
   items,
@@ -108,14 +115,29 @@ function Dropdown({
         onClose={onClose}>
         {!Array.isArray(items)
           ? React.createElement(items, { onClose })
-          : items.map(({ label, url, icon }) => (
-              <MenuItem
-                key={url}
-                onClick={url ? () => onClickItem(url) : undefined}>
-                {icon && React.createElement(icon)}
-                {label}
-              </MenuItem>
-            ))}
+          : items.map(({ label, url, icon }) => {
+              const menuItemContents = (
+                <>
+                  {icon && React.createElement(icon)}
+                  {label}
+                </>
+              )
+              return (
+                <StyledMenuItem
+                  key={url}
+                  onClick={
+                    url && !getIsUrlAbsolute(url)
+                      ? () => onClickItem(url)
+                      : undefined
+                  }>
+                  {url && getIsUrlAbsolute(url) ? (
+                    <a href={url}>{menuItemContents}</a>
+                  ) : (
+                    menuItemContents
+                  )}
+                </StyledMenuItem>
+              )
+            })}
       </Menu>
     </>
   )

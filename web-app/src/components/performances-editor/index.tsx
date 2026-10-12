@@ -292,7 +292,21 @@ const PerformancesEditor = ({
 
   const slots = getSlots(eventStartsAt, eventEndsAt)
 
-  if (!slots.length) return <>Not enough slots</>
+  if (!slots.length)
+    return (
+      <ErrorMessage>
+        You cannot configure any performances: your event has weird start or end
+        dates
+      </ErrorMessage>
+    )
+
+  if (slots.length > 1000)
+    return (
+      <ErrorMessage>
+        You cannot configure any performances: your event duration is way too
+        long
+      </ErrorMessage>
+    )
 
   const timelineStart = slots[0].getTime()
   const totalWidth = slots.length * SLOT_WIDTH_PX

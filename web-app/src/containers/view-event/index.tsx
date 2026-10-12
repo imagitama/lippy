@@ -40,6 +40,7 @@ import VisitVrchatInstanceButton from '@/components/visit-vrchat-instance-button
 import Paper from '@/components/paper'
 import FormControls from '@/components/form-controls'
 import ClubStaffControls from '@/components/club-staff-controls'
+import ReportButton from '@/components/report-button'
 
 const useStyles = makeStyles({
   root: { position: 'relative' },
@@ -285,16 +286,9 @@ const View = () => {
                 <EventAttendanceResults items={visibleAttendance} />
               ) : null}
             </div>
-            {isMod ? (
-              <div className={classes.controlGroup}>
-                <Button
-                  url={routes.editEventWithVar.replace(':eventId', id)}
-                  icon={<EditIcon />}
-                  color="secondary">
-                  Edit Event
-                </Button>
-              </div>
-            ) : null}
+            <div className={classes.controlGroup}>
+              <ReportButton type={CollectionNames.Events} id={event.id} />
+            </div>
             {isMod && (
               <>
                 <Heading variant="h3">Mod Controls</Heading>
@@ -314,6 +308,14 @@ const View = () => {
                     existingFeaturedStatus={featuredstatus}
                     onDone={hydrate}
                   />
+                </div>
+                <div className={classes.controlGroup}>
+                  <Button
+                    url={routes.editEventWithVar.replace(':eventId', id)}
+                    icon={<EditIcon />}
+                    color="secondary">
+                    Edit Event
+                  </Button>
                 </div>
                 <div className={classes.controlGroup}>
                   <HydrateVrchatInstanceButton eventId={id} hydrate={hydrate} />

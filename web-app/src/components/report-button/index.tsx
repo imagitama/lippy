@@ -29,7 +29,6 @@ const ReportButton = ({
   return (
     <Button
       color="secondary"
-      hollow={false}
       icon={<ReportIcon />}
       onClick={onBtnClick}
       url={routes.createReportWithVar

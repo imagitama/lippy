@@ -30,6 +30,8 @@ import { useState } from 'react'
 import useInterval from '@/hooks/useInterval'
 import { getPrefersBritishSpelling } from '@/utils'
 import EventDateRange from '../event-date-range'
+import FormControls from '../form-controls'
+import ReportButton from '../report-button'
 
 const StyledClubDetails = styled.div`
   font-size: 125%;
@@ -109,11 +111,16 @@ const EventPanel = ({
           <Heading variant="h2">
             <Link to={routes.viewEventWithVar.replace(':eventId', event.id)}>
               {event.name}
-            </Link>{' '}
-            <FavButtonWrapper>
-              <FavButton eventId={event.id} />
-            </FavButtonWrapper>
+            </Link>
           </Heading>
+          <FormControls>
+            <FavButton eventId={event.id} />
+            <ReportButton
+              type={CollectionNames.Events}
+              id={event.id}
+              color="secondary"
+            />
+          </FormControls>
           <EventDateRange startsAt={event.startsat} endsAt={event.endsat} />
           <Heading variant="h3">Instance</Heading>
           <VisitVrchatInstanceButton

@@ -21,16 +21,16 @@ const DateInput = ({
         <Table size="small">
           <TableBody>
             <TableRow>
-              <TableCell>UTC</TableCell>
-              <TableCell>
-                {moment.utc(value).format('YYYY-MM-DD HH:mm:ss')}
-              </TableCell>
-            </TableRow>
-            <TableRow>
               <TableCell>Local</TableCell>
               <TableCell>
                 {new Date(value).toDateString()}{' '}
                 {new Date(value).toTimeString()}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>UTC</TableCell>
+              <TableCell>
+                {moment.utc(value).format('YYYY-MM-DD HH:mm:ss')}
               </TableCell>
             </TableRow>
           </TableBody>
