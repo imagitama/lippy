@@ -8,16 +8,31 @@ import { Performance } from 'shared/modules/events'
 
 const PerformancesEditorDev = () => {
   const [val, setVal] = useState<Performance[]>([])
-  const eventStartsAt = new Date().toISOString()
-  const eventEndsAt = new Date().toISOString()
+  const MINUTE_MS = 60 * 1000
+  const HOUR_MS = 60 * MINUTE_MS
+
+  const [eventStartsAt] = useState(() =>
+    new Date(Math.round(Date.now() / MINUTE_MS) * MINUTE_MS).toISOString()
+  )
+  const [eventEndsAt] = useState(() =>
+    new Date(
+      Math.round((Date.now() + HOUR_MS) / MINUTE_MS) * MINUTE_MS
+    ).toISOString()
+  )
   return (
     <>
-      {JSON.stringify(val, null, '  ')}
+      Event starts at: {eventStartsAt}
+      <br />
+      Event ends at: {eventEndsAt}
+      <br />
+      Performances: {JSON.stringify(val, null, '  ')}
+      <br />
+      <br />
       <PerformancesEditor
         value={val}
         onChange={(newVal) => setVal(newVal)}
-        eventStartAt={eventStartsAt}
-        eventEndAt={eventEndsAt}
+        eventStartsAt={eventStartsAt}
+        eventEndsAt={eventEndsAt}
       />
     </>
   )
@@ -32,8 +47,8 @@ export default () => {
       </Helmet>
       <div>
         <h1>Forms</h1>
-        {/* <h2>Performances Editor</h2>
-        <PerformancesEditorDev /> */}
+        <h2>Performances Editor</h2>
+        <PerformancesEditorDev />
         <h2>Basic Components (Default Size)</h2>
         <Button>Click Me</Button>{' '}
         <Select label="Here We Go" button={<Button>Click Me</Button>}>

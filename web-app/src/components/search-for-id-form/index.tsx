@@ -48,8 +48,8 @@ const useStyles = makeStyles({
 })
 
 const SearchResults = styled.div`
-  display: flex;
-  align-items: center;
+  // display: flex;
+  // align-items: center;
 `
 
 // TODO: Use enums and types

@@ -24,6 +24,7 @@ import { mediaQueryForMobiles } from '@/media-queries'
 import Button from '@/components/button'
 
 import FilterButton from './components/filter-button'
+import useInterval from '@/hooks/useInterval'
 
 export interface TimeRange {
   start: Date
@@ -32,7 +33,7 @@ export interface TimeRange {
 
 export interface HorizontalTimelineProps {
   fill?: boolean
-  initialDate?: Date
+  now?: Date
   events: EventForList[]
   /** Called when an event bar is clicked. */
   onEventClick?: (event: EventForList) => void
@@ -172,7 +173,6 @@ const TickLabel = styled(Typography, {
 const RowsArea = styled.div`
   position: relative;
   min-height: 100%;
-  box-sizing: border-box;
   /* keeps the last row clear of the floating controls */
   padding-bottom: 56px;
 `
@@ -465,7 +465,7 @@ function appendToRows(
 
 const HorizontalTimeline = ({
   fill,
-  initialDate,
+  now,
   events,
   onEventClick,
   onPerformanceClick,
@@ -477,12 +477,22 @@ const HorizontalTimeline = ({
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [containerWidthPx, setContainerWidthPx] = useState(0)
-  const [nowMs, setNowMs] = useState<number>(
-    () => initialDate?.getTime() || Date.now()
-  )
+  const [nowMs, setNowMs] = useState<number>(() => now?.getTime() || Date.now())
   const [panningAnchorMs, setPanningAnchorMs] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [filters] = useEventFilters()
+
+  useEffect(() => {
+    const newNow = now?.getTime() || Date.now()
+    // console.debug(`setNowMs`, now, newNow)
+    setNowMs(newNow)
+  }, [now?.getTime()])
+
+  // useInterval(() => {
+  //   const newNow = now?.getTime() || Date.now()
+  //   console.debug(`setNowMs`, now, newNow)
+  //   setNowMs(newNow)
+  // }, 1000)
 
   const dragRef = useRef<{
     startXPx: number
@@ -519,7 +529,7 @@ const HorizontalTimeline = ({
 
   const parsedEvents = useMemo(
     () => getParsedEvents(events),
-    [events.map((ev) => ev.id).join(',')]
+    [JSON.stringify(events)]
   )
 
   const rowOfRef = useRef({
@@ -535,7 +545,7 @@ const HorizontalTimeline = ({
       ...appendToRows(favedEvents, rowOfRef.current.faved),
       ...appendToRows(otherEvents, rowOfRef.current.other),
     ]
-  }, [parsedEvents.map((ev) => ev.event.id).join(','), favedEventIds.join(',')])
+  }, [JSON.stringify(parsedEvents), JSON.stringify(favedEventIds)])
 
   const daySpans = useMemo(
     () => getDaySpans(viewStartMs, viewEndMs),

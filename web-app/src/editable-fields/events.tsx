@@ -89,21 +89,6 @@ const editableFields: EditableField<Event>[] = [
     isRequired: true,
     hint: 'Help people find and filter your event. Indicate to people what they might expect like flashing lights.',
   },
-  // {
-  //   name: 'sourceurl',
-  //   label: 'URL',
-  //   type: fieldTypes.url,
-  //   hint: 'The URL to the website for the event. Must contain https://',
-  // },
-  // {
-  //   name: 'thumbnailurl',
-  //   label: 'Thumbnail',
-  //   type: fieldTypes.imageUpload,
-  //   requiredWidth: THUMBNAIL_WIDTH,
-  //   requiredHeight: THUMBNAIL_HEIGHT,
-  //   bucketName: BucketNames.EventThumbnails,
-  //   hint: 'A thumbnail used for your event. Used when viewing the event details and in search results. Can be NSFW if the checkbox is checked below.',
-  // },
   {
     name: 'isadult',
     label: 'Is Adult',
@@ -114,28 +99,16 @@ const editableFields: EditableField<Event>[] = [
 ${nsfwRules}`,
   },
   {
-    // @ts-ignore
-    name: 'startsat_endsat',
-    label: 'Date/Time',
-    type: fieldTypes.dateRange,
-    hint: 'When the event starts and ends. All dates and times are shown in your local timezone and automatically converted.',
-    isRequired: false, // perform validation at startsat/endsat
-    startsAtFieldName: 'startsat',
-    endsAtFieldName: 'endsat',
-  },
-  {
     name: 'startsat',
     label: 'Starts At',
-    type: fieldTypes.hidden,
+    type: fieldTypes.date,
     isRequired: true,
-    isEditable: false, // needed so formFields is populated for startsat.endsAtFieldName
   },
   {
     name: 'endsat',
     label: 'Ends At',
-    type: fieldTypes.hidden,
+    type: fieldTypes.date,
     isRequired: true,
-    isEditable: false, // needed so formFields is populated for startsat.endsAtFieldName
   },
   {
     name: 'posterurl',
@@ -156,8 +129,8 @@ Adult posters can only be uploaded if the event is flagged as adult.`,
       <PerformancesEditor
         value={value || []}
         onChange={onChange}
-        eventStartAt={formFields.startsat}
-        eventEndAt={formFields.endsat}
+        eventStartsAt={formFields.startsat}
+        eventEndsAt={formFields.endsat}
       />
     ),
   } as CustomEditableField<Event, 'performances'>,

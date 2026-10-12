@@ -14,17 +14,22 @@ const DateTimeInput = ({
   onChange: (newDate: string) => void
 }) => {
   const [isDateFormatUS] = useIsDateFormatUS()
+  const onChangeRaw = (date: string) => {
+    // TODO: put this behind a prop?
+    const snapped = moment(date).clone().add(30, 'seconds').startOf('minute')
+    onChange(snapped.utc().toISOString())
+  }
   return (
     <Suspense>
       <DateFormatToggle />
       <br />
       <LazyDateTimePicker
         value={moment(value)}
-        onChange={(newVal) => onChange(newVal!.utc().toISOString())}
+        onChange={(newVal) => onChangeRaw(newVal!.utc().toISOString())}
         format={`${isDateFormatUS ? 'MM/DD' : 'DD/MM'}/YYYY hh:mm A`}
       />
       <Button
-        onClick={() => onChange(new Date().toISOString())}
+        onClick={() => onChangeRaw(new Date().toISOString())}
         color="secondary"
         hollow>
         Now
@@ -35,7 +40,7 @@ const DateTimeInput = ({
             const date = new Date(value)
             const newVal = new Date(date)
             newVal.setHours(newVal.getHours() + 1)
-            onChange(newVal.toISOString())
+            onChangeRaw(newVal.toISOString())
           }}
           color="secondary"
           hollow>
@@ -48,7 +53,7 @@ const DateTimeInput = ({
             const date = new Date(value)
             const newVal = new Date(date)
             newVal.setDate(newVal.getDate() + 1)
-            onChange(newVal.toISOString())
+            onChangeRaw(newVal.toISOString())
           }}
           color="secondary"
           hollow>

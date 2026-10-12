@@ -220,13 +220,6 @@ const WorldDataOutput = () => {
                 <TableCell>{event.startsat}</TableCell>
                 <TableCell>{event.endsat}</TableCell>
                 <TableCell>{event.vrchatgroupid}</TableCell>
-                {/* <TableCell>
-                {event.vrchatinstanceid ? (
-                  <small>{event.vrchatinstanceid}</small>
-                ) : (
-                  <NoValueLabel>(none)</NoValueLabel>
-                )}
-              </TableCell> */}
                 <TableCell>
                   {event.atlas ? (
                     <>
@@ -241,11 +234,7 @@ const WorldDataOutput = () => {
               </TableRow>
               <TableRow>
                 <TableCell colSpan={6}>
-                  {event.vrchatinstanceid ? (
-                    <small>{event.vrchatinstanceid}</small>
-                  ) : (
-                    <NoValueLabel>(none)</NoValueLabel>
-                  )}
+                  <pre>{JSON.stringify(event, null, '  ')}</pre>
                 </TableCell>
               </TableRow>
             </Fragment>

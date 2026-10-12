@@ -24,3 +24,8 @@
 .markdown-table {
   width: auto !important;
 }
+
+/* fix performances editor horizontal scrolling */
+* {
+  min-width: 0;
+}

@@ -359,25 +359,25 @@ export const ClearButton = (args: ButtonProps) => (
 
 export const SaveButton = (args: ButtonProps) => (
   <Button icon={<SaveIcon />} color="secondary" {...args}>
-    {args.children || 'Save'}
+    {args.children !== undefined ? args.children : 'Save'}
   </Button>
 )
 
 export const EditButton = (args: ButtonProps) => (
   <Button icon={<EditIcon />} color="secondary" {...args}>
-    {args.children || 'Edit'}
+    {args.children !== undefined ? args.children : 'Edit'}
   </Button>
 )
 
 export const DeleteButton = (args: ButtonProps) => (
   <Button icon={<DeleteIcon />} color="secondary" {...args}>
-    {args.children || 'Delete'}
+    {args.children !== undefined ? args.children : 'Delete'}
   </Button>
 )
 
 export const RefreshButton = (args: ButtonProps) => (
   <Button icon={<RefreshIcon />} color="secondary" {...args}>
-    {args.children || 'Refresh'}
+    {args.children !== undefined ? args.children : 'Refresh'}
   </Button>
 )
 

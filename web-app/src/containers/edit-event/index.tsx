@@ -48,7 +48,7 @@ const EventPreview = ({ event }: { event: Partial<Event> }) => {
     <div style={{ height: '200px' }}>
       <HorizontalTimeline
         events={[mockEventForList]}
-        initialDate={new Date(event.startsat!)}
+        now={new Date(event.startsat!)}
       />
     </div>
   )

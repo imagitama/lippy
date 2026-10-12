@@ -5,7 +5,7 @@ import Dialog, { DialogProps } from '../dialog'
 type Props = {
   dialog:
     | React.ReactElement<{ close?: () => void }>
-    | React.ComponentType<{ close: () => void }>
+    | ((args: { close: () => void }) => React.ReactNode)
   dialogProps?: DialogProps
 } & ButtonProps
 
@@ -13,8 +13,7 @@ function renderDialog(dialog: Props['dialog'], close: () => void) {
   if (React.isValidElement(dialog)) {
     return React.cloneElement(dialog, { close })
   }
-  const Dialog = dialog // narrowed to ComponentType
-  return <Dialog close={close} />
+  return dialog({ close }) // called, not rendered as <Dialog />
 }
 
 const DialogButton = (buttonProps: Props) => {
