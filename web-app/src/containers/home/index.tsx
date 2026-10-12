@@ -1,13 +1,14 @@
-import React, { useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { Helmet } from '@unhead/react/helmet'
 
-import useDatabaseQuery, { Operators } from '@/hooks/useDatabaseQuery'
-import { PublicEvent, ViewNames } from 'shared/modules/events'
+import { PublicEvent } from 'shared/modules/events'
 import HorizontalTimeline, { TimeRange } from '@/components/horizontal-timeline'
 import EventPanel from '@/components/event-panel'
 import ErrorBoundary from '@/components/error-boundary'
 import ErrorMessage from '@/components/error-message'
+
+import useEventsByDay from './useEventsByDay'
 
 const StyledRoot = styled.div`
   position: relative;
@@ -16,23 +17,21 @@ const StyledRoot = styled.div`
 
 const View = () => {
   const [selectedEventId, setSelectedEventId] = useState<null | string>(null)
-  const [range, setRange] = useState<TimeRange>(() => {
-    const now = Date.now()
-    return {
-      start: new Date(now - 60 * 60 * 1000), // 1 hour ago
-      end: new Date(now + 60 * 60 * 1000), // 1 hour from now
-    }
-  })
-  const [isLoading, lastErrorCode, events, hydrate] =
-    useDatabaseQuery<PublicEvent>(ViewNames.GetPublicEvents, [
-      ['startsat', Operators.LESS_THAN, range.end.toISOString()],
-      ['endsat', Operators.GREATER_THAN, range.start.toISOString()],
-    ])
+  const [range, setRange] = useState<TimeRange | null>(null)
+  const [isLoading, lastErrorCode, events, hydrate] = useEventsByDay(range)
+
+  const allEventsRef = useRef(new Map<string, PublicEvent>())
+
+  const allEvents = useMemo(() => {
+    if (!events) return []
+    for (const event of events) allEventsRef.current.set(event.id, event)
+    return [...allEventsRef.current.values()]
+  }, [events?.map((ev) => ev.id).join(',')])
 
   const selectedEvent =
     (selectedEventId && events?.find((ev) => ev.id === selectedEventId)) || null
 
-  console.debug(`view.render`, { range, events })
+  // console.debug(`view.render`, { range, allEvents })
 
   return (
     <StyledRoot>
@@ -42,11 +41,8 @@ const View = () => {
         </ErrorMessage>
       )}
       <HorizontalTimeline
-        events={events || []}
-        onEventClick={(ev) => {
-          console.debug(`onEventClick`, ev)
-          setSelectedEventId(ev.id)
-        }}
+        events={allEvents}
+        onEventClick={(ev) => setSelectedEventId(ev.id)}
         onRangeChange={(timeRange) => setRange(timeRange)}
         isLoading={isLoading}
         hydrate={hydrate}

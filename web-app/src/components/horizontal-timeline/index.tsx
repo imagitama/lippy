@@ -1,59 +1,34 @@
 import React, {
   PointerEvent,
   Suspense,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
 import styled from '@emotion/styled'
-import Box from '@mui/material/Box'
 import ButtonBase from '@mui/material/ButtonBase'
-import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
-import { darken } from '@mui/material/styles'
-import { alpha, useTheme } from '@mui/material/styles'
+import { alpha, Theme } from '@mui/material/styles'
 import HistoryIcon from '@mui/icons-material/History'
 
-import { Event, EventForList, Performance } from 'shared/modules/events'
-import { Performer } from 'shared/modules/performers'
+import { EventForList, Performance } from 'shared/modules/events'
 
 import { useEventsFavoriting } from '@/hooks/useEventFavoriting'
 import useEventFilters from '@/hooks/useEventFilters'
 
-import TagList from '../tag-list'
-import FilterButton from './components/filter-button'
-import Button from '../button'
 import { Refresh as RefreshIcon } from '@/icons'
 import { mediaQueryForMobiles } from '@/media-queries'
+
+import Button from '@/components/button'
+
+import FilterButton from './components/filter-button'
 
 export interface TimeRange {
   start: Date
   end: Date
 }
-
-const PerformanceBox = styled.div`
-  border-radius: 4px;
-  padding: 0 0 0 5px;
-`
-const EventLabel = styled.div`
-  height: 30px;
-  display: flex;
-  align-items: first baseline;
-  & > *:first-child {
-    margin-right: 0.5rem;
-  }
-`
-
-const Controls = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  padding: 0.1rem;
-  > * {
-    margin: 0.1rem !important;
-  }
-`
 
 export interface HorizontalTimelineProps {
   events: EventForList[]
@@ -75,18 +50,18 @@ export interface HorizontalTimelineProps {
 const MINUTE_MS = 60 * 1000
 const HOUR_MS = 60 * MINUTE_MS
 const TWO_HOUR_MS = HOUR_MS * 2
-/** Wait this long after the last wheel event before reporting the new range. */
 const WHEEL_SETTLE_DELAY_MS = 200
 
 const DATE_ROW_HEIGHT_PX = 24
 const HEADER_HEIGHT_PX = 32
 const ROW_PAD_PX = 8
-const EVENT_HEIGHT_PX = 50
-const PERFORMANCE_HEIGHT_PX = 22
+const EVENT_HEIGHT_PX = 42
+const PERFORMANCE_HEIGHT_PX = 19
 const NOW_LINE_WIDTH_PX = 3
 const DRAG_THRESHOLD_PX = 4
 const MIN_TICK_SPACING_PX = 45
-const WHEEL_LINE_HEIGHT_PX = 16 // Firefox reports wheel deltas in lines
+const WHEEL_LINE_HEIGHT_PX = 16 // firefox reports wheel deltas in lines
+const EVENT_GAP_MS = 10 * MINUTE_MS
 
 const TICK_STEPS_MS = [
   30 * MINUTE_MS,
@@ -98,9 +73,248 @@ const TICK_STEPS_MS = [
   24 * HOUR_MS,
 ]
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
+const getTheme = (props: { theme?: object }) => props.theme as Theme
+
+/** Props that position something along the time axis. */
+interface PositionProps {
+  leftPx: number
+  widthPx: number
+}
+
+/** MUI components forward unknown props to the DOM, so strip ours. */
+const OWN_PROPS = new Set([
+  'leftPx',
+  'widthPx',
+  'isFaved',
+  'isFilteredIn',
+  'isClippedLeft',
+  'isClippedRight',
+])
+const getShouldForwardProp = (prop: string) => !OWN_PROPS.has(prop)
+
+const Root = styled.div<{ isDragging: boolean }>`
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 30px);
+  overflow: hidden;
+  border: 1px solid ${(p) => getTheme(p).palette.divider};
+  border-radius: ${(p) => getTheme(p).shape.borderRadius}px;
+  background-color: ${(p) => getTheme(p).palette.background.paper};
+  cursor: ${(p) => (p.isDragging ? 'grabbing' : 'grab')};
+  user-select: none;
+  touch-action: pan-y;
+`
+
+const DateRow = styled.div`
+  flex-shrink: 0;
+  position: relative;
+  height: ${DATE_ROW_HEIGHT_PX}px;
+  overflow: hidden;
+  border-bottom: 1px solid ${(p) => getTheme(p).palette.divider};
+  background-color: ${(p) => alpha(getTheme(p).palette.text.primary, 0.08)};
+`
+
+const DayCell = styled.div<PositionProps & { isClippedLeft: boolean }>`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: ${(p) => p.leftPx}px;
+  width: ${(p) => p.widthPx}px;
+  overflow: hidden;
+  pointer-events: none;
+  /* divider only where the day actually starts on screen */
+  border-left: ${(p) =>
+    p.isClippedLeft ? 'none' : `1px solid ${getTheme(p).palette.divider}`};
+`
+
+const DayLabel = styled(Typography)`
+  padding-left: 6px;
+  line-height: ${DATE_ROW_HEIGHT_PX}px;
+  white-space: nowrap;
+`
+
+const AxisRow = styled.div`
+  flex-shrink: 0;
+  position: relative;
+  height: ${HEADER_HEIGHT_PX}px;
+  border-bottom: 1px solid ${(p) => getTheme(p).palette.divider};
+  background-color: ${(p) => alpha(getTheme(p).palette.text.primary, 0.04)};
+`
+
+const Scroller = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+`
+
+const TickLabel = styled(Typography, {
+  shouldForwardProp: getShouldForwardProp,
+})<{
+  leftPx: number
+}>`
+  position: absolute;
+  top: 0;
+  left: ${(p) => p.leftPx}px;
+  line-height: ${HEADER_HEIGHT_PX}px;
+  white-space: nowrap;
+  pointer-events: none;
+  ${mediaQueryForMobiles} {
+    font-size: 60%;
+  }
+`
+
+const RowsArea = styled.div`
+  position: relative;
+  min-height: 100%;
+  box-sizing: border-box;
+  /* keeps the last row clear of the floating controls */
+  padding-bottom: 56px;
+`
+
+const GridLine = styled.div<{ leftPx: number }>`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: ${(p) => p.leftPx}px;
+  width: 1px;
+  background-color: ${(p) => getTheme(p).palette.divider};
+  pointer-events: none;
+`
+
+const EmptyState = styled.div`
+  display: grid;
+  place-items: center;
+  height: 64px;
+`
+
+const EventRow = styled.div`
+  position: relative;
+  height: ${EVENT_HEIGHT_PX + ROW_PAD_PX}px;
+`
+
+const EventButton = styled(ButtonBase, {
+  shouldForwardProp: getShouldForwardProp,
+})<
+  PositionProps & {
+    isFaved: boolean
+    isFilteredIn: boolean
+    isClippedLeft: boolean
+    isClippedRight: boolean
+  }
+>`
+  position: absolute;
+  top: ${ROW_PAD_PX}px;
+  left: ${(p) => p.leftPx}px;
+  width: ${(p) => p.widthPx}px;
+  height: ${EVENT_HEIGHT_PX}px;
+  padding-left: 8px;
+  padding-right: 8px;
+  justify-content: flex-start;
+  align-items: normal;
+  overflow: hidden;
+  cursor: pointer;
+  // background-color: ${(p) =>
+    alpha(getTheme(p).palette.primary.main, p.isFilteredIn ? 0.75 : 0.25)};
+  background-color: rgba(255, 255, 255, 0.1);
+  color: ${(p) =>
+    p.isFaved
+      ? getTheme(p).palette.primary.contrastText
+      : getTheme(p).palette.text.primary};
+  /* outline (not border) so the faved marker doesn't shift the absolutely
+     positioned performances inside */
+  border: none;
+  outline: ${(p) =>
+    p.isFaved ? `2px solid ${getTheme(p).palette.primary.main}` : 'none'};
+  outline-offset: -2px;
+  border-radius: 5px;
+  border-top-left-radius: ${(p) => (p.isClippedLeft ? 0 : 'inherit')};
+  border-bottom-left-radius: ${(p) => (p.isClippedLeft ? 0 : 'inherit')};
+  border-top-right-radius: ${(p) => (p.isClippedRight ? 0 : 'inherit')};
+  border-bottom-right-radius: ${(p) => (p.isClippedRight ? 0 : 'inherit')};
+
+  && {
+    border-radius: ${(p) => getTheme(p).shape.borderRadius}px;
+  }
+
+  &.Mui-focusVisible {
+    outline: 2px solid ${(p) => getTheme(p).palette.primary.light};
+    outline-offset: 2px;
+  }
+`
+
+const EventLabel = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: first baseline;
+  & > *:first-child {
+    margin-right: 0.5rem;
+  }
+`
+
+const EventName = styled(Typography)`
+  flex-shrink: 0;
+  font-size: 90%;
+  font-weight: 600;
+  margin-top: 4px;
+`
+
+const Performances = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+`
+
+const PerformanceBox = styled.div<PositionProps>`
+  position: absolute;
+  top: 21px;
+  left: ${(p) => p.leftPx}px;
+  width: ${(p) => p.widthPx}px;
+  height: ${PERFORMANCE_HEIGHT_PX}px;
+  overflow: hidden;
+  border-radius: 4px;
+  padding: 0 0 0 5px;
+  // background-color: ${(p) => getTheme(p).palette.primary.dark};
+  background-color: rgba(255, 255, 255, 0.1);
+  // color: ${(p) => getTheme(p).palette.text.primary};
+  color: rgb(175, 175, 175);
+  text-align: left;
+`
+
+const NowLine = styled.div<{ leftPx: number }>`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: ${(p) => p.leftPx}px;
+  width: ${NOW_LINE_WIDTH_PX}px;
+  background-color: ${(p) => getTheme(p).palette.error.main};
+  z-index: 3;
+  pointer-events: none;
+`
+
+const Controls = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 0.1rem;
+  > * {
+    margin: 0.1rem !important;
+  }
+`
+
+const Genres = styled.div`
+  position: relative;
+  top: -1px;
+  font-size: 75%;
+  span {
+    margin-right: 0.25rem;
+    color: rgb(150, 150, 150);
+  }
+`
 
 interface ParsedPerformance {
   performance: Performance
@@ -115,6 +329,7 @@ interface ParsedEvent {
   endMs: number
   performances: ParsedPerformance[]
   laneCount: number
+  rowIdx: number
 }
 
 interface ProjectedBoxPx {
@@ -136,7 +351,9 @@ function getPackedLanes<T extends { startMs: number; endMs: number }>(
 
   for (const idx of order) {
     const { startMs, endMs } = items[idx]
-    let lane = laneEndsMs.findIndex((laneEndMs) => laneEndMs <= startMs)
+    let lane = laneEndsMs.findIndex(
+      (laneEndMs) => laneEndMs + EVENT_GAP_MS <= startMs
+    )
     if (lane === -1) {
       lane = laneEndsMs.length
       laneEndsMs.push(endMs)
@@ -172,18 +389,19 @@ function getParsedEvents(events: EventForList[]): ParsedEvent[] {
       endMs,
       laneCount,
       performances: rawPerformances.map((p, i) => ({ ...p, lane: lanes[i] })),
+      rowIdx: -1,
     })
   }
 
-  return parsedEvents.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs)
+  const sorted = parsedEvents.sort(
+    (a, b) => a.startMs - b.startMs || a.endMs - b.endMs
+  )
+  const { lanes } = getPackedLanes(sorted)
+  return sorted.map((e, i) => ({ ...e, rowIdx: lanes[i] }))
+
+  // return parsedEvents.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs)
 }
 
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-})
 const timeFormatter = new Intl.DateTimeFormat(undefined, {
   hour: 'numeric',
   minute: '2-digit',
@@ -194,13 +412,6 @@ const dayFormatter = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
 })
 
-function getRangeStr(startMs: number, endMs: number) {
-  return `${dateTimeFormatter.format(startMs)} – ${dateTimeFormatter.format(
-    endMs
-  )}`
-}
-
-/** Local calendar-day spans that overlap [viewStartMs, viewEndMs]. */
 function getDaySpans(viewStartMs: number, viewEndMs: number) {
   const spans: { startMs: number; endMs: number }[] = []
   const cursor = new Date(viewStartMs)
@@ -214,9 +425,41 @@ function getDaySpans(viewStartMs: number, viewEndMs: number) {
   return spans
 }
 
-/* -------------------------------------------------------------------------- */
-/* Component                                                                  */
-/* -------------------------------------------------------------------------- */
+function appendToRows(
+  items: ParsedEvent[], // sorted by start time
+  rowOf: Map<string, number>
+): ParsedEvent[][] {
+  // forget events that left this group (gone from the data, or favorited/unfavorited)
+  const present = new Set(items.map(({ event }) => event.id))
+  for (const id of rowOf.keys()) {
+    if (!present.has(id)) rowOf.delete(id)
+  }
+
+  const rows: ParsedEvent[][] = []
+  const pending: ParsedEvent[] = []
+
+  for (const item of items) {
+    const rowIndex = rowOf.get(item.event.id)
+    if (rowIndex === undefined) pending.push(item)
+    else (rows[rowIndex] ??= []).push(item)
+  }
+
+  for (const item of pending) {
+    let rowIndex = 0
+    while (
+      rows[rowIndex]?.some(
+        (other) => other.startMs < item.endMs && item.startMs < other.endMs
+      )
+    ) {
+      rowIndex++
+    }
+    ;(rows[rowIndex] ??= []).push(item)
+    rowOf.set(item.event.id, rowIndex)
+  }
+
+  // rows can be sparse if everything in them left, so fill the holes
+  return Array.from(rows, (row) => row ?? [])
+}
 
 const HorizontalTimeline = ({
   events,
@@ -227,7 +470,6 @@ const HorizontalTimeline = ({
   isLoading,
   hydrate,
 }: HorizontalTimelineProps) => {
-  const theme = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [containerWidthPx, setContainerWidthPx] = useState(0)
@@ -238,11 +480,16 @@ const HorizontalTimeline = ({
 
   const dragRef = useRef<{
     startXPx: number
+    startYPx: number
     startCenterMs: number
+    startScrollTop: number
     pointerId: number
     isActive: boolean
+    hasMovedX: boolean
     lastCenterMs: number
   } | null>(null)
+
+  const scrollerRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     const elem = containerRef.current
@@ -254,11 +501,6 @@ const HorizontalTimeline = ({
     return () => resizeObserver.disconnect()
   }, [])
 
-  //   useEffect(() => {
-  //     const id = window.setInterval(() => setNowMs(Date.now()), 1000)
-  //     return () => window.clearInterval(id)
-  //   }, [])
-
   const centerMs = panningAnchorMs ?? nowMs
   const viewStartMs = centerMs - halfWindowMs
   const viewEndMs = centerMs + halfWindowMs
@@ -267,7 +509,27 @@ const HorizontalTimeline = ({
   const getTimestampPx = (timestampMs: number) =>
     (timestampMs - viewStartMs) * pxPerMsRatio
 
-  const parsedEvents = useMemo(() => getParsedEvents(events), [events])
+  const favedEventIds = useEventsFavoriting()
+
+  const parsedEvents = useMemo(
+    () => getParsedEvents(events),
+    [events.map((ev) => ev.id).join(',')]
+  )
+
+  const rowOfRef = useRef({
+    faved: new Map<string, number>(),
+    other: new Map<string, number>(),
+  })
+
+  const eventRows = useMemo(() => {
+    const faved = new Set(favedEventIds)
+    const favedEvents = parsedEvents.filter(({ event }) => faved.has(event.id))
+    const otherEvents = parsedEvents.filter(({ event }) => !faved.has(event.id))
+    return [
+      ...appendToRows(favedEvents, rowOfRef.current.faved),
+      ...appendToRows(otherEvents, rowOfRef.current.other),
+    ]
+  }, [parsedEvents.map((ev) => ev.event.id).join(','), favedEventIds.join(',')])
 
   const daySpans = useMemo(
     () => getDaySpans(viewStartMs, viewEndMs),
@@ -297,13 +559,11 @@ const HorizontalTimeline = ({
   // latest values live in refs so the native listener is attached only once
   const centerMsRef = useRef(centerMs)
   centerMsRef.current = centerMs
-  const latestRef = useRef({ pxPerMsRatio, halfWindowMs, onRangeChange })
-  latestRef.current = { pxPerMsRatio, halfWindowMs, onRangeChange }
+  const latestRef = useRef({ pxPerMsRatio, halfWindowMs })
+  latestRef.current = { pxPerMsRatio, halfWindowMs }
   const wheelTimeoutRef = useRef<number>()
 
-  const favedEventIds = useEventsFavoriting()
-
-  React.useEffect(() => {
+  useEffect(() => {
     const elem = containerRef.current
     if (!elem) return
 
@@ -327,9 +587,8 @@ const HorizontalTimeline = ({
       // trackpads emit a stream of events with momentum - report once it settles
       window.clearTimeout(wheelTimeoutRef.current)
       wheelTimeoutRef.current = window.setTimeout(() => {
-        const { halfWindowMs: latestHalfWindowMs, onRangeChange: onChange } =
-          latestRef.current
-        onChange?.({
+        const { halfWindowMs: latestHalfWindowMs } = latestRef.current
+        onRangeChange?.({
           start: new Date(centerMsRef.current - latestHalfWindowMs),
           end: new Date(centerMsRef.current + latestHalfWindowMs),
         })
@@ -355,8 +614,6 @@ const HorizontalTimeline = ({
       timezoneOffsetMs
     const ticksToRender: { tickMs: number; label: string }[] = []
     for (let tickMs = firstTickMs; tickMs <= viewEndMs; tickMs += stepMs) {
-      const date = new Date(tickMs)
-      // const isMidnight = date.getHours() === 0 && date.getMinutes() === 0
       ticksToRender.push({
         tickMs,
         label: timeFormatter.format(tickMs),
@@ -375,9 +632,12 @@ const HorizontalTimeline = ({
     if (e.pointerType === 'mouse' && e.button !== 0) return
     dragRef.current = {
       startXPx: e.clientX,
+      startYPx: e.clientY,
       startCenterMs: centerMs,
+      startScrollTop: scrollerRef.current?.scrollTop ?? 0,
       pointerId: e.pointerId,
       isActive: false,
+      hasMovedX: false,
       lastCenterMs: centerMs,
     }
   }
@@ -386,18 +646,30 @@ const HorizontalTimeline = ({
     const drag = dragRef.current
     if (!drag || pxPerMsRatio === 0) return
     const deltaXPx = e.clientX - drag.startXPx
+    const deltaYPx = e.clientY - drag.startYPx
 
     if (!drag.isActive) {
-      if (Math.abs(deltaXPx) < DRAG_THRESHOLD_PX) return
+      if (
+        Math.abs(deltaXPx) < DRAG_THRESHOLD_PX &&
+        Math.abs(deltaYPx) < DRAG_THRESHOLD_PX
+      )
+        return
       drag.isActive = true
-      // capture only once it's a real drag so plain clicks still reach the bars
       e.currentTarget.setPointerCapture(drag.pointerId)
       setIsDragging(true)
     }
 
-    // dragging right reveals the past, so the centre time moves earlier
-    drag.lastCenterMs = drag.startCenterMs - deltaXPx / pxPerMsRatio
-    setPanningAnchorMs(drag.lastCenterMs)
+    // dragging down reveals rows above, so scroll position decreases
+    if (scrollerRef.current) {
+      scrollerRef.current.scrollTop = drag.startScrollTop - deltaYPx
+    }
+
+    // a purely vertical drag shouldn't move the time window or fetch data
+    if (Math.abs(deltaXPx) >= DRAG_THRESHOLD_PX) drag.hasMovedX = true
+    if (drag.hasMovedX) {
+      drag.lastCenterMs = drag.startCenterMs - deltaXPx / pxPerMsRatio
+      setPanningAnchorMs(drag.lastCenterMs)
+    }
   }
 
   const onDragEnd = (e: PointerEvent<HTMLDivElement>) => {
@@ -408,7 +680,7 @@ const HorizontalTimeline = ({
       e.currentTarget.releasePointerCapture(drag.pointerId)
     }
     setIsDragging(false)
-    onRangeEmit(drag.lastCenterMs)
+    if (drag.hasMovedX) onRangeEmit(drag.lastCenterMs)
   }
 
   const onResetToNow = () => {
@@ -416,296 +688,188 @@ const HorizontalTimeline = ({
     onRangeEmit(Date.now())
   }
 
+  useEffect(() => {
+    onResetToNow()
+  }, [])
+
   const nowPx = getTimestampPx(nowMs)
   const isNowVisible = nowPx >= 0 && nowPx <= containerWidthPx
-  const gridColor = theme.palette.divider
 
   return (
-    <Box
+    <Root
       ref={containerRef}
+      isDragging={isDragging}
       onPointerDown={onDragStart}
       onPointerMove={onDragMove}
       onPointerUp={onDragEnd}
-      onPointerCancel={onDragEnd}
-      sx={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
-        bgcolor: 'background.paper',
-        cursor: isDragging ? 'grabbing' : 'grab',
-        userSelect: 'none',
-        touchAction: 'pan-y',
-      }}>
+      onPointerCancel={onDragEnd}>
       {/* Date */}
-      <Box
-        sx={{
-          position: 'relative',
-          height: DATE_ROW_HEIGHT_PX,
-          borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: alpha(theme.palette.text.primary, 0.08),
-          overflow: 'hidden',
-        }}>
+      <DateRow>
         {daySpans.map(({ startMs, endMs }) => {
           const dayBoxPx = getProjectedBoxPx(startMs, endMs)
           if (!dayBoxPx) return null
           return (
-            <Box
+            <DayCell
               key={startMs}
-              sx={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: dayBoxPx.leftPx,
-                width: dayBoxPx.widthPx,
-                overflow: 'hidden',
-                // divider only where the day actually starts on screen
-                borderLeft: dayBoxPx.isClippedLeft ? 'none' : 1,
-                borderColor: 'divider',
-                pointerEvents: 'none',
-              }}>
-              <Typography
-                variant="caption"
-                // fontWeight={600}
-                sx={{
-                  pl: 0.75,
-                  lineHeight: `${DATE_ROW_HEIGHT_PX}px`,
-                  whiteSpace: 'nowrap',
-                }}>
+              leftPx={dayBoxPx.leftPx}
+              widthPx={dayBoxPx.widthPx}
+              isClippedLeft={dayBoxPx.isClippedLeft}>
+              <DayLabel variant="caption">
                 {dayFormatter.format(startMs)}
-              </Typography>
-            </Box>
+              </DayLabel>
+            </DayCell>
           )
         })}
-      </Box>
+      </DateRow>
+
       {/* Axis */}
-      <Box
-        sx={{
-          position: 'relative',
-          height: HEADER_HEIGHT_PX,
-          borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: alpha(theme.palette.text.primary, 0.04),
-        }}>
+      <AxisRow>
         {ticks.map(({ tickMs, label }) => (
-          <Typography
+          <TickLabel
             key={tickMs}
             variant="caption"
             color="text.secondary"
-            sx={{
-              position: 'absolute',
-              left: getTimestampPx(tickMs) + 6,
-              top: 0,
-              lineHeight: `${HEADER_HEIGHT_PX}px`,
-              whiteSpace: 'nowrap',
-              pointerEvents: 'none',
-              [mediaQueryForMobiles]: {
-                fontSize: '60%',
-              },
-            }}>
+            leftPx={getTimestampPx(tickMs) + 6}>
             {label}
-          </Typography>
+          </TickLabel>
         ))}
-      </Box>
+      </AxisRow>
 
       {/* Rows */}
-      <Box sx={{ position: 'relative', height: '100%' }}>
-        {/* Grid lines */}
-        {ticks.map(({ tickMs }) => (
-          <Box
-            key={tickMs}
-            sx={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              left: getTimestampPx(tickMs),
-              width: '1px',
-              bgcolor: gridColor,
-              pointerEvents: 'none',
-            }}
-            data-tick={tickMs}
-          />
-        ))}
+      <Scroller ref={scrollerRef}>
+        <RowsArea>
+          {/* Grid lines */}
+          {ticks.map(({ tickMs }) => (
+            <GridLine
+              key={tickMs}
+              leftPx={getTimestampPx(tickMs)}
+              data-tick={tickMs}
+            />
+          ))}
 
-        {parsedEvents.length === 0 && (
-          <Box sx={{ height: 64, display: 'grid', placeItems: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              No events to show
-            </Typography>
-          </Box>
-        )}
+          {parsedEvents.length === 0 && (
+            <EmptyState>
+              <Typography variant="body2" color="text.secondary">
+                No events to show
+              </Typography>
+            </EmptyState>
+          )}
 
-        {parsedEvents.map(({ event, startMs, endMs, performances }) => {
-          const eventBoxPx = getProjectedBoxPx(startMs, endMs)
-          const isFaved = favedEventIds.includes(event.id)
-          const genresToHighlight = event.genres.filter((genre) =>
-            filters.genres.includes(genre)
-          )
-          const isFilteredIn =
-            event.genres.some((genre) => filters.genres.includes(genre)) ||
-            event.tags.some((tag) => filters.tags.includes(tag))
+          {eventRows.map((rowEvents, lane) => (
+            <EventRow key={lane}>
+              {rowEvents.map(({ event, startMs, endMs, performances }) => {
+                const eventBoxPx = getProjectedBoxPx(startMs, endMs)
+                const isFaved = favedEventIds.includes(event.id)
+                const genresToHighlight = event.genres.filter((genre) =>
+                  filters.genres.includes(genre)
+                )
+                const isFilteredIn =
+                  event.genres.some((genre) =>
+                    filters.genres.includes(genre)
+                  ) || event.tags.some((tag) => filters.tags.includes(tag))
 
-          return (
-            <Box
-              key={event.id}
-              sx={{
-                position: 'relative',
-                height: EVENT_HEIGHT_PX + ROW_PAD_PX,
-              }}
-              data-event={event.id}>
-              {eventBoxPx && (
-                <Tooltip
-                  disableInteractive
-                  title={
-                    <>
-                      <strong>{event.name}</strong>
-                      <br />
-                      {getRangeStr(startMs, endMs)}
-                    </>
-                  }>
-                  <ButtonBase
+                if (!eventBoxPx) return null
+
+                return (
+                  // <Tooltip
+                  //   disableInteractive
+                  //   title={
+                  //     <>
+                  //       <strong>{event.name}</strong>
+                  //       <br />
+                  //       {getRangeStr(startMs, endMs)}
+                  //     </>
+                  //   }>
+                  <EventButton
                     disableRipple
                     onClick={() => onEventClick?.(event)}
-                    sx={{
-                      position: 'absolute',
-                      top: ROW_PAD_PX,
-                      left: eventBoxPx.leftPx,
-                      width: eventBoxPx.widthPx,
-                      height: EVENT_HEIGHT_PX,
-                      px: 1,
-                      justifyContent: 'flex-start',
-                      alignItems: 'normal',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      bgcolor: !isFilteredIn
-                        ? alpha(theme.palette.primary.main, 0.25)
-                        : alpha(theme.palette.primary.main, 0.75),
-                      color: !isFaved
-                        ? theme.palette.text.primary
-                        : theme.palette.primary.contrastText,
-                      border: isFaved
-                        ? `2px dashed ${theme.palette.tertiary.main}`
-                        : 'none',
-                      borderRadius: 1,
-                      borderTopLeftRadius: eventBoxPx.isClippedLeft
-                        ? 0
-                        : undefined,
-                      borderBottomLeftRadius: eventBoxPx.isClippedLeft
-                        ? 0
-                        : undefined,
-                      borderTopRightRadius: eventBoxPx.isClippedRight
-                        ? 0
-                        : undefined,
-                      borderBottomRightRadius: eventBoxPx.isClippedRight
-                        ? 0
-                        : undefined,
-                      '&:hover': {
-                        bgcolor: !isFaved
-                          ? alpha(theme.palette.primary.main, 0.9)
-                          : darken(theme.palette.primary.main, 0.2),
-                      },
-                      '&.Mui-focusVisible': {
-                        outline: `2px solid ${theme.palette.primary.light}`,
-                        outlineOffset: 2,
-                      },
-                    }}>
+                    leftPx={eventBoxPx.leftPx}
+                    widthPx={eventBoxPx.widthPx}
+                    isFaved={isFaved}
+                    isFilteredIn={isFilteredIn}
+                    isClippedLeft={eventBoxPx.isClippedLeft}
+                    isClippedRight={eventBoxPx.isClippedRight}>
                     <EventLabel>
-                      <Typography
-                        variant="body2"
-                        noWrap
-                        sx={{ fontWeight: 600, marginTop: '4px' }}>
+                      <EventName variant="body2" noWrap>
                         {event.name}
-                      </Typography>
+                      </EventName>
                       {event.genres.length ? (
-                        <TagList
-                          tags={event.genres}
-                          highlightTags={genresToHighlight}
-                        />
+                        <Genres>
+                          {event.genres.map((tag) => (
+                            <span key={tag}>{tag}</span>
+                          ))}
+                        </Genres>
                       ) : null}
                     </EventLabel>
-                  </ButtonBase>
-                </Tooltip>
-              )}
-              {performances.map(
-                (
-                  {
-                    performance,
-                    startMs: performanceStartMs,
-                    endMs: performanceEndMs,
-                  },
-                  idx
-                ) => {
-                  const performanceBoxPx = getProjectedBoxPx(
-                    performanceStartMs,
-                    performanceEndMs
-                  )
-                  if (!performanceBoxPx) return null
+                    <Performances>
+                      {performances.map(
+                        (
+                          {
+                            performance,
+                            startMs: performanceStartMs,
+                            endMs: performanceEndMs,
+                          },
+                          idx
+                        ) => {
+                          const performanceBoxPx = getProjectedBoxPx(
+                            performanceStartMs,
+                            performanceEndMs
+                          )
+                          if (!performanceBoxPx) return null
 
-                  const fullPerformance = event.fullperformances[idx]
+                          const fullPerformance = event.fullperformances[idx]
 
-                  const label = fullPerformance
-                    ? fullPerformance.fullperformername ||
-                      fullPerformance.performername
-                    : performance.performerid?.substring(0, 10) ||
-                      performance.performername
+                          const label = fullPerformance
+                            ? fullPerformance.fullperformername ||
+                              fullPerformance.performername
+                            : performance.performerid?.substring(0, 10) ||
+                              performance.performername
 
-                  return (
-                    <Tooltip
-                      key={`${performance.performerid}-${performanceStartMs}`}
-                      disableInteractive
-                      title={
-                        <>
-                          <strong>{label}</strong>
-                          <br />
-                          {getRangeStr(performanceStartMs, performanceEndMs)}
-                        </>
-                      }>
-                      <PerformanceBox
-                        onClick={() => onEventClick?.(event)}
-                        // onClick={() => onPerformanceClick?.(performer, event)}
-                        style={{
-                          position: 'absolute',
-                          top: 35,
-                          left: performanceBoxPx.leftPx + 1,
-                          width: performanceBoxPx.widthPx - 2,
-                          height: PERFORMANCE_HEIGHT_PX,
-                          justifyContent: 'flex-start',
-                          overflow: 'hidden',
-                          backgroundColor: theme.palette.primary.dark,
-                          color: theme.palette.text.primary,
-                        }}
-                        data-performer={performance.performerid}>
-                        <Typography variant="caption" noWrap>
-                          {label}
-                        </Typography>
-                      </PerformanceBox>
-                    </Tooltip>
-                  )
-                }
-              )}
-            </Box>
-          )
-        })}
-      </Box>
+                          return (
+                            // <Tooltip
+                            //   key={`${performance.performerid}-${performanceStartMs}`}
+                            //   disableInteractive
+                            //   title={
+                            //     <>
+                            //       <strong>{label}</strong>
+                            //       <br />
+                            //       {getRangeStr(
+                            //         performanceStartMs,
+                            //         performanceEndMs
+                            //       )}
+                            //     </>
+                            //   }>
+                            <PerformanceBox
+                              leftPx={
+                                performanceBoxPx.leftPx - eventBoxPx.leftPx + 2
+                              }
+                              widthPx={performanceBoxPx.widthPx - 1}
+                              data-performer={performance.performerid}>
+                              <Typography variant="caption" noWrap>
+                                {label}
+                              </Typography>
+                            </PerformanceBox>
+                            // </Tooltip>
+                          )
+                        }
+                      )}
+                    </Performances>
+                  </EventButton>
+                  // </Tooltip>
+                  //   )}
+                  // </EventRow>
+                )
+              })}{' '}
+            </EventRow>
+          ))}
+        </RowsArea>
+      </Scroller>
 
       {/* Current time */}
       {isNowVisible && (
-        <Box
+        <NowLine
           aria-label="Current time"
-          sx={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: nowPx - NOW_LINE_WIDTH_PX / 2,
-            width: NOW_LINE_WIDTH_PX,
-            bgcolor: 'error.main',
-            zIndex: 3,
-            pointerEvents: 'none',
-          }}
+          leftPx={nowPx - NOW_LINE_WIDTH_PX / 2}
         />
       )}
 
@@ -732,7 +896,7 @@ const HorizontalTimeline = ({
           )}
         </Suspense>
       </Controls>
-    </Box>
+    </Root>
   )
 }
 

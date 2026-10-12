@@ -29,6 +29,7 @@ import useDataStoreItem from '@/hooks/useDataStoreItem'
 import { useState } from 'react'
 import useInterval from '@/hooks/useInterval'
 import { getPrefersBritishSpelling } from '@/utils'
+import EventDateRange from '../event-date-range'
 
 const StyledClubDetails = styled.div`
   font-size: 125%;
@@ -113,6 +114,8 @@ const EventPanel = ({
               <FavButton eventId={event.id} />
             </FavButtonWrapper>
           </Heading>
+          <EventDateRange startsAt={event.startsat} endsAt={event.endsat} />
+          <Heading variant="h3">Instance</Heading>
           <VisitVrchatInstanceButton
             instance={event.vrchatinstancecache?.instance || null}
             fetchedAt={event.vrchatinstancecache?.fetchedat}

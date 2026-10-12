@@ -263,21 +263,25 @@ const GenericEditor = <TRecord extends Record<string, any>>({
       return
     }
 
-    setFormFields(
-      fields.reduce((newFormFields, fieldConfig) => {
-        return {
-          ...newFormFields,
-          [fieldConfig.name]:
-            rawRecord[fieldConfig.name as string] === false
-              ? false
-              : (fieldConfig.name as string) in rawRecord
-              ? fieldConfig.overrideValue !== undefined
-                ? fieldConfig.overrideValue
-                : rawRecord[fieldConfig.name as string]
-              : fieldConfig.default,
-        }
-      }, {} as TRecord)
-    )
+    const newFields = fields.reduce((newFormFields, fieldConfig) => {
+      return {
+        ...newFormFields,
+        [fieldConfig.name]:
+          rawRecord[fieldConfig.name as string] === false
+            ? false
+            : (fieldConfig.name as string) in rawRecord
+            ? fieldConfig.overrideValue !== undefined
+              ? fieldConfig.overrideValue
+              : rawRecord[fieldConfig.name as string]
+            : fieldConfig.default,
+      }
+    }, {} as TRecord)
+
+    setFormFields(newFields)
+
+    if (onFieldsChanged) {
+      onFieldsChanged(newFields)
+    }
   }, [rawRecord === null])
 
   const onFieldChange = (

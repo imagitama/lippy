@@ -228,8 +228,8 @@ const View = () => {
           </Heading>
         </div>
         <EventDateRange
-          startsAt={new Date(startsat)}
-          endsAt={new Date(endsat)}
+          startsAt={event.startsat}
+          endsAt={event.endsat}
           className={classes.dates}
         />
         <Heading variant="h2">Genres</Heading>

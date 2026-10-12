@@ -20,6 +20,7 @@ import NotLoggedInMessage from '@/components/not-logged-in-message'
 import HorizontalTimeline from '@/components/horizontal-timeline'
 import WarningMessage from '@/components/warning-message'
 import InfoMessage from '@/components/info-message'
+import { FeaturedStatus } from 'shared/modules/common'
 
 const EventPreview = ({ event }: { event: Partial<Event> }) => {
   if (!event.startsat && !event.endsat)
@@ -37,11 +38,11 @@ const EventPreview = ({ event }: { event: Partial<Event> }) => {
         : perf.performername || '[name]',
     })) || []
 
-  const mockEventForList: EventForList = {
+  const mockEventForList = {
     ...event,
     fullperformances: mockFullPerformances,
     clubname: 'My Club',
-  }
+  } as EventForList
 
   return (
     <div style={{ height: '200px' }}>

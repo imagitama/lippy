@@ -1,14 +1,14 @@
 import styled from '@emotion/styled'
 import { FullPerformance } from 'shared/modules/events'
-import FormattedDate from '../formatted-date'
 import { CustomTheme } from '@/themes'
+import moment from 'moment'
 
 const Root = styled.div`
   & > * {
-    margin-botton: 0.25rem;
+    margin-bottom: 0.25rem;
   }
   & > *:last-child {
-    margin-botton: 0;
+    margin-bottom: 0;
   }
 `
 const Item = styled.div`
@@ -22,6 +22,10 @@ const Label = styled.div`
   font-weight: bold;
 `
 
+function getFriendlyDate(date: string): string {
+  return moment(date).format('HH:mm')
+}
+
 const PerformanceList = ({
   performances,
 }: {
@@ -31,17 +35,13 @@ const PerformanceList = ({
     <Root>
       {performances.map((perf) => (
         <Item>
-          <Date>
-            <FormattedDate date={perf.startsat} isRelative={false} /> (
-            <FormattedDate date={perf.startsat} isRelative />)
-          </Date>
+          <Date>{getFriendlyDate(perf.startsat)}</Date>
           <Label>
-            {perf.performerid ? perf.fullperformername : perf.performername}
+            {perf.fullperformername
+              ? perf.fullperformername
+              : perf.performername}
           </Label>
-          <Date>
-            <FormattedDate date={perf.endsat} isRelative={false} /> (
-            <FormattedDate date={perf.endsat} isRelative />)
-          </Date>
+          <Date>{getFriendlyDate(perf.endsat)}</Date>
         </Item>
       ))}
     </Root>

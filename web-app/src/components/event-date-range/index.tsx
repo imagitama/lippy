@@ -58,31 +58,33 @@ const EventDateRange = ({
   endsAt,
   className,
 }: {
-  startsAt: Date
-  endsAt: Date
+  startsAt: string
+  endsAt: string
   className?: string
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   return (
     <Root className={className}>
       <div>
-        <FormattedDate date={startsAt} isRelative={false} />
-        {isExpanded && <TimezoneList date={startsAt} />}
+        <FormattedDate date={startsAt} isRelative={false} /> (
+        <FormattedDate date={startsAt} isRelative />)
+        {isExpanded && <TimezoneList date={new Date(startsAt)} />}
       </div>
       <Separator>
         <ArrowForwardIcon />
       </Separator>
       <div>
-        <FormattedDate date={endsAt} isRelative={false} />
-        {isExpanded && <TimezoneList date={endsAt} />}
+        <FormattedDate date={endsAt} isRelative={false} /> (
+        <FormattedDate date={endsAt} isRelative />)
+        {isExpanded && <TimezoneList date={new Date(endsAt)} />}
       </div>
-      <TimezoneExpander
+      {/* <TimezoneExpander
         onClick={() => setIsExpanded((currentVal) => !currentVal)}>
         {userTimezoneInfo.offset}{' '}
         <ChevronDown
           style={{ transform: isExpanded ? `rotate(180deg)` : `` }}
         />
-      </TimezoneExpander>
+      </TimezoneExpander> */}
     </Root>
   )
 }
