@@ -1,6 +1,7 @@
 import React from 'react'
 import styled from '@emotion/styled'
 import { Delete as DeleteIcon } from '@/icons'
+import NoValueLabel from '../no-value-label'
 
 const StyledTagList = styled.div`
   display: flex;
@@ -45,6 +46,7 @@ const TagList = ({
   onDelete?: (tag: string) => void
   highlightTags?: string[]
 }) => {
+  if (!tags.length) return <NoValueLabel>(no tags)</NoValueLabel>
   return (
     <StyledTagList>
       {onClick || onDelete

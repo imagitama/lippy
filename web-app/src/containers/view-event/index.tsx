@@ -4,6 +4,7 @@ import LaunchIcon from '@mui/icons-material/Launch'
 import { makeStyles } from '@mui/styles'
 import EditIcon from '@mui/icons-material/Edit'
 import { useParams } from 'react-router'
+import styled from '@emotion/styled'
 
 import * as routes from '@/routes'
 import {
@@ -30,7 +31,7 @@ import Link from '@/components/link'
 import ErrorMessage from '@/components/error-message'
 import Heading from '@/components/heading'
 import Markdown from '@/components/markdown'
-import Button from '@/components/button'
+import Button, { EditButton } from '@/components/button'
 import EventDateRange from '@/components/event-date-range'
 import PerformanceList from '@/components/performance-list'
 import TagList from '@/components/tag-list'
@@ -115,6 +116,10 @@ const useStyles = makeStyles({
   },
 })
 
+const Divider = styled.div`
+  margin: 0 1rem;
+`
+
 const View = () => {
   const { eventId: eventIdOrSlug } = useParams<{ eventId: string }>()
   const getQuery = useCallback<GetQueryFn<FullEvent>>(
@@ -191,6 +196,10 @@ const View = () => {
         {isClubStaff ? (
           <ClubStaffControls>
             <FormControls>
+              <EditButton
+                url={routes.editEventWithVar.replace(':eventId', event.id)}>
+                Edit Event
+              </EditButton>
               <HydrateVrchatInstanceButton
                 eventId={event.id}
                 hydrate={hydrate}
@@ -211,11 +220,11 @@ const View = () => {
             <Link to={routes.viewClubWithVar.replace(':clubId', clubId)}>
               {club.name}
             </Link>
-            {' / '}
+            <Divider>/</Divider>
             <Link
               to={routes.viewEventWithVar.replace(':eventId', eventIdOrSlug)}>
               {name}
-            </Link>{' '}
+            </Link>
           </Heading>
         </div>
         <EventDateRange

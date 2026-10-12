@@ -3,13 +3,12 @@ import { SocialFields } from 'shared/modules/common'
 import socialInfo from './infos'
 import Button from '../button'
 
-const Root = styled.div`
-  width: auto;
-  margin: auto;
-`
+const Root = styled.div``
 const Item = styled.div`
   width: 100%;
   padding: 0.5rem;
+  display: flex;
+  justify-content: center;
 `
 
 const SocialMediaList = ({ socials }: { socials: SocialFields }) => {

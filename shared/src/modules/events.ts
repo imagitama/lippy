@@ -19,16 +19,21 @@ export interface FullPerformance extends Performance {
   fullperformername: string // prefixed with "full" to differentiate from custom name
 }
 
+export enum EventCategory {
+  Music = 'music',
+  Other = 'other',
+}
+
 export interface EventFields extends Record<string, unknown> {
   clubid: string
   vrchatinstanceid: string | null // null to find VRC group instance
   name: string
   description: string
+  category: EventCategory
   sourceurl: string
   thumbnailurl: string
   posterurl: string
   attachmentids: string[]
-  discordserverid: string
   isadult: boolean
   startsat: string // date
   endsat: string // date

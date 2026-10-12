@@ -25,6 +25,7 @@ import TagList from '../tag-list'
 import FilterButton from './components/filter-button'
 import Button from '../button'
 import { Refresh as RefreshIcon } from '@/icons'
+import { mediaQueryForMobiles } from '@/media-queries'
 
 export interface TimeRange {
   start: Date
@@ -502,6 +503,9 @@ const HorizontalTimeline = ({
               lineHeight: `${HEADER_HEIGHT_PX}px`,
               whiteSpace: 'nowrap',
               pointerEvents: 'none',
+              [mediaQueryForMobiles]: {
+                fontSize: '60%',
+              },
             }}>
             {label}
           </Typography>
@@ -616,10 +620,12 @@ const HorizontalTimeline = ({
                         sx={{ fontWeight: 600, marginTop: '4px' }}>
                         {event.name}
                       </Typography>
-                      <TagList
-                        tags={event.genres}
-                        highlightTags={genresToHighlight}
-                      />
+                      {event.genres.length ? (
+                        <TagList
+                          tags={event.genres}
+                          highlightTags={genresToHighlight}
+                        />
+                      ) : null}
                     </EventLabel>
                   </ButtonBase>
                 </Tooltip>

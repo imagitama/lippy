@@ -42,6 +42,10 @@ const EventPoster = styled.div`
   padding: 0.5rem;
 `
 
+const FavButtonWrapper = styled.div`
+  margin-left: auto;
+`
+
 const FavButton = ({ eventId }: { eventId: string }) => {
   const [isFaved, toggleFav] = useEventFavoriting(eventId)
   return (
@@ -86,9 +90,13 @@ const EventPanel = ({
     <Dialog fullWidth onClose={onClose}>
       <Columns>
         <Column>
-          <EventPoster>
-            <img src={event.posterurl} alt="Event poster" width="100%" />
-          </EventPoster>
+          {event.posterurl ? (
+            <EventPoster>
+              <img src={event.posterurl} alt="Event poster" width="100%" />
+            </EventPoster>
+          ) : (
+            <NoResultsMessage>This event has no poster</NoResultsMessage>
+          )}
         </Column>
         <Column>
           <StyledClubDetails>
@@ -101,7 +109,9 @@ const EventPanel = ({
             <Link to={routes.viewEventWithVar.replace(':eventId', event.id)}>
               {event.name}
             </Link>{' '}
-            <FavButton eventId={event.id} />
+            <FavButtonWrapper>
+              <FavButton eventId={event.id} />
+            </FavButtonWrapper>
           </Heading>
           <VisitVrchatInstanceButton
             instance={event.vrchatinstancecache?.instance || null}

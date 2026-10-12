@@ -35,6 +35,7 @@ import FormControls from '@/components/form-controls'
 import SyncVrchatGroupForm from '@/components/sync-vrchat-group-form'
 import EventResults from '@/components/event-results'
 import NoResultsMessage from '@/components/no-results-message'
+import Metadata from '@/components/metadata'
 
 const useStyles = makeStyles({
   categories: {
@@ -116,7 +117,7 @@ const EventsForClub = ({ clubId }: { clubId: string }) => {
   return <EventResults events={events} />
 }
 
-const Root = styled(Paper)`
+const Root = styled.div`
   max-width: ${CONTENT_MAX_WIDTH_PX}px;
   margin: 0 auto;
   display: flex;
@@ -201,7 +202,7 @@ const View = () => {
             {/* <SyncVrchatGroupForm vrchatGroupId={club.linkedvrchatgroupid} /> */}
             <EditButton
               url={routes.editClubWithVar.replace(':clubId', club.id)}
-              color="primary">
+              color="secondary">
               Edit Club
             </EditButton>
           </FormControls>
@@ -214,54 +215,56 @@ const View = () => {
           <FormControls>
             <Button
               icon={<EventIcon />}
-              url={routes.createEventWithClubVar.replace(':clubId', club.id)}>
+              url={routes.createEventWithClubVar.replace(':clubId', club.id)}
+              color="secondary">
               Create Club Event
             </Button>
           </FormControls>
         </Message>
       )}
 
-      <div className={classes.title}>
-        <div className={classes.avatar}>
-          <Avatar
-            url={thumbnailUrl || undefined}
-            username={name || undefined}
-            noHat
-            lazy={false}
-          />
+      <Paper>
+        <div className={classes.title}>
+          <div className={classes.avatar}>
+            <Avatar
+              url={thumbnailUrl || undefined}
+              username={name || undefined}
+              noHat
+              lazy={false}
+            />
+          </div>
+          <Heading variant="h1" center>
+            <Link to={routes.viewClubWithVar.replace(':clubId', clubId)}>
+              {name}
+            </Link>
+          </Heading>
         </div>
-        <Heading variant="h1" center>
-          <Link to={routes.viewClubWithVar.replace(':clubId', clubId)}>
-            {name}
-          </Link>
-        </Heading>
-      </div>
 
-      {description && <Markdown source={description} />}
+        {description && <Markdown source={description} />}
 
-      <SocialMediaList socials={club} />
+        <SocialMediaList socials={club} />
 
-      {discordServerId && (
-        <DiscordServerWidget
-          serverId={discordServerId}
-          joinActionCategory={analyticsCategory}
-        />
-      )}
+        {discordServerId && (
+          <DiscordServerWidget
+            serverId={discordServerId}
+            joinActionCategory={analyticsCategory}
+          />
+        )}
 
-      <Heading variant="h2">Events</Heading>
-      <EventsForClub clubId={clubId} />
+        <Heading variant="h2">Events</Heading>
+        <EventsForClub clubId={clubId} />
 
-      {isMod && (
-        <div>
-          <Heading variant="h2">Moderator Actions</Heading>
-          <FormControls>
-            <EditButton
-              url={routes.editClubWithVar.replace(':clubId', club.id)}>
-              Edit Club
-            </EditButton>
-            <SyncVrchatGroupForm vrchatGroupId={club.linkedvrchatgroupid} />
-          </FormControls>
-          {/* <EditorRecordManager
+        {isMod && (
+          <div>
+            <Heading variant="h2">Moderator Actions</Heading>
+            <FormControls>
+              <EditButton
+                url={routes.editClubWithVar.replace(':clubId', club.id)}>
+                Edit Club
+              </EditButton>
+              <SyncVrchatGroupForm vrchatGroupId={club.linkedvrchatgroupid} />
+            </FormControls>
+            {/* <EditorRecordManager
             id={clubId}
             metaCollectionName={CollectionNames.ClubsMeta}
             editUrl={routes.editClubWithVar.replace(':clubId', clubId)}
@@ -275,32 +278,12 @@ const View = () => {
             existingEditorNotes={modNotes}
             onDone={hydrate}
           /> */}
-        </div>
-      )}
+          </div>
+        )}
 
-      <Heading variant="h2">Metadata</Heading>
-      {createdByUsername && (
-        <div>
-          Created by{' '}
-          <Link to={routes.viewUserWithVar.replace(':userId', createdBy)}>
-            {createdByUsername}
-          </Link>
-        </div>
-      )}
-
-      {lastModifiedBy && (
-        <div>
-          Last modified by{' '}
-          <Link to={routes.viewUserWithVar.replace(':userId', lastModifiedBy)}>
-            {lastModifiedByUsername}
-          </Link>
-        </div>
-      )}
-      {/* {isLoggedIn ? (
-        <div>
-          <SupporterBadgeButton clubId={club.id} />
-        </div>
-      ) : null} */}
+        <Heading variant="h2">Metadata</Heading>
+        <Metadata item={club} />
+      </Paper>
     </Root>
   )
 }

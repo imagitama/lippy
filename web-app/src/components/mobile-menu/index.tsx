@@ -21,6 +21,7 @@ import useUserPreferences from '@/hooks/useUserPreferences'
 import AccountMenu from '@/components/account-menu'
 import { RootState } from '@/slices'
 import store from '@/store'
+import { getIsUrlAbsolute } from '@/utils'
 
 const useStyles = makeStyles({
   content: {
@@ -33,6 +34,8 @@ const useStyles = makeStyles({
   listItemIcon: {
     minWidth: 0,
     color: '#240b36', // TODO: define in theme/config somewhere
+    display: 'flex',
+    alignItems: 'center',
   },
   menuItemLink: {
     display: 'block',
@@ -80,9 +83,11 @@ function MenuItemWithUrl({
       onClick={onClick}>
       <Typography component="div" style={{ display: 'flex' }}>
         <span className={classes.label}>{label}</span>
-        <ListItemIcon className={classes.listItemIcon}>
-          <ChevronRightIcon />
-        </ListItemIcon>
+        {getIsUrlAbsolute(url) ? null : (
+          <ListItemIcon className={classes.listItemIcon}>
+            <ChevronRightIcon />
+          </ListItemIcon>
+        )}
       </Typography>
     </NavigationLink>
   )

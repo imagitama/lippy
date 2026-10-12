@@ -22,7 +22,7 @@ const useStyles = makeStyles<CustomTheme>((theme) => ({
   heading: ({ variant, center }: { variant?: string; center?: boolean }) => ({
     display: 'flex',
     alignItems: 'center',
-    '& svg': {
+    '& > svg': {
       marginRight: '0.5rem',
     },
 

@@ -1,6 +1,6 @@
 import { fieldTypes } from '@/generic-forms'
 import { CustomEditableField, EditableField } from '.'
-import { BucketNames, type Event } from 'shared/modules/events'
+import { BucketNames, EventCategory, type Event } from 'shared/modules/events'
 import { ViewNames as ClubsViewNames, FullClub } from 'shared/modules/clubs'
 import { nsfwRules } from '@/config'
 import ClubResultsItem from '@/components/club-results-item'
@@ -28,6 +28,16 @@ const editableFields: EditableField<Event>[] = [
     type: fieldTypes.text,
     hint: 'The name of the event. Keep it short and simple - it is shown in the timeline/calendar.',
     isRequired: true,
+  },
+  {
+    name: 'category',
+    label: 'Category',
+    type: fieldTypes.dropdown,
+    options: Object.entries(EventCategory).map(([type, val]) => ({
+      label: type,
+      value: val,
+    })),
+    hint: 'The event category. Non-music events will NOT be shown in the VRChat world and will be de-prioritized in the timeline.',
   },
   {
     name: 'description',

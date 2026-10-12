@@ -8,8 +8,6 @@ import GitHubIcon from '@mui/icons-material/GitHub'
 import store from '@/store'
 import * as routes from '@/routes'
 import { openMenu } from '@/slices/app'
-import { ReactComponent as DiscordIcon } from '@/assets/images/icons/discord.svg'
-import { ReactComponent as PatreonIcon } from '@/assets/images/icons/patreon.svg'
 import { ReactComponent as Logo } from '@/assets/images/logo_v1.svg'
 import {
   queryForMobiles,
@@ -17,21 +15,12 @@ import {
   mediaQueryForDesktopsOnly,
 } from '@/media-queries'
 import { trackAction } from '@/analytics'
-import {
-  DISCORD_URL,
-  GITHUB_REPO_URL,
-  PATREON_BECOME_PATRON_URL,
-} from '@/config'
 
 import Link from '@/components/link'
 import MobileMenu from '@/components/mobile-menu'
 import AccountMenu from '@/components/account-menu'
 import DesktopMenu from '@/components/desktop-menu'
-import VrchatGroupButton from '@/components/vrchat-group-button'
-import { colorBrand, colorBrandLight, specialFontFamily } from '@/themes'
-
-// when the navigation starts obstructing the logo
-const mediaQueryForMenuLogoCollision = '@media (max-width: 1280px)'
+import { colorBrandLight, specialFontFamily } from '@/themes'
 
 const useStyles = makeStyles({
   root: {
@@ -40,26 +29,14 @@ const useStyles = makeStyles({
     display: 'flex',
     position: 'relative',
     [mediaQueryForMobiles]: {
+      height: '44px', // room for menu button
       flexDirection: 'column',
     },
     '& a': {
       textDecoration: 'none',
     },
   },
-  cols: {
-    display: 'flex',
-    [mediaQueryForMobiles]: {
-      flexWrap: 'wrap',
-    },
-  },
   menu: {
-    width: '100%',
-  },
-  leftCol: {
-    flexShrink: 1,
-    marginRight: '2%',
-  },
-  rightCol: {
     width: '100%',
   },
   searchBar: {
@@ -68,51 +45,8 @@ const useStyles = makeStyles({
   desktopMenu: {
     width: '100%',
   },
-  logoWrapper: {
-    display: 'flex',
-    alignItems: 'start',
-    top: 0,
-    left: 0,
-    [mediaQueryForMobiles]: {
-      position: 'relative',
-      padding: 0,
-    },
-    '& a': {
-      height: '100%',
-      display: 'flex',
-    },
-  },
-  socialIcons: {
-    marginLeft: '0.25rem',
-    display: 'flex',
-    alignItems: 'center',
-    '& a': {
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0 0.25rem',
-      opacity: '0.75',
-      transition: 'opacity 200ms',
-      '&:hover': {
-        opacity: 1,
-      },
-    },
-    '& .twitterIconLink': {
-      paddingRight: '0.25rem',
-    },
-    '& svg': {
-      width: 'auto', // fix patreon icon
-      height: '2em',
-    },
-    '& .twitterIcon': {
-      height: '1.5em',
-    },
-    '& path': {
-      fill: '#FFF',
-    },
-  },
-  twitterIconLink: {},
-  twitterIcon: {},
   logo: {
+    height: '100%', // mobile
     marginRight: '0.5rem',
     '& svg': {
       width: '1em',
@@ -126,11 +60,15 @@ const useStyles = makeStyles({
       animation: '$wiggle 500ms',
     },
     '& a': {
+      height: '100%', // mobile
       display: 'flex',
       alignItems: 'center',
       color: colorBrandLight,
       fontFamily: specialFontFamily,
       lineHeight: 1,
+    },
+    [mediaQueryForMobiles]: {
+      width: '75px', // anchor will fill the entire header
     },
   },
   '@keyframes wiggle': {
@@ -144,8 +82,8 @@ const useStyles = makeStyles({
     '100%': { transform: 'rotate(0deg)' },
   },
   menuToggleButton: {
-    width: '3rem',
-    height: '3rem',
+    width: '44px', // minimum height for accessibility
+    height: '44px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -166,35 +104,6 @@ const useStyles = makeStyles({
     width: '4rem',
     height: '3rem',
     fill: '#FFF',
-  },
-  invisible: {
-    visibility: 'hidden',
-  },
-  homepage: {
-    top: '100%',
-  },
-  socialMediaRows: {
-    [mediaQueryForMobiles]: {
-      display: 'flex',
-    },
-  },
-  searchbarWrapper: {
-    width: '100%',
-    [mediaQueryForMobiles]: {
-      width: '100%',
-      margin: '0.5rem auto 0',
-      padding: 0,
-    },
-  },
-  vrchatGroupButton: {
-    fontSize: '0.5rem',
-    margin: '0.5rem 0 0 0.5rem',
-    [mediaQueryForMobiles]: { margin: 0 },
-    opacity: '0.75',
-    transition: 'opacity 200ms',
-    '&:hover': {
-      opacity: 1,
-    },
   },
   accountMenu: {
     flexShrink: 0,

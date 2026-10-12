@@ -8,7 +8,7 @@ import classNames from 'classnames'
 
 const useStyles = makeStyles(() => ({
   root: {
-    margin: '1rem 0',
+    margin: '0.5rem 0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

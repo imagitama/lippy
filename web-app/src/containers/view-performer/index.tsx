@@ -31,6 +31,7 @@ import EventResults from '@/components/event-results'
 import NoResultsMessage from '@/components/no-results-message'
 import useUserId from '@/hooks/useUserId'
 import FormControls from '@/components/form-controls'
+import Metadata from '@/components/metadata'
 
 const useStyles = makeStyles({
   categories: {
@@ -268,29 +269,7 @@ const View = () => {
         )}
 
         <Heading variant="h2">Metadata</Heading>
-        {createdByUsername && (
-          <div>
-            Created by{' '}
-            <Link to={routes.viewUserWithVar.replace(':userId', createdBy)}>
-              {createdByUsername}
-            </Link>
-          </div>
-        )}
-
-        {lastModifiedBy && (
-          <div>
-            Last modified by{' '}
-            <Link
-              to={routes.viewUserWithVar.replace(':userId', lastModifiedBy)}>
-              {lastModifiedByUsername}
-            </Link>
-          </div>
-        )}
-        {/* {isLoggedIn ? (
-          <>
-            <SupporterBadgeButton performerId={performer.id} />
-          </>
-        ) : null} */}
+        <Metadata item={performer} />
       </Root>
     </>
   )
