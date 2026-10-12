@@ -20,19 +20,18 @@ const SocialMediaList = ({ socials }: { socials: SocialFields }) => {
         if (!info) return null
         return (
           <Item>
-            <Button
-              icon={info.icon || undefined}
-              url={info.getUrl ? info.getUrl(val) : val}
-              title="Visit the link">
-              {info.label}
-            </Button>
-            {/* <a
-              href={info.getUrl ? info.getUrl(val) : val}
-              title="Visit the link"
-              target="_blank"
-              rel="noopener noreferrer">
-              {info.icon} {info.label}
-            </a> */}
+            {info.getUrl ? (
+              <Button
+                icon={info.icon || undefined}
+                url={info.getUrl(val)}
+                title="Visit the link">
+                {info.label}
+              </Button>
+            ) : (
+              <span>
+                {info.label}: {val}
+              </span>
+            )}
           </Item>
         )
       })}

@@ -26,6 +26,7 @@ import ErrorMessage from '../error-message'
 import NoResultsMessage from '../no-results-message'
 import Link from '../link'
 import { routes } from '@/routes'
+import { PerformanceListItem } from '../performance-list'
 
 const { default: moment } = await import('moment')
 const LazyDateTimePicker = React.lazy(() => import('../datetime-input/lazy'))
@@ -185,23 +186,7 @@ const PerformanceEditor = ({
         ) : (
           <>
             <Column style={{ width: '80%' }}>
-              <div>
-                Starts:{' '}
-                <FormattedDate date={newFields.startsat!} isRelative={false} />{' '}
-                (<FormattedDate date={newFields.startsat!} isRelative />)
-              </div>
-              <div>
-                Performer:{' '}
-                <PerformerName
-                  id={newFields.performerid!}
-                  name={newFields.performername!}
-                />
-              </div>
-              <div>
-                Ends:{' '}
-                <FormattedDate date={newFields.endsat!} isRelative={false} /> (
-                <FormattedDate date={newFields.endsat!} />)
-              </div>
+              <PerformanceListItem performance={newFields as Performance} />
             </Column>
             <Column style={{ width: '20%' }}>
               <EditButton
@@ -261,21 +246,19 @@ const PerformanceForm = ({
     })
   }
 
-  const onClickAddThirty = () => {
+  const onClickAddThirtyToStart = () => {
     if (!newFields.startsat) return
     const date = new Date(newFields.startsat)
     date.setMinutes(date.getMinutes() + 30)
     updateField('startsat', date.toISOString())
+  }
 
-    if (newFields.endsat) {
-      const date = new Date(newFields.endsat)
-      date.setMinutes(date.getMinutes() + 30)
-      updateField('endsat', date.toISOString())
-    } else {
-      const date = new Date(newFields.startsat)
-      date.setMinutes(date.getMinutes() + 30)
-      updateField('endsat', date.toISOString())
-    }
+  const onClickAddThirtyToEnd = () => {
+    const dateStr = newFields.endsat || newFields.startsat
+    if (!dateStr) return
+    const date = new Date(dateStr)
+    date.setMinutes(date.getMinutes() + 30)
+    updateField('endsat', date.toISOString())
   }
 
   const onClickUseEventStart = () => {
@@ -304,9 +287,15 @@ const PerformanceForm = ({
           <Button
             size="small"
             color="secondary"
+            onClick={() => onClickAddThirtyToStart()}>
+            +30 mins
+          </Button>{' '}
+          <Button
+            size="small"
+            color="secondary"
             onClick={() => onClickUseEndOfPrevPerf()}
             isDisabled={prevPerf === null || !prevPerf.endsat}>
-            End Of Previous Performance
+            End Of Prev Perf
           </Button>
         </ValueCell>
       </Row>
@@ -341,11 +330,11 @@ const PerformanceForm = ({
           <PerformanceDateTimeInput
             value={newFields.endsat || ''}
             onChange={(newVal) => updateField('endsat', newVal)}
-          />
+          />{' '}
           <Button
             size="small"
             color="secondary"
-            onClick={() => onClickAddThirty()}>
+            onClick={() => onClickAddThirtyToEnd()}>
             +30 mins
           </Button>
         </ValueCell>

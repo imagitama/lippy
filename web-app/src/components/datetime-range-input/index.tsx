@@ -52,7 +52,12 @@ function DateTimeBoundaryInput({
         <DateCalendar
           value={momentValue}
           onChange={handleDateChange}
-          sx={{ width: '100%' }}
+          sx={{
+            width: '100%',
+            '& .MuiPickersDay-root': {
+              borderRadius: 0,
+            },
+          }}
         />
         <MultiSectionDigitalClock
           value={momentValue}

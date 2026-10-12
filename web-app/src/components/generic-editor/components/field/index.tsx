@@ -5,7 +5,6 @@ import Accordion from '@mui/material/Accordion'
 import AccordionDetails from '@mui/material/AccordionDetails'
 import AccordionSummary from '@mui/material/AccordionSummary'
 import FormHelperText from '@mui/material/FormHelperText'
-import styled from '@emotion/styled'
 
 import { EditableField } from '@/editable-fields'
 import { ChevronDown as ChevronDownIcon, Warning as WarningIcon } from '@/icons'
@@ -22,6 +21,9 @@ const useStyles = makeStyles({
     display: 'flex',
     [mediaQueryForMobiles]: {
       flexWrap: 'wrap',
+    },
+    '& > *': {
+      padding: '0.25rem',
     },
     '& > *:nth-child(2)': {
       width: '70%',
@@ -56,9 +58,10 @@ const useStyles = makeStyles({
     },
   },
   content: {
-    '&&': {
-      padding: '0.25rem',
-    },
+    // padding: '0.25rem',
+    // '&&': {
+    //   padding: '0.25rem',
+    // },
   },
   requiredLabel: {
     marginLeft: '0.5rem',
@@ -75,21 +78,10 @@ const useStyles = makeStyles({
   },
 })
 
-const ExpandHint = styled.div`
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-top: 5px;
-  right: 0;
-  font-size: 150%;
-`
-
 const Field = ({
   editableField,
   children,
   isAccordion,
-  isRequired,
-  startExpanded,
   isExpanded,
   onExpandChange,
   size,
@@ -97,8 +89,6 @@ const Field = ({
   editableField: EditableField<any>
   children: React.ReactNode
   isAccordion?: boolean
-  isRequired?: boolean
-  startExpanded?: boolean
   isExpanded?: boolean
   onExpandChange?: (newVal: boolean) => void
   size?: 'small'

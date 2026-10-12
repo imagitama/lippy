@@ -19,15 +19,12 @@ import VrchatUsernameEditor from '@/components/vrchat-username-editor'
 import BioEditor from '@/components/bio-editor'
 import NotificationSettings from '@/components/notification-settings'
 import MyReports from '@/components/my-reports'
-import PatreonConnectForm from '@/components/patreon-connect-form'
-import VrPlatformChooser from '@/components/vr-platform-chooser'
 import LinkAccountWithVrchatForm from '@/components/link-with-vrchat-account-form'
 import ChangeEmailForm from '@/components/change-email-form'
 import DeleteAccountForm from '@/components/delete-account-form'
 import ChangePasswordForm from '@/components/change-password-form'
 import Discord from './components/discord'
 import MyUserOverview from '@/components/my-user-overview'
-import SupporterBadgeForm from '@/components/supporter-badge-form'
 import VrchatGroupButton from '@/components/vrchat-group-button'
 import Button from '@/components/button'
 
@@ -38,6 +35,7 @@ import MultiFactorAuthForm from '@/components/multi-factor-auth-form'
 import MyEvents from './components/my-events'
 import MyClubs from './components/my-clubs'
 import MyPerformers from './components/my-performers'
+import Block from '@/components/block'
 
 const analyticsCategoryName = 'MyAccount'
 
@@ -65,6 +63,52 @@ const View = () => {
             contents: <MyUserOverview />,
           },
           {
+            name: 'profile',
+            label: 'profile',
+            contents: (
+              <>
+                <Heading variant="h2">Profile</Heading>
+                <Block title="Username">
+                  <p>
+                    You can change your username as many times as you would
+                    like.
+                  </p>
+                  <UsernameEditor
+                    onSaveClick={() =>
+                      trackAction(analyticsCategoryName, 'Click save username')
+                    }
+                  />
+                </Block>
+                <Block title="Avatar">
+                  <p>
+                    Your avatar is shown on your profile, your comments and in
+                    lists of users.
+                  </p>
+                  <AvatarUploadForm
+                    onClick={() =>
+                      trackAction(
+                        analyticsCategoryName,
+                        'Click avatar upload form'
+                      )
+                    }
+                  />
+                </Block>
+                <Block title="Bio">
+                  <p>This bio is shown on your public user profile.</p>
+                  <BioEditor
+                    // @ts-ignore
+                    onSaveClick={() =>
+                      trackAction(
+                        analyticsCategoryName,
+                        'Click save bio button'
+                      )
+                    }
+                  />
+                </Block>
+              </>
+            ),
+          },
+          {
             name: 'events',
             label: 'My Events',
             contents: <MyEvents />,
@@ -80,61 +124,24 @@ const View = () => {
             contents: <MyPerformers />,
           },
           {
-            name: 'profile',
-            label: 'profile',
-            contents: (
-              <>
-                <Heading variant="h2">Profile</Heading>
-                <Heading variant="h3">Username</Heading>
-                <p>
-                  You can change your username as many times as you would like.
-                </p>
-                <UsernameEditor
-                  onSaveClick={() =>
-                    trackAction(analyticsCategoryName, 'Click save username')
-                  }
-                />
-                <Heading variant="h3">Avatar</Heading>
-                <p>
-                  Your avatar is shown on your profile, your comments and in
-                  lists of users.
-                </p>
-                <AvatarUploadForm
-                  onClick={() =>
-                    trackAction(
-                      analyticsCategoryName,
-                      'Click avatar upload form'
-                    )
-                  }
-                />
-                <Heading variant="h3">Bio</Heading>
-                <p>This bio is shown on your public user profile.</p>
-                <BioEditor
-                  // @ts-ignore
-                  onSaveClick={() =>
-                    trackAction(analyticsCategoryName, 'Click save bio button')
-                  }
-                />
-                {/* <Heading variant="h3">VR Games</Heading>
-                <VrPlatformChooser /> */}
-              </>
-            ),
-          },
-          {
             name: 'settings',
             label: 'Settings',
             contents: (
               <>
                 <Heading variant="h2">Settings</Heading>
-                <div>
-                  <AdultContentToggle
-                    analyticsCategoryName={analyticsCategoryName}
-                  />
-                </div>
-                <Heading variant="h3">Features</Heading>
-                <Features />
-                <Heading variant="h3">Notifications</Heading>
-                <NotificationSettings />
+                <Block title="Settings">
+                  <div>
+                    <AdultContentToggle
+                      analyticsCategoryName={analyticsCategoryName}
+                    />
+                  </div>
+                </Block>
+                <Block title="Features">
+                  <Features />
+                </Block>
+                <Block title="Notifications">
+                  <NotificationSettings />
+                </Block>
               </>
             ),
           },
@@ -144,18 +151,25 @@ const View = () => {
             contents: (
               <>
                 <Heading variant="h2">Authentication</Heading>
-                <Heading variant="h3">Multi-Factor Authentication</Heading>
-                <MultiFactorAuthForm />
-                <Heading variant="h3">Change Email Address</Heading>
-                <p>
-                  Use this form to change your signup email address to something
-                  else.
-                </p>
-                <ChangeEmailForm />
-                <Heading variant="h3">Change Password</Heading>
-                <p>Use this form to change your password to something else.</p>
-                <ChangePasswordForm />
-                <DeleteAccountForm />
+                <Block title="Multi-Factor Authentication">
+                  <MultiFactorAuthForm />
+                </Block>
+                <Block title="Change Email Address">
+                  <p>
+                    Use this form to change your signup email address to
+                    something else.
+                  </p>
+                  <ChangeEmailForm />
+                </Block>
+                <Block title="Change Password">
+                  <p>
+                    Use this form to change your password to something else.
+                  </p>
+                  <ChangePasswordForm />
+                </Block>
+                <Block title="Danger Zone">
+                  <DeleteAccountForm />
+                </Block>
               </>
             ),
           },
@@ -165,11 +179,13 @@ const View = () => {
             contents: (
               <>
                 <Heading variant="h2">VRChat</Heading>
-                <Heading variant="h3">Group</Heading>
-                <VrchatGroupButton />
-                <Heading variant="h3">Link Account</Heading>
-                <VrchatUsernameEditor />
-                <LinkAccountWithVrchatForm />
+                <Block title="Group">
+                  <VrchatGroupButton />
+                </Block>
+                <Block title="Link Account">
+                  <VrchatUsernameEditor />
+                  <LinkAccountWithVrchatForm />
+                </Block>
               </>
             ),
           },

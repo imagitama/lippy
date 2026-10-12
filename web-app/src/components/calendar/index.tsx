@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
 import ReactCalendar from 'react-calendar'
-import type { View } from 'react-calendar/dist/shared/types.js'
 import { makeStyles } from '@mui/styles'
 import styled from '@emotion/styled'
 
@@ -15,8 +14,7 @@ import {
 import * as routes from '@/routes'
 import Link from '@/components/link'
 import { colorGreyedOut, CustomTheme } from '@/themes'
-import Button, { CreateButton } from '../button'
-import FormattedDate from '../formatted-date'
+import Button from '../button'
 import Columns from '../columns'
 import Column from '../column'
 import Heading from '../heading'
@@ -72,7 +70,7 @@ const useStyles = makeStyles<CustomTheme>((theme) => ({
     },
   },
   today: {
-    borderRadius: '0.25rem',
+    // borderRadius: '0.25rem',
     outline: '2px solid rgba(255,255,255,0.5) !important',
     zIndex: 100,
   },
@@ -98,7 +96,6 @@ const EventItem = ({ event, style }: { event: Event; style: EventStyle }) => (
 
 const Tile = ({ date }: { date: Date }) => {
   const { events } = useContext(EventsContext)
-  const classes = useStyles()
 
   const groupedEvents = events.reduce<{
     [EventStyle.StartsToday]: Event[]

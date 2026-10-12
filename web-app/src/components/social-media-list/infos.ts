@@ -19,7 +19,7 @@ const socialInfo: SocialInfo[] = [
   // vrc
   {
     name: 'vrchatusername',
-    label: 'VRChat User',
+    label: 'VRChat Username',
     icon: null,
     // display names have no URL, so no getUrl
   },

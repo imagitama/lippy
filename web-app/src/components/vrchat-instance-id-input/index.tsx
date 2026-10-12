@@ -36,19 +36,17 @@ const VrchatInstanceIdInput = ({
 
   return (
     <>
-      <Paper>
-        Visit the VRChat website, click an instance, copy its URL here:
-        <TextInput
-          label="URL"
-          value={textVal}
-          onChange={(e) => setTextVal(e.target.value)}
-          fullWidth
-        />
-        <small>
-          eg.
-          https://vrchat.com/home/launch?worldId=wrld_6ad41169-1631-40b6-8a8d-491cc39c408b&instanceId=92902~group(grp_d49c108b-dcf4-49b5-8efa-5cfce12f6c9c)~groupAccessType(plus)~ageGate~region(us)
-        </small>
-      </Paper>
+      Visit the VRChat website, click an instance, copy its URL here:
+      <TextInput
+        label="URL"
+        value={textVal}
+        onChange={(e) => setTextVal(e.target.value)}
+        fullWidth
+      />
+      <small>
+        eg.
+        https://vrchat.com/home/launch?worldId=wrld_6ad41169-1631-40b6-8a8d-491cc39c408b&instanceId=92902~group(grp_d49c108b-dcf4-49b5-8efa-5cfce12f6c9c)~groupAccessType(plus)~ageGate~region(us)
+      </small>
       {value && <Paper>Using instance ID '{value || '(none yet)'}'</Paper>}
     </>
   )

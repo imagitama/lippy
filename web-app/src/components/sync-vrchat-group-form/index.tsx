@@ -82,7 +82,13 @@ const SyncVrchatGroupForm = ({
     return <VrchatGroupOutput {...lastResult} />
   }
 
-  return <Button onClick={onClickSync}>Sync </Button>
+  return (
+    <Button
+      onClick={onClickSync}
+      title="Fetches the VRChat group and stores it for usage later">
+      Sync VRChat Group
+    </Button>
+  )
 }
 
 export default SyncVrchatGroupForm

@@ -27,6 +27,12 @@ const useStyles = makeStyles({
   },
 })
 
+const Root = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+`
+
 const Date = styled.div`
   position: absolute;
   bottom: 0;
@@ -66,7 +72,7 @@ const Notices = () => {
   }
 
   return (
-    <>
+    <Root>
       {noticesToShow.map((notice) => (
         <div className={classes.notice} key={notice.id}>
           <Message {...notice} hideId={notice.hideid}>
@@ -79,7 +85,7 @@ const Notices = () => {
           </Message>
         </div>
       ))}
-    </>
+    </Root>
   )
 }
 

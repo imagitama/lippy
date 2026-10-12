@@ -1,27 +1,48 @@
 import { fieldTypes } from '@/generic-forms'
 import { CustomEditableField, EditableField } from '.'
 import { BucketNames, EventCategory, type Event } from 'shared/modules/events'
-import { ViewNames as ClubsViewNames, FullClub } from 'shared/modules/clubs'
+import {
+  Club,
+  ViewNames as ClubsViewNames,
+  CollectionNames,
+  FullClub,
+  ViewNames,
+} from 'shared/modules/clubs'
 import { nsfwRules } from '@/config'
 import ClubResultsItem from '@/components/club-results-item'
 import PerformancesEditor from '@/components/performances-editor'
 import { commonGenres, eventTags, lessCommonGenres, worldTags } from '@/tags'
 import VrchatInstanceIdInput from '@/components/vrchat-instance-id-input'
+import useDataStoreItem from '@/hooks/useDataStoreItem'
+import LoadingIndicator from '@/components/loading-indicator'
+import ErrorMessage from '@/components/error-message'
+import NoResultsMessage from '@/components/no-results-message'
 
 export const POSTER_WIDTH = 300 * 2
 export const POSTER_HEIGHT = 400 * 2
+
+const ClubOutput = ({ clubId }: { clubId: string }) => {
+  const [isLoading, lastErrorCode, club] = useDataStoreItem<FullClub>(
+    ViewNames.GetFullClubs,
+    clubId
+  )
+  if (isLoading) return <LoadingIndicator message="Loading club..." />
+  if (lastErrorCode !== null)
+    return (
+      <ErrorMessage errorCode={lastErrorCode}>Failed to load club</ErrorMessage>
+    )
+  if (!club)
+    return <NoResultsMessage>No club found with ID '{clubId}'</NoResultsMessage>
+  return <ClubResultsItem club={club} />
+}
 
 const editableFields: EditableField<Event>[] = [
   {
     name: 'clubid',
     label: 'Club',
-    type: fieldTypes.searchable,
-    collectionName: ClubsViewNames.GetFullClubs,
-    fieldAsLabel: 'name',
-    renderer: ({ item }) => <ClubResultsItem club={item as FullClub} />,
-    isRequired: true,
-    hint: 'The club this event is for.',
-  },
+    type: fieldTypes.custom,
+    renderer: ({ value }) => <ClubOutput clubId={value} />,
+  } as CustomEditableField<Event, 'clubid'>,
   {
     name: 'name',
     label: 'Name',
@@ -123,9 +144,9 @@ ${nsfwRules}`,
     requiredWidth: POSTER_WIDTH,
     requiredHeight: POSTER_HEIGHT,
     bucketName: BucketNames.EventPosters,
-    hint: `Standard movie poster size. Shown in the VRChat world and when you view the event details. Do not use adult content:
+    hint: `Standard movie poster size. Shown in the VRChat world and when you view the event details (only if not adult).
     
-${nsfwRules}`,
+Adult posters can only be uploaded if the event is flagged as adult.`,
   },
   {
     name: 'performances',

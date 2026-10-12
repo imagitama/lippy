@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import { FullPerformance } from 'shared/modules/events'
+import { FullPerformance, Performance } from 'shared/modules/events'
 import { CustomTheme } from '@/themes'
 import moment from 'moment'
 
@@ -26,6 +26,22 @@ function getFriendlyDate(date: string): string {
   return moment(date).format('HH:mm')
 }
 
+export const PerformanceListItem = ({
+  performance: perf,
+}: {
+  performance: Performance | FullPerformance
+}) => (
+  <Item>
+    <Date>{getFriendlyDate(perf.startsat)}</Date>
+    <Label>
+      {'fullperformername' in perf
+        ? perf.fullperformername
+        : perf.performername || perf.performerid}
+    </Label>
+    <Date>{getFriendlyDate(perf.endsat)}</Date>
+  </Item>
+)
+
 const PerformanceList = ({
   performances,
 }: {
@@ -34,15 +50,7 @@ const PerformanceList = ({
   return (
     <Root>
       {performances.map((perf) => (
-        <Item>
-          <Date>{getFriendlyDate(perf.startsat)}</Date>
-          <Label>
-            {perf.fullperformername
-              ? perf.fullperformername
-              : perf.performername}
-          </Label>
-          <Date>{getFriendlyDate(perf.endsat)}</Date>
-        </Item>
+        <PerformanceListItem performance={perf} />
       ))}
     </Root>
   )

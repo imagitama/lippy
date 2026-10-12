@@ -20,7 +20,6 @@ import NotLoggedInMessage from '@/components/not-logged-in-message'
 import HorizontalTimeline from '@/components/horizontal-timeline'
 import WarningMessage from '@/components/warning-message'
 import InfoMessage from '@/components/info-message'
-import { FeaturedStatus } from 'shared/modules/common'
 
 const EventPreview = ({ event }: { event: Partial<Event> }) => {
   if (!event.startsat && !event.endsat)
@@ -31,12 +30,13 @@ const EventPreview = ({ event }: { event: Partial<Event> }) => {
     )
 
   const mockFullPerformances: FullPerformance[] =
-    event.performances?.map((perf) => ({
-      ...perf,
-      fullperformername: perf.performerid
-        ? perf.performerid.slice(0, 5)
-        : perf.performername || '[name]',
-    })) || []
+    event.performances?.map((perf) => {
+      const perfName = perf.performername || perf.performerid!
+      return {
+        ...perf,
+        fullperformername: perfName,
+      }
+    }) || []
 
   const mockEventForList = {
     ...event,
@@ -46,8 +46,10 @@ const EventPreview = ({ event }: { event: Partial<Event> }) => {
 
   return (
     <div style={{ height: '200px' }}>
-      {' '}
-      <HorizontalTimeline events={[mockEventForList]} />
+      <HorizontalTimeline
+        events={[mockEventForList]}
+        initialDate={new Date(event.startsat!)}
+      />
     </div>
   )
 }

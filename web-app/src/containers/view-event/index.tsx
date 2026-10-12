@@ -297,6 +297,7 @@ const View = () => {
             ) : null}
             {isMod && (
               <>
+                <Heading variant="h3">Mod Controls</Heading>
                 <div className={classes.controlGroup}>
                   <EditorRecordManager
                     id={id}

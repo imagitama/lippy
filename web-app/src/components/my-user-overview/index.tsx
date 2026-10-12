@@ -11,6 +11,7 @@ import {
   getHasUserVerifiedTheirEmail,
   getSignedUpWithDiscord,
   getSignedUpWithEmail,
+  loggedInUser,
 } from '@/auth'
 
 const MyUserOverview = () => {
@@ -27,6 +28,19 @@ const MyUserOverview = () => {
       <Heading variant="h1" style={{ marginTop: '0.5rem' }}>
         <UsernameLink username={user.username} id={user.id} />
       </Heading>
+      <Heading variant="h2">Sign-up Method</Heading>
+      {getSignedUpWithEmail(loggedInUser!) ? 'Email' : 'Other'}
+      <Heading variant="h2">Email</Heading>
+      {isPrivateInfoRevealed ? (
+        loggedInUser!.email!
+      ) : (
+        <Button
+          onClick={() => setIsPrivateInfoRevealed(true)}
+          color="secondary"
+          size="small">
+          Reveal
+        </Button>
+      )}
     </>
   )
 }

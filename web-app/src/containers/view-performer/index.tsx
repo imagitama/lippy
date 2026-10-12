@@ -251,6 +251,7 @@ const View = () => {
         {isMod && (
           <>
             <Heading variant="h2">Moderator Actions</Heading>
+            todo
             {/* <EditorRecordManager
             id={performerId}
             metaCollectionName={CollectionNames.PerformersMeta}

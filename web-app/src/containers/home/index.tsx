@@ -41,6 +41,7 @@ const View = () => {
         </ErrorMessage>
       )}
       <HorizontalTimeline
+        fill
         events={allEvents}
         onEventClick={(ev) => setSelectedEventId(ev.id)}
         onRangeChange={(timeRange) => setRange(timeRange)}

@@ -31,6 +31,8 @@ export interface TimeRange {
 }
 
 export interface HorizontalTimelineProps {
+  fill?: boolean
+  initialDate?: Date
   events: EventForList[]
   /** Called when an event bar is clicked. */
   onEventClick?: (event: EventForList) => void
@@ -92,12 +94,12 @@ const OWN_PROPS = new Set([
 ])
 const getShouldForwardProp = (prop: string) => !OWN_PROPS.has(prop)
 
-const Root = styled.div<{ isDragging: boolean }>`
+const Root = styled.div<{ fill: boolean; isDragging: boolean }>`
   display: flex;
   flex-direction: column;
   position: relative;
   width: 100%;
-  height: calc(100vh - 30px);
+  height: ${(p) => (p.fill ? 'calc(100vh - 30px)' : '100%')};
   overflow: hidden;
   border: 1px solid ${(p) => getTheme(p).palette.divider};
   border-radius: ${(p) => getTheme(p).shape.borderRadius}px;
@@ -462,6 +464,8 @@ function appendToRows(
 }
 
 const HorizontalTimeline = ({
+  fill,
+  initialDate,
   events,
   onEventClick,
   onPerformanceClick,
@@ -473,7 +477,9 @@ const HorizontalTimeline = ({
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [containerWidthPx, setContainerWidthPx] = useState(0)
-  const [nowMs, setNowMs] = useState(() => Date.now())
+  const [nowMs, setNowMs] = useState<number>(
+    () => initialDate?.getTime() || Date.now()
+  )
   const [panningAnchorMs, setPanningAnchorMs] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [filters] = useEventFilters()
@@ -697,6 +703,7 @@ const HorizontalTimeline = ({
 
   return (
     <Root
+      fill={fill!!}
       ref={containerRef}
       isDragging={isDragging}
       onPointerDown={onDragStart}

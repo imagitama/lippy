@@ -1,25 +1,16 @@
 import React from 'react'
 import { makeStyles } from '@mui/styles'
+import { getIsUrlAbsolute } from '@/utils'
+import { CustomTheme } from '@/themes'
+
 import LazyLoad from '@/components/lazy-load'
 import Link from '@/components/link'
-import { getIsUrlAbsolute } from '@/utils'
-import {
-  mediaQueryForMobiles,
-  mediaQueryForTabletsOrBelow,
-} from '@/media-queries'
 import ErrorBoundary from '@/components/error-boundary'
-import { CustomTheme } from '@/themes'
+import Heading from '@/components/heading'
 
 const useStyles = makeStyles<CustomTheme>((theme) => ({
   root: {
-    padding: '1rem',
-    // backgroundColor: '#282828', // when rendered inside ExperimentalArea dont want big areas of green
-    [mediaQueryForTabletsOrBelow]: {
-      padding: '0.5rem',
-    },
-    [mediaQueryForMobiles]: {
-      padding: '0.25rem',
-    },
+    marginBottom: '1rem',
   },
   titleWrapper: {
     display: 'flex',
@@ -27,24 +18,8 @@ const useStyles = makeStyles<CustomTheme>((theme) => ({
     marginBottom: '0.5rem',
   },
   title: {
-    flex: '1 0 auto',
-    fontSize: '150%',
-    fontWeight: '200',
-    marginRight: '0.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    '& a': {
-      color: 'inherit',
-      display: 'flex',
-      alignItems: 'center',
-      textDecoration: 'none',
-    },
-    '&:hover $icon': {
-      display: 'flex',
-    },
-    [mediaQueryForMobiles]: {
-      padding: '0.25rem',
-      marginRight: '0.25rem',
+    '&&': {
+      margin: '0 0.5rem 0 0',
     },
   },
   icon: {
@@ -86,7 +61,7 @@ const Block = ({
       <LazyLoad>
         <div className={`${classes.root} ${className}`}>
           <div className={classes.titleWrapper}>
-            <h2 className={classes.title}>
+            <Heading variant="h2" className={classes.title}>
               {url ? (
                 getIsUrlAbsolute(url) ? (
                   <a href={url} target="_blank" rel="noopener noreferrer">
@@ -98,7 +73,7 @@ const Block = ({
               ) : (
                 titleToRender
               )}
-            </h2>
+            </Heading>
             <div className={classes.border} />
           </div>
           {children}

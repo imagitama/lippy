@@ -68,13 +68,13 @@ const AvatarUploadForm = ({
 
   return (
     <>
-      <Heading variant="h4">Current Avatar</Heading>
+      <Heading variant="h3">Current Avatar</Heading>
       {user.avatarurl ? (
         <Avatar url={user.avatarurl} />
       ) : (
         <NoResultsMessage>No avatar uploaded yet</NoResultsMessage>
       )}
-      <Heading variant="h4">Upload New Avatar</Heading>
+      <Heading variant="h3">Upload New Avatar</Heading>
       <ImageUploader
         onDone={onUploadedWithUrls}
         bucketName={BucketNames.UserAvatars}
