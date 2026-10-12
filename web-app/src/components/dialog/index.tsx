@@ -64,7 +64,6 @@ export interface DialogProps extends Omit<MaterialDialogProps, 'open'> {}
 const Dialog = forwardRef<HTMLDivElement, DialogProps>((props, ref) => {
   const classes = useStyles()
 
-  // TODO: Default close button
   return (
     <MaterialDialog
       open

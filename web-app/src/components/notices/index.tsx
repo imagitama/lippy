@@ -28,9 +28,9 @@ const useStyles = makeStyles({
 })
 
 const Root = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
+  // position: fixed;
+  // top: 0;
+  // left: 0;
 `
 
 const Date = styled.div`

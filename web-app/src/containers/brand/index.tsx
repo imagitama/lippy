@@ -1,16 +1,23 @@
 import React from 'react'
 import { Helmet } from '@unhead/react/helmet'
 
-// import { colors } from '@/brand'
 import Markdown from '@/components/markdown'
 
-import { ReactComponent as Logo } from './assets/logo-v1/logo-v1.svg'
-import avatarUrl from './assets/logo-v1/avatar.png'
-import { DEFAULT_PAGE_DESC } from '@/config'
+import { ReactComponent as Logo } from '@/assets/images/logo_v1.svg'
+import logoUrl from '@/assets/images/logo_v1.svg?url'
+import { colorBrand } from '@/themes'
+import Link from '@/components/link'
 
 const rules = `# Our Brand Guide
 
-todo`
+TODO
+
+## Colors
+
+| Name | Value | Usage/Desc |
+|---|---|---|
+| Brand | ${colorBrand} <span style="display: inline-block; width: 10px; height: 10px; background-color: ${colorBrand};"></span> | |
+`
 
 export default () => (
   <>
@@ -21,8 +28,10 @@ export default () => (
         content="Read about what the brand is including our colors, logo, fonts and more."
       />
     </Helmet>
-    <div style={{ width: '300px' }}>
+    <div style={{ width: '200px' }}>
+      Logo SVG:
       <Logo style={{ width: '100%' }} />
+      <a href={logoUrl}>Link</a>
     </div>
     <Markdown source={rules} enableHtml />
   </>

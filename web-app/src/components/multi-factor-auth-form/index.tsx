@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import VpnKeyIcon from '@mui/icons-material/VpnKey'
 
-import SuccessMessage from '../success-message'
-import MultiFactorAuthCodeInput from '../multi-factor-auth-code-input'
-import Button from '../button'
 import { handleError } from '@/error-handling'
-import FormControls from '../form-controls'
-import ErrorMessage from '../error-message'
-import QrCode from '../qr-code'
-import { getHasUserVerifiedTheirEmail, getSignedUpWithEmail } from '@/auth'
+import { getSignedUpWithEmail } from '@/auth'
+
 import useSupabaseUser from '@/hooks/useSupabaseUser'
-import Message from '../message'
+
+import SuccessMessage from '@/components/success-message'
+import MultiFactorAuthCodeInput from '@/components/multi-factor-auth-code-input'
+import Button from '@/components/button'
+import FormControls from '@/components/form-controls'
+import ErrorMessage from '@/components/error-message'
+import QrCode from '@/components/qr-code'
+import Message from '@/components/message'
 
 enum Step {
   Start,

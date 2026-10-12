@@ -6,7 +6,7 @@ const SiteSettingsForm = () => {
   return (
     <>
       <Heading variant="h1">Site Settings</Heading>
-      todo
+      TODO
     </>
   )
 }

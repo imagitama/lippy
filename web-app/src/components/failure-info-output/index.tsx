@@ -15,8 +15,6 @@ const getFriendlyMessageFromFailureInfo = (
   failureInfo: QueuedItemFailureInfo<any>,
   messages?: MessageMap
 ): string => {
-  // TODO: better type-safety for data
-
   switch (failureInfo.code) {
     case AiErrorCode.PromptBlocked:
       return `The AI blocked our prompt: ${failureInfo.data.reason}`

@@ -42,13 +42,6 @@ export interface MetaRecord extends Record<string, unknown> {
   publishstatus: PublishStatus
 }
 
-// TODO: move somewhere else
-export interface GeminiFuncResult<TArgs> {
-  args: TArgs
-  id: string
-  name: string
-}
-
 export enum ResolutionStatus {
   Pending = 'pending',
   Resolved = 'resolved',

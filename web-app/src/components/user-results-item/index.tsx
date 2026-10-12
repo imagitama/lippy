@@ -68,7 +68,7 @@ const useStyles = makeStyles({
   },
 })
 
-const UserListItem = ({
+const UserResultsItem = ({
   user,
   showSignupDate = true,
 }: {
@@ -114,4 +114,4 @@ const UserListItem = ({
   )
 }
 
-export default UserListItem
+export default UserResultsItem

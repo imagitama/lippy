@@ -82,7 +82,7 @@ export default ({
             resolutionStatus={resolutionStatus}
             resolvedByUsername={resolvedByUsername}
           /> */}
-          Resolution status: {resolutionStatus} (by who - todo)
+          Resolution status: {resolutionStatus} (TODO - by who)
         </TableCell>
       </TableRow>
     </Fragment>

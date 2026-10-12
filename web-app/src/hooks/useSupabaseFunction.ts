@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { handleError } from '@/error-handling'
 import { callFunction } from '@/supabase'
 
-export enum FirebaseErrorCode {
+export enum FunctionErrorCode {
   Unknown = 'unknown',
 }
 
-const getFirebaseErrorCode = (err: Error) => {
+const getFunctionErrorCode = (err: Error) => {
   // TODO: finish
-  return FirebaseErrorCode.Unknown
+  return FunctionErrorCode.Unknown
 }
 
 type ClearFn = () => void
@@ -17,14 +17,14 @@ export default <TPayload extends Record<string, any>, TResult>(
   functionName: string
 ): [
   boolean,
-  FirebaseErrorCode | null,
+  FunctionErrorCode | null,
   TResult | null,
   (payload: TPayload) => Promise<TResult>,
   ClearFn
 ] => {
   const [result, setResult] = useState<TResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [lastErrorCode, setLastErrorCode] = useState<FirebaseErrorCode | null>(
+  const [lastErrorCode, setLastErrorCode] = useState<FunctionErrorCode | null>(
     null
   )
 
@@ -54,7 +54,7 @@ export default <TPayload extends Record<string, any>, TResult>(
     } catch (err) {
       console.error(err)
       setIsLoading(false)
-      setLastErrorCode(getFirebaseErrorCode(err as Error))
+      setLastErrorCode(getFunctionErrorCode(err as Error))
       handleError(err)
       throw err
     }

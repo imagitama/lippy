@@ -14,7 +14,7 @@ export interface WorldDataEvent {
   startsat: string
   endsat: string
   vrchatgroupid: string // from parent club
-  vrchatinstanceid: string | null // TODO: populate from API when null
+  vrchatinstanceid: string | null // can be auto populated from VRChat group instance
   atlas: {
     idx: number
     x: number

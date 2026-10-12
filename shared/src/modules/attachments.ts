@@ -1,3 +1,5 @@
+import { AccessStatus, ApprovalStatus } from './common.ts'
+
 export enum AttachmentReason {
   // AssetFile = 'asset-file',
   UserAdded = 'user-added',
@@ -31,8 +33,18 @@ export interface Attachment extends AttachmentFields {
   createdat: string
 }
 
-// TODO: extend from meta?
-export interface FullAttachment extends Attachment {
+export interface AttachmentMeta extends Record<string, unknown> {
+  id: string
+  approvalstatus: ApprovalStatus
+  accessstatus: AccessStatus
+  modnotes: string | null
+  lastmodifiedat: string | null // date
+  lastmodifiedby: string | null
+  createdat: string // date
+  createdby: string
+}
+
+export interface FullAttachment extends Attachment, AttachmentMeta {
   createdbyusername: string
   lastmodifiedbyusername: string
   modnotes: string | null

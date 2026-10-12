@@ -6,5 +6,5 @@ export interface CachedDiscordUser {
 }
 
 export enum CollectionNames {
-  DiscordUsersCache = 'discordusers', // TODO: rename to "cache"
+  DiscordUsersCache = 'discorduserscache',
 }

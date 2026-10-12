@@ -2,7 +2,7 @@ import React from 'react'
 import { makeStyles } from '@mui/styles'
 
 import { UserForList } from 'shared/modules/users'
-import UserListItem from '@/components/user-list-item'
+import UserResultsItem from '@/components/user-results-item'
 
 const useStyles = makeStyles({
   container: {
@@ -11,8 +11,7 @@ const useStyles = makeStyles({
   },
 })
 
-// TODO: rename to UserResults
-const UserList = ({
+const UserResults = ({
   users,
   showSignupDate = true,
 }: {
@@ -24,7 +23,7 @@ const UserList = ({
     <div className={classes.container}>
       {users
         ? users.map((user) => (
-            <UserListItem
+            <UserResultsItem
               key={user.id}
               user={user}
               showSignupDate={showSignupDate}
@@ -35,4 +34,4 @@ const UserList = ({
   )
 }
 
-export default UserList
+export default UserResults

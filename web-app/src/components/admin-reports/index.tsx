@@ -79,7 +79,7 @@ function ReportsTable({ reports }: { reports?: FullReport[] }) {
                     resolutionStatus={resolutionStatus}
                     resolvedByUsername={resolvedByUsername}
                   /> */}
-                  Resolution: {resolutionStatus} (todo - by who)
+                  Resolution: {resolutionStatus} (TODO - by who)
                 </TableCell>
               </TableRow>
             )

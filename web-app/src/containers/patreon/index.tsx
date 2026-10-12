@@ -20,7 +20,7 @@ import {
 } from 'shared/modules/users'
 import LoadingIndicator from '@/components/loading-indicator'
 import ErrorMessage from '@/components/error-message'
-import UserList from '@/components/user-list'
+import UserResults from '@/components/user-results'
 
 const useStyles = makeStyles({
   link: {
@@ -78,9 +78,9 @@ const Patrons = () => {
   return (
     <>
       <Heading variant="h2">Active Patrons</Heading>
-      <UserList users={active} showSignupDate={false} />
+      <UserResults users={active} showSignupDate={false} />
       <Heading variant="h2">Previous Patrons</Heading>
-      <UserList users={previous} showSignupDate={false} />
+      <UserResults users={previous} showSignupDate={false} />
     </>
   )
 }

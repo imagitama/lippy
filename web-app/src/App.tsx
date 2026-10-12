@@ -72,11 +72,9 @@ const useStyles = makeStyles({
     padding: '0 0.5rem 0.5rem',
     [mediaQueryForTabletsOrBelow]: {
       maxWidth: '100vw',
-      padding: '0 1rem 1rem',
-      // overflow: 'hidden',
     },
     [mediaQueryForMobiles]: {
-      padding: '0 0.5rem 0.5rem',
+      padding: '0 0.25rem 0.25rem',
     },
   },
   homeNotices: {

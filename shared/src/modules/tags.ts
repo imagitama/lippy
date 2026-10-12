@@ -1,3 +1,5 @@
+import type { AccessStatus } from './common.ts'
+
 export interface TagFields extends Record<string, unknown> {
   label: string
   category: string
@@ -13,12 +15,6 @@ export interface Tag extends TagFields {
   lastmodifiedby: string | null
   createdat: string
   createdby: string | null // can be null - system
-}
-
-// TODO: use common type?
-enum AccessStatus {
-  Public = 'public',
-  Deleted = 'deleted',
 }
 
 export interface TagMeta {

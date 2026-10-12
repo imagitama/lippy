@@ -189,7 +189,7 @@ export interface PaginatedViewProps<TRecord extends Record<string, any>> {
   defaultSubView?: string
   children?: React.ReactElement
   extraControls?: React.ReactElement[]
-  extraControlsLeft?: React.ReactElement[] // todo: better name
+  extraControlsLeft?: React.ReactElement[]
   urlWithSubViewNameAndPageNumberVar?: string
   createUrl?: string
   subViews?: SubViewConfig[]

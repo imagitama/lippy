@@ -12,9 +12,6 @@ export const DEFAULT_PAGE_DESC = 'Lippy'
 export const VRCHAT_GROUP_ID = 'LIPPY.5986'
 export const VRCHAT_GROUP_URL =
   'https://vrchat.com/home/group/grp_3cd9eaf5-e61d-4d74-a1a8-f10f1c9763c4'
-
-// test world
-// TODO: use prod world when ready
 export const JOIN_VRCHAT_WORLD_URL =
   'https://vrchat.com/home/content/worlds/wrld_53961058-f31d-4f7e-acf3-7b47fadfdc9a'
 
@@ -106,7 +103,6 @@ export const colorPalette = {
   positive: 'rgb(200, 255, 200)',
   negative: 'rgb(255, 200, 200)',
   warning: 'rgb(255, 255, 200)',
-  // TODO: move to a themes thing
   selectedBg: 'rgb(50, 50, 0)',
   selectedBoxShadow: '0 0 0 2px rgb(100, 100, 0)',
 }

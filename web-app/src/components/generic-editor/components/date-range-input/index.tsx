@@ -24,10 +24,7 @@ const DateRangeInput = ({
   return (
     <div>
       {startsAtValue && endsAtValue && (
-        <EventDateRange
-          startsAt={new Date(startsAtValue)}
-          endsAt={new Date(endsAtValue)}
-        />
+        <EventDateRange startsAt={startsAtValue} endsAt={endsAtValue} />
       )}
       <br />
       <DateTimeRangeInput

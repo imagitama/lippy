@@ -6,7 +6,7 @@ declare module '*.svg' {
   >
 }
 
-declare module '*.svg?raw' {
+declare module '*.svg?url' {
   export default String()
 }
 

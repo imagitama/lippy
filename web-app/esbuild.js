@@ -9,6 +9,26 @@ dotenv.config();
 
 const WEB_ROOT = __dirname;
 
+const urlPlugin = {
+  name: 'url',
+  setup(build) {
+    build.onResolve({ filter: /\?url$/ }, async (args) => {
+      const result = await build.resolve(args.path.replace(/\?url$/, ''), {
+        kind: args.kind,
+        resolveDir: args.resolveDir,
+      })
+      if (result.errors.length) return { errors: result.errors }
+      return { path: result.path, namespace: 'url' }
+    })
+
+    build.onLoad({ filter: /.*/, namespace: 'url' }, async (args) => ({
+      contents: await fs.readFile(args.path),
+      loader: 'file',
+      watchFiles: [args.path],
+    }))
+  },
+};
+
 (async () => {
   const define = {}
 
@@ -30,6 +50,7 @@ const WEB_ROOT = __dirname;
     sourcemap: true,
     target: ['esnext'],
     plugins: [
+      urlPlugin,
       svgrPlugin({
         exportType: 'named',
       }),

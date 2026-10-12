@@ -5,14 +5,16 @@ import { useLocation } from 'react-router'
 import * as routes from '@/routes'
 import { User, ViewNames, UserForList, UserRoles } from 'shared/modules/users'
 
-import UserList from '@/components/user-list'
+import UserResults from '@/components/user-results'
 import Heading from '@/components/heading'
 import PaginatedView, { GetQueryFn } from '@/components/paginated-view'
 import Link from '@/components/link'
 
 const sortKey = 'view-users'
 
-const Renderer = ({ items }: { items?: User[] }) => <UserList users={items!} />
+const Renderer = ({ items }: { items?: User[] }) => (
+  <UserResults users={items!} />
+)
 
 enum SubView {
   ALL = 'all',

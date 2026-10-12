@@ -33,7 +33,6 @@ const useStyles = makeStyles({
   },
   listItemIcon: {
     minWidth: 0,
-    color: '#240b36', // TODO: define in theme/config somewhere
     display: 'flex',
     alignItems: 'center',
   },

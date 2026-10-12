@@ -98,7 +98,7 @@ export interface FullReport<TParent = any> extends Report, ReportsMeta {
 
 export enum CollectionNames {
   Reports = 'reports',
-  ReportsMeta = 'reportsmeta', // TODO: Pluralize this sometime
+  ReportsMeta = 'reportsmeta',
 }
 
 export enum ViewNames {

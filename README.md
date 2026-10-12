@@ -1,6 +1,6 @@
 # Lippy
 
-A mono-repo for the [Lippy](todo) project:
+A mono-repo for the [Lippy](https://lippystreet.com) project:
 
 | Thing | Purpose |
 | --- | --- |

@@ -18,11 +18,8 @@ import Button from '@/components/button'
 import LoadingIndicator from '@/components/loading-indicator'
 import ErrorMessage from '@/components/error-message'
 import Paper from '@/components/paper'
-import Heading from '@/components/heading'
-import NoResultsMessage from '@/components/no-results-message'
 import SuccessMessage from '@/components/success-message'
-import useUserPreferences from '@/hooks/useUserPreferences'
-import UserPreferenceEditor from '../user-preference-editor'
+import UserPreferenceEditor from '@/components/user-preference-editor'
 
 const patreonOAuthUrl = `https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${process.env.REACT_APP_PATREON_CLIENT_ID}&redirect_uri=${process.env.REACT_APP_PATREON_REDIRECT_URI}&scope=identity%20campaigns.members`
 let oauthCode
