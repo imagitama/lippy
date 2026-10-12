@@ -148,7 +148,8 @@ const WelcomeMessage = () => {
       </Heading>
       <BodyText>
         Create an account, create a performer profile (stage name), then event
-        organisers can assign you to events.
+        organisers can assign you to events (they can also just type in your
+        name manually).
       </BodyText>
       <Heading variant="h2">Attendees</Heading>
       <BodyText>
