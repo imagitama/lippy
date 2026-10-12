@@ -160,11 +160,10 @@ const Cropper = ({
   const imageRef = useRef<HTMLImageElement>()
   const throttleTimeoutRef = useRef<NodeJS.Timeout>()
   const onImageLoadedTimeoutRef = useRef<NodeJS.Timeout>()
+  const aspect =
+    requiredWidth && requiredHeight ? requiredWidth / requiredHeight : undefined
   const [crop, setCrop] = useState<Crop>({
-    aspect:
-      requiredWidth && requiredHeight
-        ? requiredWidth / requiredHeight
-        : undefined,
+    aspect,
   })
   const classes = useStyles()
 
@@ -212,19 +211,54 @@ const Cropper = ({
           imageRef.current.crossOrigin = 'anonymous' // allow us to render cross-domain images like Gumroad
 
           // need this delay because it is needed apparently
+          // onImageLoadedTimeoutRef.current = setTimeout(() => {
+          //   setCrop((currentVal) => ({
+          //     ...currentVal,
+          //     x: 0,
+          //     y: 0,
+          //     width:
+          //       requiredWidth && img.width > requiredWidth
+          //         ? requiredWidth
+          //         : img.width,
+          //     height:
+          //       requiredHeight && img.height > requiredHeight
+          //         ? requiredHeight
+          //         : img.height,
+          //   }))
+          // }, 50)
+
           onImageLoadedTimeoutRef.current = setTimeout(() => {
+            let initialWidth = img.width
+            let initialHeight = img.height
+
+            if (aspect) {
+              if (img.width / img.height > aspect) {
+                // Image is wider than the target aspect ratio -> fit by height
+                initialHeight = img.height
+                initialWidth = img.height * aspect
+              } else {
+                // Image is taller or square -> fit by width
+                initialWidth = img.width
+                initialHeight = img.width / aspect
+              }
+            }
+
+            // Apply optional max dimension constraints if provided
+            if (requiredWidth && initialWidth > requiredWidth) {
+              initialWidth = requiredWidth
+              if (aspect) initialHeight = requiredWidth / aspect
+            }
+            if (requiredHeight && initialHeight > requiredHeight) {
+              initialHeight = requiredHeight
+              if (aspect) initialWidth = requiredHeight * aspect
+            }
+
             setCrop((currentVal) => ({
               ...currentVal,
               x: 0,
               y: 0,
-              width:
-                requiredWidth && img.width > requiredWidth
-                  ? requiredWidth
-                  : img.width,
-              height:
-                requiredHeight && img.height > requiredHeight
-                  ? requiredHeight
-                  : img.height,
+              width: initialWidth,
+              height: initialHeight,
             }))
           }, 50)
         }}
