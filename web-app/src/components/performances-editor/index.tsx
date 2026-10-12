@@ -23,6 +23,7 @@ import HintText from '../hint-text'
 import useDataStoreItem from '@/hooks/useDataStoreItem'
 import LoadingIndicator from '../loading-indicator'
 import ErrorMessage from '../error-message'
+import WarningMessage from '../warning-message'
 
 const SLOT_MS = 30 * 30 * 1000
 const SLOT_WIDTH_PX = 200 // px per 30-min slot
@@ -397,8 +398,45 @@ const PerformancesEditor = ({
     },
   })
 
+  const isFirstPerfOutOfBounds =
+    value.length > 0 &&
+    (new Date(value[0].startsat) < new Date(eventStartsAt) ||
+      new Date(value[0].endsat) > new Date(eventEndsAt))
+
+  const onRealignPerfs = () => {
+    if (value.length === 0) return
+
+    const oldFirstStart = new Date(value[0].startsat).getTime()
+    const newEventStart = new Date(eventStartsAt).getTime()
+    const offset = newEventStart - oldFirstStart
+
+    const updatedValue = value.map((perf) => {
+      const perfStart = new Date(perf.startsat).getTime()
+      const perfEnd = new Date(perf.endsat).getTime()
+
+      return {
+        ...perf,
+        startsat: new Date(perfStart + offset).toISOString(),
+        endsat: new Date(perfEnd + offset).toISOString(),
+      }
+    })
+
+    onChange(updatedValue)
+  }
+
   return (
     <>
+      {isFirstPerfOutOfBounds && (
+        <WarningMessage
+          controls={
+            <Button onClick={() => onRealignPerfs()} color="secondary">
+              Shift all performances to event start
+            </Button>
+          }>
+          The first performance starts before or after the event. This only
+          happens when someone changes the event start/end dates.
+        </WarningMessage>
+      )}
       <Root>
         <Container style={{ width: totalWidth }}>
           <DateRow>
