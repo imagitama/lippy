@@ -193,8 +193,6 @@ const GenericEditor = <TRecord extends Record<string, any>>({
   const [formFields, setFormFields] = useState<null | Partial<TRecord>>(
     overrideFields
       ? overrideFields
-      : id
-      ? null
       : {
           ...fields.reduce((newFormFields, fieldConfig) => {
             return {
