@@ -92,7 +92,7 @@ const useStyles = makeStyles({
   },
   primaryMetadata: {
     display: 'flex',
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: '1rem',
@@ -161,6 +161,7 @@ const View = () => {
     clubid: clubId,
     name,
     description,
+    posterurl: posterUrl,
     sourceurl,
     modnotes,
     featuredstatus,
@@ -209,14 +210,9 @@ const View = () => {
           </ClubStaffControls>
         ) : null}
         <div className={classes.primaryMetadata}>
-          {/* {thumbnailurl ? (
-            <img
-              src={thumbnailurl}
-              alt="Thumbnail for event"
-              width={300}
-              className={classes.primaryMetadataThumb}
-            />
-          ) : null} */}
+          {posterUrl ? (
+            <img src={posterUrl} alt="Poster for event" width="400px" />
+          ) : null}
           <Heading variant="h1">
             <Link to={routes.viewClubWithVar.replace(':clubId', clubId)}>
               {club.name}
