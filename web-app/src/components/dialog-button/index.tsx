@@ -13,7 +13,8 @@ function renderDialog(dialog: Props['dialog'], close: () => void) {
   if (React.isValidElement(dialog)) {
     return React.cloneElement(dialog, { close })
   }
-  return dialog({ close }) // called, not rendered as <Dialog />
+  // must call it as a function here to avoid re-mounting constantly (like with text inputs)
+  return dialog({ close })
 }
 
 const DialogButton = (buttonProps: Props) => {

@@ -73,7 +73,10 @@ const editableFields: EditableField<Event>[] = [
     type: fieldTypes.tags,
     showRecommendedTags: false,
     showSuggestButton: false, // TODO: finish this
-    suggestedTags: commonGenres.concat(lessCommonGenres),
+    suggestedTags: {
+      Common: commonGenres,
+      'Less Common': lessCommonGenres,
+    },
     default: [],
     isRequired: true,
     hint: 'Help people find and filter your event.',
@@ -84,7 +87,10 @@ const editableFields: EditableField<Event>[] = [
     type: fieldTypes.tags,
     showRecommendedTags: false,
     showSuggestButton: false, // TODO: finish this
-    suggestedTags: eventTags.concat(worldTags),
+    suggestedTags: {
+      Events: eventTags,
+      World: worldTags,
+    },
     default: [],
     isRequired: true,
     hint: 'Help people find and filter your event. Indicate to people what they might expect like flashing lights.',

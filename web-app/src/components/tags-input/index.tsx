@@ -93,7 +93,9 @@ export interface TagsInputSettings {
   showRecommendedTags?: boolean
   autoComplete?: boolean
   showSuggestButton?: boolean
-  suggestedTags?: string[]
+  suggestedTags?: {
+    [label: string]: string[]
+  }
 }
 
 const TagsInput = ({
@@ -161,7 +163,12 @@ const TagsInput = ({
       {showRecommendedTags && <RecommendedTags onClick={addTag} />}
       {suggestedTags && (
         <SuggestedTagsWrapper>
-          <TagList tags={suggestedTags} onClick={addTag} />
+          {Object.entries(suggestedTags).map(([label, tags]) => (
+            <>
+              <strong>{label}</strong>
+              <TagList tags={tags} onClick={addTag} />
+            </>
+          ))}
         </SuggestedTagsWrapper>
       )}
       {/* {showSuggestButton && (

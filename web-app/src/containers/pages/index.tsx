@@ -13,6 +13,7 @@ import useDataStoreItem from '@/hooks/useDataStoreItem'
 import LoadingIndicator from '@/components/loading-indicator'
 import ErrorMessage from '@/components/error-message'
 import Link from '@/components/link'
+import PageContent from '@/components/page-content'
 
 const EditorControls = () => {
   const { parentName: incomingParentName, pageName: incomingPageName } =
@@ -56,16 +57,18 @@ const PageRenderer = ({
         <title>{page.title}</title>
         <meta name="description" content={page.description} />
       </Helmet>
-      <Heading variant="h1">
-        <Link
-          to={routes.pagesWithParentAndPageVar
-            .replace(':parentName', page.parentid)
-            .replace(':pageName', page.id)}>
-          {page.title}
-        </Link>
-      </Heading>
-      <Markdown source={page.content} />
-      <EditorControls />
+      <PageContent>
+        <Heading variant="h1">
+          <Link
+            to={routes.pagesWithParentAndPageVar
+              .replace(':parentName', page.parentid)
+              .replace(':pageName', page.id)}>
+            {page.title}
+          </Link>
+        </Heading>
+        <Markdown source={page.content} />
+        <EditorControls />
+      </PageContent>
     </>
   )
 }

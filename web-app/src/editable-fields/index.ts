@@ -101,7 +101,6 @@ export interface TagEditableField<TRecord>
   extends TagsInputSettings,
     EditableFieldBase<TRecord> {
   type: fieldTypes.tags
-  suggestedTags?: string[]
 }
 
 export interface MarkdownEditableField<TRecord>

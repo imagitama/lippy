@@ -57,8 +57,9 @@ const AlphaOrBetaTable = ({ isAlpha }: { isAlpha: boolean }) => {
       </ErrorMessage>
     )
 
-  if (!results || results.length === 0)
-    return <ErrorMessage>Data is empty/wrong</ErrorMessage>
+  if (!results?.length) return <NoResultsMessage>No events</NoResultsMessage>
+
+  if (!results) return <ErrorMessage>Data is empty</ErrorMessage>
 
   return (
     <Table size="small" noMinWidth>

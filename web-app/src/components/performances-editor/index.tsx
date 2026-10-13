@@ -35,6 +35,7 @@ const Root = styled.div`
   width: 100%;
   overflow-x: auto;
   min-width: 0;
+  font-size: 75%;
 `
 const Container = styled.div``
 
@@ -157,7 +158,6 @@ const RightDragHandle = styled(DragHandle)`
 `
 
 const DateOutput = styled.div`
-  font-size: 75%;
   font-weight: bold;
   user-select: none;
 `
@@ -549,7 +549,7 @@ const PerformancesEditor = ({
                             </FormControls>
                           </>
                         )}>
-                        Set Name
+                        Name
                       </DialogButton>
                     </div>
                   </PerformerName>

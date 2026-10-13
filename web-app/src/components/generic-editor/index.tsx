@@ -286,7 +286,7 @@ const GenericEditor = <TRecord extends Record<string, any>>({
     name: string,
     newVal: string | boolean | number | null
   ) => {
-    console.debug(`onFieldChange`, name, newVal)
+    // console.debug(`onFieldChange`, name, newVal)
 
     if (onFieldChanged) {
       onFieldChanged(name, newVal)

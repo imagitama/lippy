@@ -52,10 +52,10 @@ const useStyles = makeStyles({
       width: '1em',
       height: '1em',
       fontSize: '200%',
-      marginRight: '0.5rem',
-      [mediaQueryForMobiles]: {
-        marginRight: '0.1rem',
-      },
+      marginRight: '0.25rem',
+      // [mediaQueryForMobiles]: {
+      //   marginRight: '0.1rem',
+      // },
     },
     transition: 'all 100ms',
     '&:hover': {
