@@ -206,7 +206,7 @@ const Duration = styled.div`
   user-select: none;
 `
 
-const PerformerNameById = ({
+export const PerformerNameById = ({
   id,
   customName,
 }: {

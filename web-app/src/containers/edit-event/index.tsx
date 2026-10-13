@@ -9,6 +9,10 @@ import {
   EventForList,
   FullPerformance,
 } from 'shared/modules/events'
+import {
+  Performer,
+  CollectionNames as PerformersCollectionNames,
+} from 'shared/modules/performers'
 import editableFields from '@/editable-fields/events'
 import { addDays } from '@/utils/dates'
 import useIsLoggedIn from '@/hooks/useIsLoggedIn'
@@ -20,8 +24,32 @@ import NotLoggedInMessage from '@/components/not-logged-in-message'
 import HorizontalTimeline from '@/components/horizontal-timeline'
 import WarningMessage from '@/components/warning-message'
 import InfoMessage from '@/components/info-message'
+import useDataStoreItems from '@/hooks/useDataStoreItems'
+
+const usePerformerNamesById = (
+  ids: string[]
+): [boolean, string | null, { id: string; name: string }[] | null] => {
+  const [isLoading, lastErrorCode, results] = useDataStoreItems<Performer>(
+    PerformersCollectionNames.Performers,
+    ids
+  )
+  return [
+    isLoading,
+    lastErrorCode,
+    results?.map((perf) => ({
+      id: perf.id,
+      name: perf.name,
+    })) || null,
+  ]
+}
 
 const EventPreview = ({ event }: { event: Partial<Event> }) => {
+  const [, , performerIdsAndNames] = usePerformerNamesById(
+    event.performances
+      ?.filter((perf) => perf.performerid)
+      .map((perf) => perf.performerid!) || []
+  )
+
   if (!event.startsat && !event.endsat)
     return (
       <WarningMessage>
@@ -31,7 +59,11 @@ const EventPreview = ({ event }: { event: Partial<Event> }) => {
 
   const mockFullPerformances: FullPerformance[] =
     event.performances?.map((perf) => {
-      const perfName = perf.performername || perf.performerid!
+      const perfName =
+        perf.performerid && performerIdsAndNames
+          ? performerIdsAndNames.find((item) => item.id === perf.performerid)
+              ?.name || 'Loading...'
+          : perf.performername || perf.performerid || ''
       return {
         ...perf,
         fullperformername: perfName,
