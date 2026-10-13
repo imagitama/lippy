@@ -160,6 +160,7 @@ const RightDragHandle = styled(DragHandle)`
 const DateOutput = styled.div`
   font-weight: bold;
   user-select: none;
+  line-height: 1;
 `
 const StartDate = styled(DateOutput)`
   margin-left: 15px;
@@ -168,11 +169,20 @@ const EndDate = styled(DateOutput)`
   margin-right: 15px;
 `
 
-const PerformerName = styled.div`
+const PerformerLabel = styled.div`
   width: 100%;
   margin: 5px 0 0 15px;
   text-align: center;
 `
+
+const PerformerName = styled.div`
+  display: flex;
+  align-items: center;
+  svg {
+    margin-right: 2px;
+  }
+`
+
 const Controls = styled.div`
   position: relative;
   height: 50px;
@@ -225,7 +235,7 @@ export const PerformerNameById = ({
       </ErrorMessage>
     )
   return (
-    <>
+    <PerformerName>
       {performer ? (
         <>
           <PerformerIcon /> {performer.name}
@@ -237,7 +247,7 @@ export const PerformerNameById = ({
       ) : (
         '(no name yet)'
       )}
-    </>
+    </PerformerName>
   )
 }
 
@@ -479,7 +489,8 @@ const PerformancesEditor = ({
                 style={{
                   left: msToPx(eventStart - timelineStart),
                   width: msToPx(eventEnd - eventStart),
-                }}></EventCell>
+                }}
+              />
             </EventRow>
             {value.map((perf, idx) => {
               const left = msToPx(
@@ -493,7 +504,7 @@ const PerformancesEditor = ({
                 <PerformanceCell key={idx} style={{ left, width }}>
                   <LeftDragHandle {...dragProps('startsat', perf, idx)} />
                   <StartDate>{getTimeRowLabel(perf.startsat)}</StartDate>
-                  <PerformerName>
+                  <PerformerLabel>
                     <Duration>
                       {getFriendlyDuration(perf.startsat, perf.endsat)}
                     </Duration>
@@ -552,7 +563,7 @@ const PerformancesEditor = ({
                         Name
                       </DialogButton>
                     </div>
-                  </PerformerName>
+                  </PerformerLabel>
                   <EndDate>{getTimeRowLabel(perf.endsat)}</EndDate>
                   <RightDragHandle {...dragProps('endsat', perf, idx)} />
                 </PerformanceCell>
