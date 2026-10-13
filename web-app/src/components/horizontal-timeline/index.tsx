@@ -293,6 +293,7 @@ const PerformanceBox = styled.div<PositionProps>`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: left;
   }
 `
 
@@ -319,7 +320,8 @@ const Controls = styled.div`
 
 const Genres = styled.div`
   position: relative;
-  top: -1px;
+  top: 1px;
+  left: 7px;
   font-size: 75%;
   span {
     margin-right: 0.25rem;
