@@ -52,21 +52,25 @@ function useEventsByDay(
     ? addDays(targetStartDate, 1)
     : undefined
 
-  // console.debug(`useEventsByDay`, timeRange, targetStartDate, targetEndDate)
-
   const [isLoading, lastErrorCode, events, hydrate] =
-    useDatabaseQuery<PublicEvent>(ViewNames.GetPublicEvents, [
-      [
-        'startsat',
-        Operators.LESS_THAN,
-        (targetEndDate ?? new Date(0)).toISOString(),
-      ],
-      [
-        'endsat',
-        Operators.GREATER_THAN,
-        (targetStartDate ?? new Date(0)).toISOString(),
-      ],
-    ])
+    useDatabaseQuery<PublicEvent>(
+      ViewNames.GetPublicEvents,
+      targetStartDate && targetEndDate
+        ? [
+            ['startsat', Operators.LESS_THAN, targetEndDate.toISOString()],
+            ['endsat', Operators.GREATER_THAN, targetStartDate.toISOString()],
+          ]
+        : false,
+      {
+        queryName: `events-by-day`,
+      }
+    )
+
+  console.debug(`useEventsByDay`, {
+    targetStartDate,
+    targetEndDate,
+    fetchedEvents: events,
+  })
 
   // only commit results once we've seen this target's fetch actually run,
   // so stale results from the previous day never get filed under the new one
@@ -86,14 +90,13 @@ function useEventsByDay(
     }
   }, [isLoading, events, target, lastErrorCode])
 
-  // merge cached days, dedupe (events can span days), clip to visible range
-  const visibleEvents = useMemo(() => {
+  const allEvents = useMemo(() => {
     const byId = new Map<string, PublicEvent>()
     for (const list of cache.values()) for (const e of list) byId.set(e.id, e)
     return [...byId.values()]
-  }, [cache, startMs, endMs])
+  }, [cache])
 
-  return [isLoading, lastErrorCode, visibleEvents, hydrate]
+  return [isLoading, lastErrorCode, allEvents, hydrate]
 }
 
 export default useEventsByDay
