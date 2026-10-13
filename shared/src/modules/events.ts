@@ -68,6 +68,7 @@ export interface EventForList extends Event {
   featuredstatus: FeaturedStatus
   fullperformances: FullPerformance[]
   clubname: string
+  clubthumbnailurl: string | null
   vrchatinstancecache: VrchatInstanceCachedItem | null
 }
 

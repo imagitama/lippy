@@ -34,7 +34,7 @@ export const PerformanceListItem = ({
   <Item>
     <Date>{getFriendlyDate(perf.startsat)}</Date>
     <Label>
-      {'fullperformername' in perf
+      {'fullperformername' in perf && perf.fullperformername
         ? perf.fullperformername
         : perf.performername || perf.performerid}
     </Label>

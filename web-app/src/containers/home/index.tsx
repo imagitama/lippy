@@ -25,7 +25,7 @@ const View = () => {
     if (!events) return []
     for (const event of events) allEventsRef.current.set(event.id, event)
     return [...allEventsRef.current.values()]
-  }, [events?.map((ev) => ev.id).join(',')])
+  }, [JSON.stringify(events)])
 
   const selectedEvent =
     (selectedEventId && events?.find((ev) => ev.id === selectedEventId)) || null

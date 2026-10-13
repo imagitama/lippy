@@ -250,18 +250,22 @@ const EventButton = styled(ButtonBase, {
 
 const EventLabel = styled.div`
   width: 100%;
+  height: 17px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
   display: flex;
-  align-items: first baseline;
-  & > *:first-child {
-    margin-right: 0.5rem;
+  align-items: center;
+  img {
+    height: 17px;
+    margin-right: 4px;
   }
 `
 
-const EventName = styled(Typography)`
+const EventName = styled.span`
   flex-shrink: 0;
-  font-size: 90%;
-  font-weight: 600;
-  margin-top: 4px;
+  font-size: 75%;
+  margin-top: 2px;
 `
 
 const Performances = styled.div`
@@ -280,11 +284,16 @@ const PerformanceBox = styled.div<PositionProps>`
   overflow: hidden;
   border-radius: 4px;
   padding: 0 0 0 5px;
-  // background-color: ${(p) => getTheme(p).palette.primary.dark};
   background-color: rgba(255, 255, 255, 0.1);
-  // color: ${(p) => getTheme(p).palette.text.primary};
   color: rgb(175, 175, 175);
-  text-align: left;
+  span {
+    display: block;
+    margin-top: 5px;
+    font-size: 75%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 `
 
 const NowLine = styled.div<{ leftPx: number }>`
@@ -399,9 +408,10 @@ function getParsedEvents(events: EventForList[]): ParsedEvent[] {
     (a, b) => a.startMs - b.startMs || a.endMs - b.endMs
   )
   const { lanes } = getPackedLanes(sorted)
-  return sorted.map((e, i) => ({ ...e, rowIdx: lanes[i] }))
 
-  // return parsedEvents.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs)
+  // console.debug(`HorizontalTimeline.getParsedEvents`, { events, sorted })
+
+  return sorted.map((e, i) => ({ ...e, rowIdx: lanes[i] }))
 }
 
 const timeFormatter = new Intl.DateTimeFormat(undefined, {
@@ -807,9 +817,10 @@ const HorizontalTimeline = ({
                     isClippedLeft={eventBoxPx.isClippedLeft}
                     isClippedRight={eventBoxPx.isClippedRight}>
                     <EventLabel>
-                      <EventName variant="body2" noWrap>
-                        {event.name}
-                      </EventName>
+                      {event.clubthumbnailurl && (
+                        <img src={event.clubthumbnailurl} alt="Club thumbnil" />
+                      )}
+                      <EventName>{event.name}</EventName>
                       {event.genres.length ? (
                         <Genres>
                           {event.genres.map((tag) => (
@@ -862,9 +873,7 @@ const HorizontalTimeline = ({
                               }
                               widthPx={performanceBoxPx.widthPx - 1}
                               data-performer={performance.performerid}>
-                              <Typography variant="caption" noWrap>
-                                {label}
-                              </Typography>
+                              <span>{label}</span>
                             </PerformanceBox>
                             // </Tooltip>
                           )
