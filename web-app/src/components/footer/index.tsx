@@ -117,7 +117,7 @@ function DevelopmentTools() {
           <td>
             SB: {supabaseUserId}
             <br />
-            Editor: {isMod ? 'Yes' : 'No'}
+            Mod: {isMod ? 'Yes' : 'No'}
             <br />
             <br />
             Is verified: {isVerified ? 'Yes' : 'No'}

@@ -18,8 +18,10 @@ import LoadingIndicator from '@/components/loading-indicator'
 import ErrorMessage from '@/components/error-message'
 import NoResultsMessage from '@/components/no-results-message'
 
-export const POSTER_WIDTH = 300 * 2
-export const POSTER_HEIGHT = 400 * 2
+// 2:3 standard movie size
+// NOTE: atlassing is configured for 2:3
+export const POSTER_WIDTH = 1000
+export const POSTER_HEIGHT = 1500
 
 const ClubOutput = ({ clubId }: { clubId: string }) => {
   const [isLoading, lastErrorCode, club] = useDataStoreItem<FullClub>(
