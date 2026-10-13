@@ -30,7 +30,7 @@ const View = () => {
   const selectedEvent =
     (selectedEventId && events?.find((ev) => ev.id === selectedEventId)) || null
 
-  // console.debug(`view.render`, { range, allEvents })
+  console.debug(`view.render`, { range, allEvents })
 
   return (
     <StyledRoot>

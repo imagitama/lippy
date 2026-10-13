@@ -76,7 +76,10 @@ export interface PublicEvent extends EventForList {}
 
 export interface FullEvent extends Event, EventMeta {
   fullperformances: FullPerformance[]
-  club: Pick<Club, 'name' | 'owneruserids' | 'moduserids' | 'createdby'>
+  club: Pick<
+    Club,
+    'name' | 'owneruserids' | 'moduserids' | 'createdby' | 'thumbnailurl'
+  >
   vrchatinstancecache: VrchatInstanceCachedItem | null
   attendance: FullEventAttendance[]
 }

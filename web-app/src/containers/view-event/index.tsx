@@ -115,6 +115,16 @@ const useStyles = makeStyles({
   controlGroup: {
     marginBottom: '1rem',
   },
+  clubName: {
+    '& a': {
+      display: 'flex',
+      alignItems: 'center',
+    },
+    '& img': {
+      width: '50px',
+      marginRight: '0.5rem',
+    },
+  },
 })
 
 const Divider = styled.div`
@@ -213,8 +223,11 @@ const View = () => {
           {posterUrl ? (
             <img src={posterUrl} alt="Poster for event" width="400px" />
           ) : null}
-          <Heading variant="h1">
+          <Heading variant="h1" className={classes.clubName}>
             <Link to={routes.viewClubWithVar.replace(':clubId', clubId)}>
+              {club.thumbnailurl && (
+                <img src={club.thumbnailurl} alt="Club thumbnail" />
+              )}
               {club.name}
             </Link>
             <Divider>/</Divider>

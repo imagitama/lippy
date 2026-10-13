@@ -35,6 +35,13 @@ import ReportButton from '../report-button'
 
 const StyledClubDetails = styled.div`
   font-size: 125%;
+  display: flex;
+  align-items: center;
+  & img {
+    width: 50px;
+    height: 50px;
+    margin-right: 0.5rem;
+  }
 `
 
 const Desc = styled.div`
@@ -103,7 +110,9 @@ const EventPanel = ({
         </Column>
         <Column>
           <StyledClubDetails>
-            Club{' '}
+            {event.clubthumbnailurl && (
+              <img src={event.clubthumbnailurl} alt="Club thumbnail" />
+            )}
             <Link to={routes.viewClubWithVar.replace(':clubId', event.clubid)}>
               {event.clubname}
             </Link>
