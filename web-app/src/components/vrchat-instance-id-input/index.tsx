@@ -26,11 +26,11 @@ const VrchatInstanceIdInput = ({
 
   const instanceId = textVal ? getInstanceIdFromUrl(textVal) : null
 
-  console.debug(`VrchatInstanceIdInput.render`, { value })
+  // console.debug(`VrchatInstanceIdInput.render`, { value })
 
   useEffect(() => {
     if (!textVal) return
-    console.debug(`VrchatInstanceIdInput.changed`, { textVal, instanceId })
+    // console.debug(`VrchatInstanceIdInput.changed`, { textVal, instanceId })
     onChange(instanceId)
   }, [textVal])
 

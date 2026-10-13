@@ -12,7 +12,6 @@ import useEventsByDay from './useEventsByDay'
 
 const StyledRoot = styled.div`
   position: relative;
-  height: 100%;
 `
 
 const View = () => {
