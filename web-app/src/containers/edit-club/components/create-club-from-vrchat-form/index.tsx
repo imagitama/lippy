@@ -26,6 +26,7 @@ import StatusText from '@/components/status-text'
 import { PostgresErrorCode } from '@/data-store'
 import FormControls from '@/components/form-controls'
 import WarningMessage from '@/components/warning-message'
+import JoinBotToVrchatGroupForm from '@/components/join-bot-to-vrchat-group-form'
 
 interface GetVrchatGroupsForUserPayload {
   userId: string
@@ -131,8 +132,11 @@ const VrchatGroups = ({
 
 const CreateClubFromVrchatForm = () => {
   const [, , user] = useUserRecord()
-  const [selectedGroup, setSelectedGroup] =
-    useState<null | VrchatGroupMembership>(null)
+  const [groupMem, setGroupMem] = useState<null | VrchatGroupMembership>(null)
+  const [isMemberOfGroup, setIsMemberOfGroup] = useState(false)
+  const [isSkipping, setIsSkipping] = useState(false)
+
+  const onClickSkipJoiningGroup = () => setIsSkipping(true)
 
   if (!user!.linkedvrchatuserid)
     return (
@@ -149,39 +153,61 @@ const CreateClubFromVrchatForm = () => {
       </WarningMessage>
     )
 
-  return (
-    <>
-      <Heading variant="h1">Create Club from VRChat Group</Heading>
-      {!selectedGroup && (
-        <VrchatGroups onSelectGroup={(group) => setSelectedGroup(group)} />
-      )}
-      {selectedGroup && (
-        <GenericEditor<Club>
-          fields={editableFields}
-          collectionName={CollectionNames.Clubs}
-          analyticsCategory={'CreateClub'}
-          saveBtnAction="Click save club button"
-          cancelBtnAction="Click cancel button"
-          getSuccessUrl={(newId) =>
-            routes.viewClubWithVar.replace(':clubId', newId!)
-          }
-          overrideFields={{
-            vrchatgroupid: selectedGroup.groupId,
-            // TODO: resonite/chilloutvr group IDs here too
-            name: selectedGroup.name,
-            description: selectedGroup.description,
-          }}
-          getErrorMessage={(code: string) => {
-            switch (code) {
-              case PostgresErrorCode.UniqueViolation:
-                return 'a club with that VRChat group already exists'
+  if (groupMem) {
+    if (!isMemberOfGroup && isSkipping === false) {
+      return (
+        <>
+          <InfoMessage>
+            If you want Lippy to automatically find your group instances for
+            your events our bot must join your group (and stay in the group for
+            the duration of your event). This is entirely optional.
+          </InfoMessage>
+          <FormControls>
+            <JoinBotToVrchatGroupForm
+              vrchatGroupId={groupMem.groupId}
+              onSuccess={() => setIsMemberOfGroup(true)}
+            />
+          </FormControls>
+          <FormControls>
+            <Button onClick={onClickSkipJoiningGroup} color="secondary">
+              Skip
+            </Button>
+          </FormControls>
+        </>
+      )
+    } else {
+      return (
+        <>
+          <Heading variant="h1">Create Club from VRChat Group</Heading>
+          <GenericEditor<Club>
+            fields={editableFields}
+            collectionName={CollectionNames.Clubs}
+            analyticsCategory={'CreateClub'}
+            saveBtnAction="Click save club button"
+            cancelBtnAction="Click cancel button"
+            getSuccessUrl={(newId) =>
+              routes.viewClubWithVar.replace(':clubId', newId!)
             }
-            return ''
-          }}
-        />
-      )}
-    </>
-  )
+            overrideFields={{
+              vrchatgroupid: groupMem.groupId,
+              // TODO: resonite/chilloutvr group IDs here too
+              name: groupMem.name,
+              description: groupMem.description,
+            }}
+            getErrorMessage={(code: string) => {
+              switch (code) {
+                case PostgresErrorCode.UniqueViolation:
+                  return 'a club with that VRChat group already exists'
+              }
+              return ''
+            }}
+          />
+        </>
+      )
+    }
+  }
+
+  return <VrchatGroups onSelectGroup={(group) => setGroupMem(group)} />
 }
 
 export default CreateClubFromVrchatForm

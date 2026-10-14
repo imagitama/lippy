@@ -36,6 +36,7 @@ import SyncVrchatGroupForm from '@/components/sync-vrchat-group-form'
 import EventResults from '@/components/event-results'
 import NoResultsMessage from '@/components/no-results-message'
 import Metadata from '@/components/metadata'
+import JoinBotToVrchatGroupForm from '@/components/join-bot-to-vrchat-group-form'
 
 const useStyles = makeStyles({
   categories: {
@@ -264,6 +265,9 @@ const View = () => {
               </EditButton>
               <SyncVrchatGroupForm vrchatGroupId={club.linkedvrchatgroupid} />
             </FormControls>
+            <JoinBotToVrchatGroupForm
+              vrchatGroupId={club.linkedvrchatgroupid}
+            />
             {/* <EditorRecordManager
             id={clubId}
             metaCollectionName={CollectionNames.ClubsMeta}
