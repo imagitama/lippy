@@ -334,11 +334,11 @@ const EventsOutput = ({ json }: { json: string }) => {
   if (!externalData || !rawEvents || !rawEvents.length)
     return <NoResultsMessage>No events found</NoResultsMessage>
 
-  rawEvents.sort((a, b) => a.start - b.start)
+  const sorted = rawEvents.toSorted((a, b) => a.end - b.end)
 
   return (
     <>
-      {rawEvents.map((rawEvent) => (
+      {sorted.map((rawEvent) => (
         <LazyLoad key={rawEvent.id}>
           <ExternalEventOutput
             externalEvent={rawEvent}
