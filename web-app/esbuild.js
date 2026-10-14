@@ -9,6 +9,20 @@ dotenv.config();
 
 const WEB_ROOT = __dirname;
 
+const rawPlugin = {
+  name: 'raw-json',
+  setup(build) {
+    build.onResolve({ filter: /\?raw$/ }, args => ({
+      path: path.resolve(args.resolveDir, args.path.replace(/\?raw$/, '')),
+      namespace: 'raw',
+    }))
+    build.onLoad({ filter: /.*/, namespace: 'raw' }, async args => ({
+      contents: await fs.readFile(args.path, 'utf8'),
+      loader: 'text',
+    }))
+  },
+}
+
 const urlPlugin = {
   name: 'url',
   setup(build) {
@@ -51,6 +65,7 @@ const urlPlugin = {
     target: ['esnext'],
     plugins: [
       urlPlugin,
+      rawPlugin,
       svgrPlugin({
         exportType: 'named',
       }),

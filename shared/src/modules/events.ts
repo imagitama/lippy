@@ -76,7 +76,7 @@ export interface PublicEvent extends EventForList {}
 
 export interface FullEvent extends Event, EventMeta {
   fullperformances: FullPerformance[]
-  club: Pick<
+  club: null | Pick<
     Club,
     'name' | 'owneruserids' | 'moduserids' | 'createdby' | 'thumbnailurl'
   >

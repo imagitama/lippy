@@ -45,3 +45,4 @@ export { default as Pages } from './containers/pages'
 export { default as EditPage } from './containers/edit-page'
 
 export { default as Vrchat } from './containers/vrchat'
+export { default as Importer } from './containers/importer'

@@ -141,3 +141,4 @@ export const adminHistoryWithQueryParamVars =
   '/admin/history?userId=:userId&parentType=:parentType&parentId=:parentId'
 
 export const vrchat = '/vrchat'
+export const importer = '/importer'

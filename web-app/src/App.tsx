@@ -310,6 +310,7 @@ const MainContent = () => {
         <Route exact path={routes.events} component={Lazy.Events} />
         <Route exact path={'/dev'} component={Lazy.Dev} />
         <Route exact path={routes.vrchat} component={Lazy.Vrchat} />
+        <Route exact path={routes.importer} component={Lazy.Importer} />
         {/* pages - these must always be at the end as catch all */}
         <Route
           exact

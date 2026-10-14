@@ -13,6 +13,7 @@ export interface WorldDataEvent {
   name: string
   startsat: string
   endsat: string
+  clubname: string
   vrchatgroupid: string // from parent club
   vrchatinstanceid: string | null // can be auto populated from VRChat group instance
   atlas: {
@@ -46,6 +47,7 @@ export interface EventAlphaOrBeta extends Record<string, unknown> {
 export interface EventAlphaOrBetaForWorld extends EventAlphaOrBeta {
   vrchatgroupid: string // from parent club
   event: Event
+  clubname: string
 }
 
 // for display /world

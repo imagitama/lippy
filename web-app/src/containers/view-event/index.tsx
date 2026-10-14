@@ -191,10 +191,12 @@ const View = () => {
     (attendanceItem) => attendanceItem.status !== AttendanceStatus.Abstain
   )
 
-  const isClubOwner = myUserId
-    ? club.owneruserids.includes(myUserId) || club.createdby === myUserId
-    : false
-  const isClubMod = myUserId ? club.moduserids.includes(myUserId) : false
+  const isClubOwner =
+    club && myUserId
+      ? club.owneruserids.includes(myUserId) || club.createdby === myUserId
+      : false
+  const isClubMod =
+    myUserId && club ? club.moduserids.includes(myUserId) : false
   const isClubStaff = isClubOwner || isClubMod
 
   return (
@@ -224,13 +226,17 @@ const View = () => {
             <img src={posterUrl} alt="Poster for event" width="400px" />
           ) : null}
           <Heading variant="h1" className={classes.clubName}>
-            <Link to={routes.viewClubWithVar.replace(':clubId', clubId)}>
-              {club.thumbnailurl && (
-                <img src={club.thumbnailurl} alt="Club thumbnail" />
-              )}
-              {club.name}
-            </Link>
-            <Divider>/</Divider>
+            {club && (
+              <>
+                <Link to={routes.viewClubWithVar.replace(':clubId', clubId)}>
+                  {club.thumbnailurl && (
+                    <img src={club.thumbnailurl} alt="Club thumbnail" />
+                  )}
+                  {club.name}
+                </Link>
+                <Divider>/</Divider>
+              </>
+            )}
             <Link
               to={routes.viewEventWithVar.replace(':eventId', eventIdOrSlug)}>
               {name}

@@ -17,3 +17,12 @@ declare module '*.png' {
 declare module '*.webp' {
   export default String()
 }
+
+declare module '*.json?raw' {
+  export default String()
+}
+
+declare module '*.css' {
+  const styles: { [className: string]: string }
+  export default styles
+}
