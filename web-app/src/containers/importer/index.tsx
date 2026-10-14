@@ -40,6 +40,8 @@ import { Event } from 'shared/modules/events'
 import ImageUploader from '@/components/image-uploader'
 import LazyLoad from '@/components/lazy-load'
 import FormattedDate from '@/components/formatted-date'
+import CheckboxInput from '@/components/checkbox-input'
+import DateTimeRangeInput from '@/components/datetime-range-input'
 
 const ComponentForField = ({
   name,
@@ -324,6 +326,12 @@ const EventsOutput = ({ json }: { json: string }) => {
   const [isLoading, lastErrorCode, existingImporterDetails] =
     useDataStore<ImporterDetails>(getQuery)
 
+  const [isFiltering, setIsFiltering] = useState(false)
+  const [filterDates, setFilterDates] = useState<null | {
+    startsAt: string | undefined
+    endsAt: string | undefined
+  }>(null)
+
   if (isLoading)
     return <LoadingIndicator message="Finding existing imports..." />
   if (lastErrorCode !== null)
@@ -336,9 +344,47 @@ const EventsOutput = ({ json }: { json: string }) => {
 
   const sorted = rawEvents.toSorted((a, b) => a.end - b.end)
 
+  const toUnix = (s?: string) => {
+    if (!s) return undefined
+    const ms = new Date(s).getTime()
+    return Number.isNaN(ms) ? undefined : Math.floor(ms / 1000)
+  }
+
+  const from = isFiltering ? toUnix(filterDates?.startsAt) : undefined
+  const to = isFiltering ? toUnix(filterDates?.endsAt) : undefined
+
+  const results = sorted.filter(
+    (e) =>
+      (from === undefined || e.end >= from) && (to === undefined || e.end <= to)
+  )
+
   return (
     <>
-      {sorted.map((rawEvent) => (
+      <Paper title="Events">
+        Found {rawEvents.length} events
+        <hr />
+        <CheckboxInput
+          value={isFiltering}
+          label={'Filter by date'}
+          onChange={(newVal) => setIsFiltering(newVal)}
+        />
+        {isFiltering && (
+          <>
+            <DateTimeRangeInput
+              startsAtValue={filterDates?.startsAt || new Date().toISOString()}
+              endsAtValue={filterDates?.endsAt || new Date().toISOString()}
+              onChange={(newStartsAt, newEndsAt) =>
+                setFilterDates({
+                  startsAt: newStartsAt,
+                  endsAt: newEndsAt,
+                })
+              }
+            />
+            Filtering to {results.length}
+          </>
+        )}
+      </Paper>
+      {results.map((rawEvent) => (
         <LazyLoad key={rawEvent.id}>
           <ExternalEventOutput
             externalEvent={rawEvent}
