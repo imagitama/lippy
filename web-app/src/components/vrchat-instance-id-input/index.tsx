@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import TextInput from '../text-input'
 import Paper from '../paper'
+import FormControls from '../form-controls'
+import Button from '../button'
 
 const getInstanceIdFromUrl = (url: string): string | null => {
   const { searchParams } = new URL(url)
@@ -47,7 +49,16 @@ const VrchatInstanceIdInput = ({
         eg.
         https://vrchat.com/home/launch?worldId=wrld_6ad41169-1631-40b6-8a8d-491cc39c408b&instanceId=92902~group(grp_d49c108b-dcf4-49b5-8efa-5cfce12f6c9c)~groupAccessType(plus)~ageGate~region(us)
       </small>
-      {value && <Paper>Using instance ID '{value || '(none yet)'}'</Paper>}
+      {value && (
+        <Paper>
+          Using instance ID '{value || '(none yet)'}'
+          <FormControls>
+            <Button onClick={() => onChange(null)} color="secondary">
+              Clear
+            </Button>
+          </FormControls>
+        </Paper>
+      )}
     </>
   )
 }
