@@ -1,6 +1,5 @@
 import Button from '@/components/button'
 import ErrorMessage from '@/components/error-message'
-import HintText from '@/components/hint-text'
 import LoadingIndicator from '@/components/loading-indicator'
 import SuccessMessage from '@/components/success-message'
 import { InfoIconWithTooltip } from '@/components/tooltip'
@@ -21,12 +20,6 @@ interface HydrateEventVrchatInstanceResult {
   error?: string
 }
 
-// interface HydrateVrchatInstancesPayload {}
-// interface HydrateVrchatInstancesResult {
-//   success: boolean
-//   error?: string
-// }
-
 const HydrateVrchatInstanceButton = ({
   eventId,
   hydrate,
@@ -34,12 +27,6 @@ const HydrateVrchatInstanceButton = ({
   eventId: string
   hydrate: () => void
 }) => {
-  // const [isCalling, lastErrorCode, lastResult, callFunc, clear] =
-  //   useSupabaseFunction<
-  //     HydrateVrchatInstancesPayload,
-  //     HydrateVrchatInstancesResult
-  //   >(FunctionNames.HydrateEventVrchatInstances)
-
   const [isCalling, lastErrorCode, lastResult, callFunc, clear] =
     useSupabaseFunction<
       HydrateEventVrchatInstancePayload,
@@ -70,7 +57,10 @@ const HydrateVrchatInstanceButton = ({
             Successfully synced
             <br />
             <br />
-            Instance ID: {lastResult.instanceId || '(no instance found)'}
+            Instance ID:{' '}
+            {lastResult.instanceId !== null
+              ? lastResult.instanceId
+              : '(no instance was found)'}
           </SuccessMessage>
         ) : (
           <ErrorMessage>Failed to update: {lastResult.error!}</ErrorMessage>

@@ -1,4 +1,10 @@
 import { type Event } from './events.ts'
+import type {
+  VrchatGroupAccessType,
+  VrchatInstance,
+  VrchatInstanceCachedItem,
+  VrchatInstanceType,
+} from './vrchat-cache.ts'
 
 export interface GetWorldDataRecord extends Record<string, unknown> {
   isalpha: boolean
@@ -6,6 +12,18 @@ export interface GetWorldDataRecord extends Record<string, unknown> {
   events: string // JSON - WorldDataEvent[]
   lastmodifiedat: string | null // date
   generatedat: string // date
+}
+
+export interface VrchatInstanceForWorld {
+  name: string
+  type: VrchatInstanceType
+  groupaccesstype: VrchatGroupAccessType | null
+  worldname: string
+  playercapacity: number
+  playercount: number
+  // queuecapacity: number | null TODO: not exposed in API?
+  queuecount: number | null
+  lastupdatedat: string // date
 }
 
 export interface WorldDataEvent {
@@ -21,6 +39,7 @@ export interface WorldDataEvent {
     x: number
     y: number
   } | null
+  vrchatinstance: VrchatInstanceForWorld | null
 }
 
 export interface EventToSend extends Event {
@@ -48,6 +67,7 @@ export interface EventAlphaOrBetaForWorld extends EventAlphaOrBeta {
   vrchatgroupid: string // from parent club
   event: Event
   clubname: string
+  vrchatinstancecache: VrchatInstanceCachedItem | null
 }
 
 // for display /world

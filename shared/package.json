@@ -1,7 +1,7 @@
 {
   "name": "shared",
   "scripts": {
-    "copy-to-edge": "cpx './src/**/*' ../../supabase/functions/_shared/shared",
+    "copy-to-edge": "cpx './src/**/*' ../../club-street/supabase/functions/_shared/shared",
     "build": "tsc && cpx package.json ./dist",
     "start": "npm run build"
   },
