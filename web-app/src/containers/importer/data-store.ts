@@ -19,6 +19,7 @@ export enum FunctionNames {
 export interface ImportExternalEventPayload {
   p_ev: EventFieldsResult
   p_externalid: number
+  p_vrchatgroupid: string | null
 }
 
 export interface ImportExternalEventResult {

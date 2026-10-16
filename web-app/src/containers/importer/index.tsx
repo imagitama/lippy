@@ -43,6 +43,7 @@ import FormattedDate from '@/components/formatted-date'
 import CheckboxInput from '@/components/checkbox-input'
 import DateTimeRangeInput from '@/components/datetime-range-input'
 import { callFunction, client } from '@/supabase'
+import { getVrchatGroupIdFromUrl } from '@/vrchat'
 
 const ComponentForField = ({
   name,
@@ -162,6 +163,11 @@ export async function fetchExternalImage(url: string): Promise<string> {
   return URL.createObjectURL(blob)
 }
 
+const getVrchatGroupId = (ev: ExternalEvent): string | null => {
+  if (!ev.urls.vrcGroup) return null
+  return getVrchatGroupIdFromUrl(ev.urls.vrcGroup)
+}
+
 const SingleExternalEventImporter = ({
   externalEvent,
   ourEventFields,
@@ -184,6 +190,7 @@ const SingleExternalEventImporter = ({
         posterurl: posterUrl,
       },
       p_externalid: externalEvent.id,
+      p_vrchatgroupid: getVrchatGroupId(externalEvent),
     })
   }
 

@@ -59,6 +59,13 @@ export const getVrchatWorldLaunchUrlForId = (worldId: string): string => {
   return `vrchat://launch?ref=vrchat.com&id=${worldId}:0`
 }
 
+const VRC_GROUP_ID_REGEX =
+  /grp_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+
+export const getVrchatGroupIdFromUrl = (url: string): string | null => {
+  return url.match(VRC_GROUP_ID_REGEX)?.[0] ?? null
+}
+
 export enum FunctionNames {
   UnlinkWithVrchatAccount = 'unlinkWithVrchatAccount',
   LinkWithVrchatAccount = 'linkWithVrchatAccount',
