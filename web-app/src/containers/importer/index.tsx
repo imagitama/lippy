@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import BodyText from '@/components/body-text'
 import ErrorMessage from '@/components/error-message'
@@ -42,6 +42,7 @@ import LazyLoad from '@/components/lazy-load'
 import FormattedDate from '@/components/formatted-date'
 import CheckboxInput from '@/components/checkbox-input'
 import DateTimeRangeInput from '@/components/datetime-range-input'
+import { callFunction, client } from '@/supabase'
 
 const ComponentForField = ({
   name,
@@ -132,6 +133,35 @@ const ComponentForField = ({
   }
 }
 
+const FUNCTION_URL = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/downloadExternalImage`
+
+export async function fetchExternalImage(url: string): Promise<string> {
+  const {
+    data: { session },
+  } = await client.auth.getSession()
+  if (!session) throw new Error('NotAuthenticated')
+
+  const res = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: process.env.REACT_APP_SUPABASE_API_KEY!,
+    },
+    body: JSON.stringify({ url }),
+  })
+
+  // Success -> image bytes. Failure -> JSON { error: 'SomeErrorClassName' }
+  const contentType = res.headers.get('content-type') ?? ''
+  if (!res.ok || !contentType.startsWith('image/')) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error ?? `HTTP_${res.status}`)
+  }
+
+  const blob = await res.blob()
+  return URL.createObjectURL(blob)
+}
+
 const SingleExternalEventImporter = ({
   externalEvent,
   ourEventFields,
@@ -144,11 +174,15 @@ const SingleExternalEventImporter = ({
       FunctionNames.ImportExternalEvent,
       []
     )
-  //   const [posterUrl, setPosterUrl] = useState<null | string>(null)
+  const [posterUrl, setPosterUrl] = useState<null | string>(null)
+  const [posterUrlToUse, setPosterUrlToUse] = useState<null | string>(null)
 
   const onClickImport = () => {
     performImport({
-      p_ev: ourEventFields,
+      p_ev: {
+        ...ourEventFields,
+        posterurl: posterUrl,
+      },
       p_externalid: externalEvent.id,
     })
   }
@@ -161,34 +195,50 @@ const SingleExternalEventImporter = ({
   ) as ImageUploadEditableField<Event>
   if (!posterEditableField) throw new Error('No editable field')
 
+  const onClickDownload = async () => {
+    console.debug(`downloading event poster...`)
+    const url = await fetchExternalImage(externalEvent.poster!)
+    console.debug(`we have an internal URL: `, url)
+    setPosterUrlToUse(url)
+  }
+
   return (
     <>
       {externalEvent.poster ? (
-        <Message>
-          This event has a poster however the external image will not load
-        </Message>
-      ) : (
-        <Message>This event does not have a poster</Message>
-      )}
-      {/* {externalEvent.poster ? (
         <>
-          {posterUrl && (
+          <a href={externalEvent.poster} target="_blank" download="my_file.jpg">
+            Open Image In New Tab
+          </a>
+          <hr />
+          {posterUrl ? (
             <img src={posterUrl} width="300px" alt="Poster image" />
+          ) : (
+            <>
+              <Button onClick={onClickDownload}>
+                Download Poster ({externalEvent.poster})
+              </Button>
+              {posterUrlToUse ? (
+                <ImageUploader
+                  preloadImageUrl={posterUrlToUse}
+                  onDone={(urls) => {
+                    console.debug(`GenericEditor.ImageUploadInput urls`, {
+                      urls,
+                    })
+                    setPosterUrl(urls[0])
+                  }}
+                  {...posterEditableField}
+                />
+              ) : (
+                <ErrorMessage>No poster URL!</ErrorMessage>
+              )}
+            </>
           )}
-          <ImageUploader
-            preloadImageUrl={externalEvent.poster}
-            onDone={(urls) => {
-              console.debug(`GenericEditor.ImageUploadInput urls`, { urls })
-              setPosterUrl(urls[0])
-            }}
-            {...posterEditableField}
-          />
         </>
       ) : (
         <NoResultsMessage>
           The external event does not have a poster
         </NoResultsMessage>
-      )} */}
+      )}
       {isCalling ? (
         <LoadingIndicator />
       ) : lastErrorCode !== null ? (
@@ -233,6 +283,7 @@ const ExternalEventOutput = ({
   existingImporterDetails: ImporterDetails | null
   fullData: ExternalData
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false)
   const ourEventFields = getEventFieldsFromExternalEvent(
     externalEvent,
     fullData
@@ -249,34 +300,43 @@ const ExternalEventOutput = ({
 
   return (
     <>
-      <Columns>
-        <Column widthPerc={50}>
-          <Paper key={externalEvent.id}>
-            <Table size="small" noMinWidth>
-              <TableBody>
-                {Object.entries(externalEvent).map(([name, val]) => (
-                  <TableRow key={name}>
-                    <TableCell width="20%">{name}</TableCell>
-                    <TableCell width="80%">
-                      <ComponentForField
-                        name={name as keyof ExternalEvent}
-                        val={val}
-                        all={externalEvent}
-                      />
-                    </TableCell>
-                    {/* <TableCell width="40%">
+      <Button onClick={() => setIsExpanded(!isExpanded)}>Toggle Expand</Button>
+      {isExpanded ? (
+        <Columns>
+          <Column widthPerc={50}>
+            <Paper key={externalEvent.id}>
+              <Table size="small" noMinWidth>
+                <TableBody>
+                  {Object.entries(externalEvent).map(([name, val]) => (
+                    <TableRow key={name}>
+                      <TableCell width="20%">{name}</TableCell>
+                      <TableCell width="80%">
+                        <ComponentForField
+                          name={name as keyof ExternalEvent}
+                          val={val}
+                          all={externalEvent}
+                        />
+                      </TableCell>
+                      {/* <TableCell width="40%">
                         <ComponentForOurField  />
                     </TableCell> */}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Paper>
-        </Column>
-        <Column widthPerc={50}>
-          <OurFields ourEventFields={ourEventFields} />
-        </Column>
-      </Columns>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Paper>
+          </Column>
+          <Column widthPerc={50}>
+            <OurFields ourEventFields={ourEventFields} />
+          </Column>
+        </Columns>
+      ) : (
+        <Paper>
+          <strong>
+            {externalEvent.name} {externalEvent.category}
+          </strong>
+        </Paper>
+      )}
       <Paper>
         <Heading variant="h2" noTopMargin>
           Import

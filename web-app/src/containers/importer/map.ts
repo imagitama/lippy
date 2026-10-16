@@ -7,6 +7,7 @@ export type EventFieldsResult = Pick<
   | 'vrchatinstanceid'
   | 'name'
   | 'description'
+  | 'posterurl'
   | 'category'
   | 'attachmentids'
   | 'startsat'
@@ -70,19 +71,19 @@ const EXTERNAL_TAG_MAP: Record<number, string> = {
   6: 'ext:sfw',
 
   // Flashing lights (group 5)
-  8: 'ext:no-flash',
-  9: 'ext:mild-flash',
-  10: 'ext:severe-flash',
-  11: 'ext:flash-toggle',
+  8: 'ext:no_flash',
+  9: 'ext:mild_flash',
+  10: 'ext:severe_flash',
+  11: 'ext:flash_toggle',
 
   // Avatar performance (group 6)
-  12: 'ext:no-avatar-restriction',
-  13: 'ext:poor-or-better',
-  14: 'ext:medium-or-better',
+  12: 'ext:no_avatar_restriction',
+  13: 'ext:poor_or_better',
+  14: 'ext:medium_or_better',
 
   // Misc
-  4: 'ext:open-decks',
-  16: 'ext:its-good',
+  4: 'ext:open_decks',
+  16: 'ext:its_good',
 }
 
 export const getTagsFromExternalTags = (tags: number[]): string[] =>

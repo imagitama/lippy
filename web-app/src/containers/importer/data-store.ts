@@ -3,6 +3,7 @@ import { EventFieldsResult } from './map'
 export interface ImporterDetails {
   eventid: string
   externalid: number
+  vrchatgroupid: string | null
   createdat: string
   createdby: string
 }

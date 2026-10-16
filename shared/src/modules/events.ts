@@ -32,7 +32,7 @@ export interface EventFields extends Record<string, unknown> {
   category: EventCategory
   sourceurl: string
   thumbnailurl: string
-  posterurl: string
+  posterurl: string | null
   attachmentids: string[]
   isadult: boolean
   startsat: string // date
