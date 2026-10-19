@@ -16,6 +16,19 @@ const ensureUrl = (val: string) => {
 }
 
 const socialInfo: SocialInfo[] = [
+  // core
+  {
+    name: 'websiteurl',
+    label: 'Website',
+    icon: null,
+    getUrl: (val) => val,
+  },
+  {
+    name: 'email',
+    label: 'Email',
+    icon: null,
+    getUrl: (val) => `mailto:${val}`,
+  },
   // vrc
   {
     name: 'vrchatusername',

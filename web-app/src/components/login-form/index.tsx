@@ -27,6 +27,7 @@ import SignUpWithEmailForm from '@/components/signup-with-email-form'
 import Heading from '../heading'
 import MultiFactorAuthCodeInput from '../multi-factor-auth-code-input'
 import { login } from '@/auth'
+import PasswordInput from '../password-input'
 
 const useStyles = makeStyles({
   root: {
@@ -210,15 +211,10 @@ const LoginWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
         onKeyDown={onKeyDown}
         autoComplete="username"
       />
-      <TextInput
-        topMargin
-        fullWidth
+      <PasswordInput
         value={passwordVal}
-        onChange={(e) => setPasswordVal(e.target.value)}
-        label="Password"
-        type="password"
+        onChange={(val) => setPasswordVal(val)}
         onKeyDown={onKeyDown}
-        autoComplete="current-password"
       />
       <FormControls>
         <div>

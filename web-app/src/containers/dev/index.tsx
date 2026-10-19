@@ -5,6 +5,7 @@ import Button from '@/components/button'
 import TextInput from '@/components/text-input'
 import PerformancesEditor from '@/components/performances-editor'
 import { Performance } from 'shared/modules/events'
+import PasswordInput from '@/components/password-input'
 
 const PerformancesEditorDev = () => {
   const [val, setVal] = useState<Performance[]>([])
@@ -64,6 +65,7 @@ export default () => {
           <MenuItem value="Some option">Some option</MenuItem>
         </Select>{' '}
         <TextInput label="Type In Me" button={<Button>Click Me</Button>} />
+        <PasswordInput label="Password" value="abc" onChange={(val) => {}} />
       </div>
     </>
   )

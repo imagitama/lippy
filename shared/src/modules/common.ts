@@ -49,6 +49,10 @@ export enum ResolutionStatus {
 
 // clubs/performers
 export interface SocialFields {
+  // core stuff
+  websiteurl: string | null
+  email: string | null
+
   // vrc
   vrchatusername: string | null
   vrchatuserid: string | null
