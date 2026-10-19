@@ -43,6 +43,7 @@ import ClubStaffControls from '@/components/club-staff-controls'
 import ReportButton from '@/components/report-button'
 import { getIsUserClubMod, getIsUserClubOwner } from '@/utils/clubs'
 import useUserRecord from '@/hooks/useUserRecord'
+import PageContent from '@/components/page-content'
 
 const useStyles = makeStyles({
   root: { position: 'relative' },
@@ -254,97 +255,102 @@ const View = () => {
           endsAt={event.endsat}
           className={classes.dates}
         />
-        <Heading variant="h2">Genres</Heading>
-        <TagList tags={genres} />
-        <Heading variant="h2">Tags</Heading>
-        <TagList tags={tags} />
-        <div className={classes.cols}>
-          <div className={classes.leftCol}>
-            <Block title="Description">
-              {description ? (
-                <Markdown source={description} />
-              ) : (
-                <NoResultsMessage>No description set</NoResultsMessage>
-              )}
-            </Block>
-            <Block title="Performers">
-              {event.performances.length ? (
-                <PerformanceList performances={event.fullperformances} />
-              ) : (
-                <NoResultsMessage>
-                  No performances set for this event
-                </NoResultsMessage>
-              )}
-            </Block>
-            <Block title="Comments">
-              <CommentList
-                collectionName={CollectionNames.Events}
-                parentId={id}
-              />
-            </Block>
-          </div>
-          <div className={classes.rightCol}>
-            <div className={classes.controlGroup}>
-              <VisitVrchatInstanceButton
-                instance={event.vrchatinstancecache?.instance || null}
-                fetchedAt={event.vrchatinstancecache?.fetchedat}
-              />
+        <PageContent>
+          <Heading variant="h2">Genres</Heading>
+          <TagList tags={genres} />
+          <Heading variant="h2">Tags</Heading>
+          <TagList tags={tags} />
+          <div className={classes.cols}>
+            <div className={classes.leftCol}>
+              <Block title="Description">
+                {description ? (
+                  <Markdown source={description} />
+                ) : (
+                  <NoResultsMessage>No description set</NoResultsMessage>
+                )}
+              </Block>
+              <Block title="Performers">
+                {event.performances.length ? (
+                  <PerformanceList performances={event.fullperformances} />
+                ) : (
+                  <NoResultsMessage>
+                    No performances set for this event
+                  </NoResultsMessage>
+                )}
+              </Block>
+              <Block title="Comments">
+                <CommentList
+                  collectionName={CollectionNames.Events}
+                  parentId={id}
+                />
+              </Block>
             </div>
-            {sourceurl && (
+            <div className={classes.rightCol}>
               <div className={classes.controlGroup}>
-                <Button size="large" icon={<LaunchIcon />} url={sourceurl}>
-                  Visit Website
-                </Button>
+                <VisitVrchatInstanceButton
+                  instance={event.vrchatinstancecache?.instance || null}
+                  fetchedAt={event.vrchatinstancecache?.fetchedat}
+                />
               </div>
-            )}
-            <div className={classes.controlGroup}>
-              <EventAttendanceButton
-                eventId={event.id}
-                myAttendance={myAttendance}
-                onDone={hydrate}
-              />
-              {visibleAttendance.length ? (
-                <EventAttendanceResults items={visibleAttendance} />
-              ) : null}
-            </div>
-            <div className={classes.controlGroup}>
-              <ReportButton type={CollectionNames.Events} id={event.id} />
-            </div>
-            {isMod && (
-              <>
-                <Heading variant="h3">Mod Controls</Heading>
+              {sourceurl && (
                 <div className={classes.controlGroup}>
-                  <EditorRecordManager
-                    id={id}
-                    collectionName={CollectionNames.Events}
-                    metaCollectionName={CollectionNames.EventsMeta}
-                    showApprovalButtons
-                    showDeclineReasons={false}
-                    // existingApprovalStatus={approvalstatus}
-                    showAccessButtons
-                    // existingAccessStatus={accessstatus}
-                    showEditorNotes
-                    existingEditorNotes={modnotes}
-                    showFeatureButtons
-                    existingFeaturedStatus={featuredstatus}
-                    onDone={hydrate}
-                  />
-                </div>
-                <div className={classes.controlGroup}>
-                  <Button
-                    url={routes.editEventWithVar.replace(':eventId', id)}
-                    icon={<EditIcon />}
-                    color="secondary">
-                    Edit Event
+                  <Button size="large" icon={<LaunchIcon />} url={sourceurl}>
+                    Visit Website
                   </Button>
                 </div>
-                <div className={classes.controlGroup}>
-                  <HydrateVrchatInstanceButton eventId={id} hydrate={hydrate} />
-                </div>
-              </>
-            )}
+              )}
+              <div className={classes.controlGroup}>
+                <EventAttendanceButton
+                  eventId={event.id}
+                  myAttendance={myAttendance}
+                  onDone={hydrate}
+                />
+                {visibleAttendance.length ? (
+                  <EventAttendanceResults items={visibleAttendance} />
+                ) : null}
+              </div>
+              <div className={classes.controlGroup}>
+                <ReportButton type={CollectionNames.Events} id={event.id} />
+              </div>
+              {isMod && (
+                <>
+                  <Heading variant="h3">Mod Controls</Heading>
+                  <div className={classes.controlGroup}>
+                    <EditorRecordManager
+                      id={id}
+                      collectionName={CollectionNames.Events}
+                      metaCollectionName={CollectionNames.EventsMeta}
+                      showApprovalButtons
+                      showDeclineReasons={false}
+                      // existingApprovalStatus={approvalstatus}
+                      showAccessButtons
+                      // existingAccessStatus={accessstatus}
+                      showEditorNotes
+                      existingEditorNotes={modnotes}
+                      showFeatureButtons
+                      existingFeaturedStatus={featuredstatus}
+                      onDone={hydrate}
+                    />
+                  </div>
+                  <div className={classes.controlGroup}>
+                    <Button
+                      url={routes.editEventWithVar.replace(':eventId', id)}
+                      icon={<EditIcon />}
+                      color="secondary">
+                      Edit Event
+                    </Button>
+                  </div>
+                  <div className={classes.controlGroup}>
+                    <HydrateVrchatInstanceButton
+                      eventId={id}
+                      hydrate={hydrate}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </PageContent>
       </div>
     </>
   )
