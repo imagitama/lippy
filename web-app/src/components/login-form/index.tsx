@@ -214,6 +214,7 @@ const LoginWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
       <PasswordInput
         value={passwordVal}
         onChange={(val) => setPasswordVal(val)}
+        fullWidth
         onKeyDown={onKeyDown}
       />
       <FormControls>

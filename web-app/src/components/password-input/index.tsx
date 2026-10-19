@@ -5,6 +5,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import TextInput, { Props } from '../text-input'
 
 const Root = styled.span`
+  width: 100%;
   position: relative;
   display: inline-block;
 `
