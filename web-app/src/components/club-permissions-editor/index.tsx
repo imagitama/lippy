@@ -1,17 +1,20 @@
-import { CollectionNames, User } from 'shared/modules/users'
-import Button, { DeleteButton } from '../button'
-import SearchForIdForm from '../search-for-id-form'
-import NoResultsMessage from '../no-results-message'
-import UsernameLink from '../username-link'
-import { SupabaseClient } from '@supabase/supabase-js'
 import { useCallback, useState } from 'react'
-import useDataStore from '@/hooks/useDataStore'
-import LoadingIndicator from '../loading-indicator'
-import ErrorMessage from '../error-message'
-import TextInput from '../text-input'
-import { getIsVrchatWorldId } from '@/vrchat'
 import { getIsUuid } from '@/utils'
-import Paper from '../paper'
+
+import { CollectionNames, User } from 'shared/modules/users'
+import useDataStore from '@/hooks/useDataStore'
+
+import Button, { DeleteButton } from '@/components/button'
+import SearchForIdForm from '@/components/search-for-id-form'
+import NoResultsMessage from '@/components/no-results-message'
+import UsernameLink from '@/components/username-link'
+import { SupabaseClient } from '@supabase/supabase-js'
+import LoadingIndicator from '@/components/loading-indicator'
+import ErrorMessage from '@/components/error-message'
+import TextInput from '@/components/text-input'
+import Paper from '@/components/paper'
+import InfoMessage from '@/components/info-message'
+import Table, { TableBody, TableRow, TableCell } from '../responsive-table'
 
 const useUsers = (
   userIds: string[]
@@ -32,9 +35,11 @@ const useUsers = (
 const ClubPermissionsEditor = ({
   value,
   onChange,
+  vrchatGroupId,
 }: {
   value: string[]
   onChange: (val: string[]) => void
+  vrchatGroupId: string | null
 }) => {
   const onRemove = (userId: string) =>
     onChange(value.filter((id) => id !== userId))
@@ -60,20 +65,37 @@ const ClubPermissionsEditor = ({
   return (
     <>
       {value.length ? (
-        <ul>
-          {value.map((userId) => {
-            const user = users?.find((u) => u.id === userId)
-            return (
-              <li key={userId}>
-                <UsernameLink
-                  username={user?.username || '(no username)'}
-                  id={userId}
-                />{' '}
-                <DeleteButton onClick={() => onRemove(userId)} />
-              </li>
-            )
-          })}
-        </ul>
+        <Table size="small" noMinWidth>
+          <TableBody>
+            {value.length ? (
+              value.map((userId) => {
+                const user = users?.find((u) => u.id === userId)
+                return (
+                  <TableRow key={userId}>
+                    <TableCell>
+                      <UsernameLink
+                        username={user?.username || '(no username)'}
+                        id={userId}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <DeleteButton
+                        onClick={() => onRemove(userId)}
+                        size="small"
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={2}>
+                  <NoResultsMessage>No roles yet</NoResultsMessage>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       ) : (
         <NoResultsMessage>No users configured yet</NoResultsMessage>
       )}
@@ -88,7 +110,7 @@ const ClubPermissionsEditor = ({
           }}
         />
       </Paper>
-      <Paper>
+      {/* <Paper>
         You can paste a user ID here (not a VRChat user ID - ours!):
         <br />
         <TextInput
@@ -97,7 +119,7 @@ const ClubPermissionsEditor = ({
           onChange={(e) => setManualVal(e.target.value)}
           button={<Button onClick={() => onManualAdd()}>Add</Button>}
         />
-      </Paper>
+      </Paper> */}
     </>
   )
 }

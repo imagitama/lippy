@@ -9,8 +9,12 @@ export interface ClubFields extends Record<string, any>, SocialFields {
   thumbnailurl: string | null
   websiteurl: string | null
   email: string | null
-  owneruserids: string[]
-  moduserids: string[]
+  owneruserids: string[] // our users who can edit the entire club
+  moduserids: string[] // our users who can create/edit events
+  vrchatownerroleids: string[] // VRC role IDs
+  vrchatmodroleids: string[] // VRC role IDs
+  vrchatowneruserids: string[] // VRC user IDs
+  vrchatmoduserids: string[] // VRC user IDs
 }
 
 export interface Club extends ClubFields {

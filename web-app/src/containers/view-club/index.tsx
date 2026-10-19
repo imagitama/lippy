@@ -7,7 +7,7 @@ import EventIcon from '@mui/icons-material/Event'
 
 import * as routes from '@/routes'
 import { mediaQueryForTabletsOrBelow } from '@/media-queries'
-import { FullClub, ViewNames } from 'shared/modules/clubs'
+import { Club, FullClub, ViewNames } from 'shared/modules/clubs'
 import {
   ViewNames as EventsViewNames,
   PublicEvent,
@@ -37,6 +37,8 @@ import EventResults from '@/components/event-results'
 import NoResultsMessage from '@/components/no-results-message'
 import Metadata from '@/components/metadata'
 import JoinBotToVrchatGroupForm from '@/components/join-bot-to-vrchat-group-form'
+import ImportVrchatGroupRolesForm from '@/components/import-vrchat-group-roles-form'
+import useUserRecord from '@/hooks/useUserRecord'
 
 const useStyles = makeStyles({
   categories: {
@@ -126,9 +128,45 @@ const Root = styled.div`
   flex-direction: column;
 `
 
+const getIsUserClubOwner = (
+  userId: string,
+  vrchatUserId: string | null,
+  club: Club
+): boolean => {
+  // console.debug(
+  //   'getIsUserClubOwner',
+  //   userId,
+  //   vrchatUserId,
+  //   club.vrchatowneruserids
+  // )
+
+  if (club.createdby === userId) return true
+
+  if (club.owneruserids.includes(userId)) return true
+
+  if (vrchatUserId && club.vrchatowneruserids.includes(vrchatUserId))
+    return true
+
+  return false
+}
+
+const getIsUserClubMod = (
+  userId: string,
+  vrchatUserId: string | null,
+  club: Club
+): boolean => {
+  // console.debug('getIsUserClubMod', userId, vrchatUserId, club.vrchatmoduserids)
+
+  if (club.moduserids.includes(userId)) return true
+
+  if (vrchatUserId && club.vrchatmoduserids.includes(vrchatUserId)) return true
+
+  return false
+}
+
 const View = () => {
   const { clubId } = useParams<{ clubId: string }>()
-  const myUserId = useUserId()
+  const [, , user] = useUserRecord()
   const [isLoading, lastErrorCode, club] = useDataStoreItem<FullClub>(
     ViewNames.GetFullClubs,
     clubId,
@@ -160,6 +198,7 @@ const View = () => {
     thumbnailurl: thumbnailUrl,
     email: email,
     websiteurl: websiteUrl,
+    vrchatgroupid: vrchatGroupId,
 
     // view
     createdbyusername: createdByUsername,
@@ -173,11 +212,15 @@ const View = () => {
   } = club
 
   const isDeleted = accessStatus === AccessStatus.Deleted
+  const myUserId = user?.id
 
   const isClubOwner = myUserId
-    ? club.owneruserids.includes(myUserId) || club.createdby === myUserId
+    ? getIsUserClubOwner(myUserId, user?.linkedvrchatuserid, club)
     : false
-  const isClubMod = myUserId ? club.moduserids.includes(myUserId) : false
+  const isClubMod = myUserId
+    ? getIsUserClubMod(myUserId, user?.linkedvrchatuserid, club)
+    : false
+
   const isClubStaff = isClubOwner || isClubMod
 
   return (
@@ -197,17 +240,19 @@ const View = () => {
       {modNotes && <Message title="Moderator Notes">{modNotes}</Message>}
 
       {isClubOwner && (
-        <Message>
-          You are a club owner so you can edit the club.
-          <FormControls>
-            {/* <SyncVrchatGroupForm vrchatGroupId={club.linkedvrchatgroupid} /> */}
-            <EditButton
-              url={routes.editClubWithVar.replace(':clubId', club.id)}
-              color="secondary">
-              Edit Club
-            </EditButton>
-          </FormControls>
-        </Message>
+        <>
+          <Message>
+            You are a club owner so you can edit the club.
+            <FormControls>
+              {/* <SyncVrchatGroupForm vrchatGroupId={club.linkedvrchatgroupid} /> */}
+              <EditButton
+                url={routes.editClubWithVar.replace(':clubId', club.id)}
+                color="secondary">
+                Edit Club
+              </EditButton>
+            </FormControls>
+          </Message>
+        </>
       )}
 
       {isClubStaff && (

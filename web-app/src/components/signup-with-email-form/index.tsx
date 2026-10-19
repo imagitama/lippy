@@ -17,6 +17,7 @@ import ErrorMessage from '@/components/error-message'
 import { signup } from '@/auth'
 import SuccessMessage from '../success-message'
 import { routes } from '@/routes'
+import { AuthApiError, AuthError } from '@supabase/supabase-js'
 
 const useStyles = makeStyles({
   root: {
@@ -110,22 +111,21 @@ const getRecaptchaToken = async () => {
   return token
 }
 
-const getLabelForSignUpErrorCode = (errorCode: SignUpErrorCode): string => {
-  switch (errorCode) {
-    case SignUpErrorCode.RecaptchaInvalid:
-      return 'recaptcha failed'
-    case SignUpErrorCode.InvalidEmail:
-      return 'invalid email'
-    case SignUpErrorCode.InvalidPassword:
-      return 'invalid password (must have more than 6 characters)'
-    case SignUpErrorCode.WeakPassword:
-      return 'weak password'
-    case SignUpErrorCode.EmailAlreadyInUse:
-      return 'email already in use'
-    case SignUpErrorCode.Unknown:
-    default:
-      return `unknown error (code ${errorCode})`
+const getErrorCodeFromError = (err: Error): string => {
+  if (err instanceof AuthApiError) {
+    return err.code!
   }
+  return 'unknown'
+}
+
+type AuthErrorCode = AuthError['code']
+
+const getUserFriendlyMessageFromCode = (code: AuthErrorCode): string => {
+  switch (code!) {
+    case 'user_already_exists':
+      return 'user already exists'
+  }
+  return code as string
 }
 
 const SignUpWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
@@ -136,7 +136,7 @@ const SignUpWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null)
   const [lastResult, setLastResult] = useState<null>(null)
-  const [lastErrorCode, setLastErrorCode] = useState<null>(null)
+  const [lastErrorCode, setLastErrorCode] = useState<null | string>(null)
 
   const submit = async () => {
     try {
@@ -166,6 +166,7 @@ const SignUpWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
       handleError(err)
       setIsWorking(false)
       setIsSuccess(false)
+      setLastErrorCode(getErrorCodeFromError(err as Error))
     }
   }
 
@@ -198,8 +199,10 @@ const SignUpWithEmailForm = ({ onSuccess }: { onSuccess: () => void }) => {
     } else {
       return (
         <ErrorMessage>
-          Something failed with the signup. Please report this to our Discord
-          server to have it looked into.
+          Signup failed:{' '}
+          {lastErrorCode
+            ? getUserFriendlyMessageFromCode(lastErrorCode)
+            : 'unknown'}
         </ErrorMessage>
       )
     }

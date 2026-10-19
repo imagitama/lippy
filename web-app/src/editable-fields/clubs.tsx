@@ -4,6 +4,11 @@ import type { CustomEditableField, EditableField } from './'
 import { type Club, BucketNames } from 'shared/modules/clubs'
 import { socialEditableFields } from './common'
 import ClubPermissionsEditor from '@/components/club-permissions-editor'
+import ImportVrchatGroupRolesForm, {
+  RoleType,
+} from '@/components/import-vrchat-group-roles-form'
+import InfoMessage from '@/components/info-message'
+import VrchatRoleIdsEditor from '@/components/vrchat-role-ids-editor'
 
 export enum SectionNames {
   Basic = 'Basic',
@@ -63,29 +68,117 @@ const fields: EditableField<Club>[] = [
     section: SectionNames.Basic,
   },
   {
-    name: 'owneruserids',
-    label: 'Club Owners',
+    name: 'perms-info',
+    label: '',
     type: fieldTypes.custom,
-    renderer: ({ value, onChange }) => (
-      <ClubPermissionsEditor value={value || []} onChange={onChange} />
+    renderer: () => (
+      <InfoMessage title="How permissions work">
+        You can sync your club with your VRChat group roles. Anyone on this site
+        who has that VRChat role will have permissions here too.
+        <br />
+        <br />
+        You can also manually assign users at the end if they don't have a
+        VRChat account.
+      </InfoMessage>
+    ),
+    section: SectionNames.Perms,
+  },
+  {
+    name: 'vrchatownerroleids',
+    label: 'Owner Roles',
+    type: fieldTypes.custom,
+    renderer: ({ value, formFields, setFieldsValues }) => (
+      <VrchatRoleIdsEditor
+        roleIdsWithMemberIds={value.map((roleId) => {
+          return {
+            roleId,
+            memberIds: formFields.vrchatowneruserids,
+          }
+        })}
+        onChange={(roleIdsWithMemberIds) => {
+          setFieldsValues({
+            vrchatownerroleids: roleIdsWithMemberIds.map((item) => item.roleId),
+            vrchatowneruserids: roleIdsWithMemberIds.flatMap(
+              (item) => item.memberIds
+            ),
+          })
+        }}
+        roleType={RoleType.Owner}
+        vrchatGroupId={formFields.vrchatgroupid}
+      />
     ),
     default: [],
-    hint: `Users on this site who can edit the club (and create/manage events). The creator of the club can always edit it.
-  
-Note: We can only automatically retrieve the VRChat group owner.`,
+    hint: 'VRC group roles that are considered owners and can edit the club.',
+    section: SectionNames.Perms,
+  } as CustomEditableField<Club, 'vrchatownerroleids'>,
+  {
+    name: 'vrchatowneruserids',
+    type: fieldTypes.hidden,
+    isEditable: false,
+    section: SectionNames.Perms,
+  },
+  {
+    name: 'vrchatmodroleids',
+    label: 'Event Organizer Roles',
+    type: fieldTypes.custom,
+    renderer: ({ value, formFields, setFieldsValues }) => (
+      <VrchatRoleIdsEditor
+        roleIdsWithMemberIds={value.map((roleId) => {
+          return {
+            roleId,
+            memberIds: formFields.vrchatmoduserids,
+          }
+        })}
+        onChange={(roleIdsWithMemberIds) => {
+          setFieldsValues({
+            vrchatmodroleids: roleIdsWithMemberIds.map((item) => item.roleId),
+            vrchatmoduserids: roleIdsWithMemberIds.flatMap(
+              (item) => item.memberIds
+            ),
+          })
+        }}
+        roleType={RoleType.Mod}
+        vrchatGroupId={formFields.vrchatgroupid}
+      />
+    ),
+    default: [],
+    hint: 'VRC group roles that can create/manage events.',
+    section: SectionNames.Perms,
+  } as CustomEditableField<Club, 'vrchatmodroleids'>,
+  {
+    name: 'vrchatmoduserids',
+    type: fieldTypes.hidden,
+    isEditable: false,
+    section: SectionNames.Perms,
+  },
+  {
+    name: 'owneruserids',
+    label: 'Owner Users',
+    type: fieldTypes.custom,
+    renderer: ({ value, onChange, formFields }) => (
+      <ClubPermissionsEditor
+        value={value || []}
+        onChange={onChange}
+        vrchatGroupId={formFields.vrchatgroupid}
+      />
+    ),
+    default: [],
+    hint: `Users on this site who can edit the club (and create/manage events).`,
     section: SectionNames.Perms,
   } as CustomEditableField<Club, 'owneruserids'>,
   {
     name: 'moduserids',
-    label: 'Club Moderators',
+    label: 'Event Organizer Users',
     type: fieldTypes.custom,
-    renderer: ({ value, onChange }) => (
-      <ClubPermissionsEditor value={value || []} onChange={onChange} />
+    renderer: ({ value, onChange, formFields }) => (
+      <ClubPermissionsEditor
+        value={value || []}
+        onChange={onChange}
+        vrchatGroupId={formFields.vrchatgroupid}
+      />
     ),
     default: [],
-    hint: `Users on this site who can create/manage events.
-    
-Note: We can only automatically retrieve the VRChat group owner.`,
+    hint: `Users on this site who can create/manage events.`,
     section: SectionNames.Perms,
   } as CustomEditableField<Club, 'moduserids'>,
   ...socialEditableFields.filter(filterSocialEditableField),

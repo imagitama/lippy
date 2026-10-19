@@ -50,7 +50,12 @@ const View = () => {
     )
   }
 
-  return <CreateClubFromVrchatForm />
+  return (
+    <>
+      <Heading variant="h1">Create Club</Heading>
+      <CreateClubFromVrchatForm />
+    </>
+  )
 }
 
 export default () => {

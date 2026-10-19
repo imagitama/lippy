@@ -242,6 +242,43 @@ export interface VrchatInstanceCachedItem {
   fetchedat: string // date
 }
 
+export interface VrchatGroupMemberUser {
+  id: string
+  displayName: string
+  bannerColor?: string
+  bannerType?: string
+  bannerUrl?: string
+  iconFrame?: string
+  iconUrl?: string
+  nameplateEffect?: string
+  profileEffect?: string
+}
+
+export interface VrchatGroupMember {
+  id: string
+  userId: string
+  user?: VrchatGroupMemberUser
+  roleIds: string[]
+}
+
+export interface VrchatGroupRole {
+  createdAt: string // ISO 8601
+  defaultRole: boolean
+  description: string
+  groupId: string // grp_...
+  id: string // grol_...
+  isAddedOnJoin: boolean
+  isManagementRole: boolean
+  isSelfAssignable: boolean
+  name: string
+  order: number
+  permissions: string[] // e.g. ["*"] for super admin
+  productId?: string | null // prod_...
+  requiresPurchase: boolean
+  requiresTwoFactor: boolean
+  updatedAt: string // ISO 8601
+}
+
 export enum CollectionNames {
   VrchatAvatarsCache = 'vrchatavatarscache',
   VrchatUsersCache = 'vrchatuserscache',

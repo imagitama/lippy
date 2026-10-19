@@ -37,6 +37,7 @@ enum LinkWithVrchatAccountErrorCode {
   NeedVrchatUsername = 'NeedVrchatUsername',
   VrchatUserDoesNotExist = 'VrchatUserDoesNotExist',
   VrchatStatusDoesNotHaveCode = 'VrchatStatusDoesNotHaveCode',
+  VrchatUserAlreadyLinked = 'VrchatUserAlreadyLinked',
   Unknown = 'Unknown',
 }
 
@@ -65,6 +66,8 @@ const getMessageForErrorCode = (code: string): string => {
       return 'the VRChat username you have set does not appear to exist'
     case LinkWithVrchatAccountErrorCode.VrchatStatusDoesNotHaveCode:
       return 'the VRChat account was found but the status does not include the code'
+    case LinkWithVrchatAccountErrorCode.VrchatUserAlreadyLinked:
+      return 'the VRChat account was found with the code but that account has already been linked to someone'
     case GenerateVrchatLinkCodeErrorCode.AlreadyHasLinkCode:
       return 'you already have a link code'
     default:

@@ -29,7 +29,7 @@ export function scrollTo(x: number, isSmooth: boolean = true): void {
   } catch (err) {
     if (
       (err as Error).message.includes(
-        "Failed to execute 'scrollTo' on 'Window': 2 arguments required, but only 1 present.",
+        "Failed to execute 'scrollTo' on 'Window': 2 arguments required, but only 1 present."
       )
     ) {
       // newer browsers only need 1 argument: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo
@@ -42,7 +42,7 @@ export function scrollTo(x: number, isSmooth: boolean = true): void {
 export function scrollToSide(
   x: number,
   y: number,
-  isSmooth: boolean = true,
+  isSmooth: boolean = true
 ): void {
   // console.debug(`scrolling to ${x},${y}...`)
   try {
@@ -54,7 +54,7 @@ export function scrollToSide(
   } catch (err) {
     if (
       (err as Error).message.includes(
-        "Failed to execute 'scrollTo' on 'Window': 2 arguments required, but only 1 present.",
+        "Failed to execute 'scrollTo' on 'Window': 2 arguments required, but only 1 present."
       )
     ) {
       // newer browsers only need 1 argument: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo
@@ -67,7 +67,7 @@ export function scrollToSide(
 export function scrollToElement(
   element: HTMLElement,
   isSmooth = true,
-  padding = 0,
+  padding = 0
 ): void {
   // console.debug(`scrolling to element...`, element)
   return scrollTo(element.getBoundingClientRect().top - padding, isSmooth)
@@ -209,7 +209,7 @@ export const mapFieldsForDatabase = (fields: {
       ...newFields,
       [key.toLowerCase()]: val,
     }),
-    {},
+    {}
   )
 
 export function getIsGoogleDriveUrl(url: string): boolean {
@@ -223,7 +223,7 @@ export function getIsDiscordUrl(url: string): boolean {
 export const getImageUrlFromYouTubeUrl = (url: string): string =>
   getIsUrlAYoutubeVideo(url)
     ? `https://ytimg.googleusercontent.com/vi/${getYouTubeVideoIdFromUrl(
-        url,
+        url
       )}/sddefault.jpg`
     : ''
 
@@ -248,7 +248,7 @@ export const isInternalUrl = (url: string): boolean => url.includes('supabase')
 
 export const insertItemInbetweenAllItems = <TThing>(
   arr: Array<TThing>,
-  thingToInsert: TThing,
+  thingToInsert: TThing
 ): Array<TThing> => {
   const newArr = [...arr]
   for (let i = arr.length - 1; i > 0; i--) {
@@ -303,10 +303,10 @@ export const getIsUuid = (str: string): boolean => {
 }
 
 export const findItemAndParents = <
-  TItem extends { id: string; parentid: string },
+  TItem extends { id: string; parentid: string }
 >(
   items: TItem[],
-  ids: string[],
+  ids: string[]
 ): TItem[] => {
   const findItem = (items: TItem[], ids: string[]): TItem[] => {
     let returnItems: TItem[] = []
@@ -354,6 +354,10 @@ export function removeByIndex<T>(arr: T[], index: number): T[] {
   return [...arr.slice(0, index), ...arr.slice(index + 1)]
 }
 
+export function removeFromArray<T>(arr: readonly T[], item: T): T[] {
+  return arr.filter((x) => x !== item)
+}
+
 export const moveCursorToEnd = (element: HTMLElement) => {
   const range = document.createRange()
   const selection = window.getSelection()
@@ -389,7 +393,7 @@ export const isJsonUrl = (url: string) =>
 export const moveItemInArray = (
   from: number,
   to: number,
-  array: Array<any>,
+  array: Array<any>
 ): Array<any> => {
   const newArray: Array<any> = [].concat(array as any)
   newArray.splice(to, 0, newArray.splice(from, 1)[0])
@@ -421,10 +425,10 @@ export const getIsUrlRisky = (url: string): boolean => {
 
 export const getLabelFromEditableFields = <TRecord extends Record<string, any>>(
   fieldName: Extract<keyof TRecord, string>,
-  editableFields: EditableField<TRecord>[],
+  editableFields: EditableField<TRecord>[]
 ): string => {
   const editableField = editableFields.find(
-    (editableField) => editableField.name === fieldName,
+    (editableField) => editableField.name === fieldName
   )
 
   if (editableField) {
@@ -489,8 +493,8 @@ export function getPrefersBritishSpelling() {
 
   return locales.some((locale) =>
     britishLocales.some((british) =>
-      locale.toLowerCase().startsWith(british.toLowerCase()),
-    ),
+      locale.toLowerCase().startsWith(british.toLowerCase())
+    )
   )
 }
 

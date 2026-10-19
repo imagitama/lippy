@@ -178,7 +178,6 @@ const CreateClubFromVrchatForm = () => {
     } else {
       return (
         <>
-          <Heading variant="h1">Create Club from VRChat Group</Heading>
           <GenericEditor<Club>
             fields={editableFields}
             collectionName={CollectionNames.Clubs}

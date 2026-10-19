@@ -21,4 +21,5 @@ export interface ClassifiedEntry<TValue> extends Record<string, any> {
 
 export enum ClassifiedIds {
   VRChatAuth = 'vrchatauth',
+  VRChatApi = 'vrchatapi',
 }

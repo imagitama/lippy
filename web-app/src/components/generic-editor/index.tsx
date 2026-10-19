@@ -546,7 +546,16 @@ const GenericEditor = <TRecord extends Record<string, any>>({
             ([sectionName, fields]) => ({
               name: sectionName,
               label: sectionName,
-              contents: <div>{fields.map(mapEditableFieldToFieldOutput)}</div>,
+              contents: (
+                <div>
+                  {fields
+                    .filter(({ type }) => type !== fieldTypes.hidden)
+                    .filter(({ isEditable }) =>
+                      id ? (isEditable !== false ? true : false) : true
+                    )
+                    .map(mapEditableFieldToFieldOutput)}
+                </div>
+              ),
             })
           )}
         />
