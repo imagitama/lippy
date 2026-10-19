@@ -61,29 +61,26 @@ export const getCategoryForExternalCategory = (
 
 const EXTERNAL_TAG_MAP: Record<number, string> = {
   // Platform (group 2)
-  2: 'ext:windows',
-  7: 'ext:android',
-  15: 'ext:ios',
+  7: 'quest_compatible',
+  15: 'ios_compatible',
 
   // Content rating (groups 1 and 4)
-  1: 'ext:nsfw',
-  5: 'ext:18plus', // "Age gated"
-  6: 'ext:sfw',
+  1: 'nsfw_allowed',
+  5: '18plus', // "Age gated"
 
   // Flashing lights (group 5)
-  8: 'ext:no_flash',
-  9: 'ext:mild_flash',
-  10: 'ext:severe_flash',
-  11: 'ext:flash_toggle',
+  8: 'no_flash',
+  9: 'mild_flashing_lights',
+  10: 'severe_flashing_lights',
+  11: 'flashing_lights_toggle',
 
   // Avatar performance (group 6)
-  12: 'ext:no_avatar_restriction',
-  13: 'ext:poor_or_better',
-  14: 'ext:medium_or_better',
+  12: 'no_avatar_restriction',
+  13: 'poor_or_better',
+  14: 'medium_or_better',
 
   // Misc
-  4: 'ext:open_decks',
-  16: 'ext:its_good',
+  4: 'open_decks',
 }
 
 export const getTagsFromExternalTags = (tags: number[]): string[] =>
