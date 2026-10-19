@@ -41,6 +41,8 @@ import Paper from '@/components/paper'
 import FormControls from '@/components/form-controls'
 import ClubStaffControls from '@/components/club-staff-controls'
 import ReportButton from '@/components/report-button'
+import { getIsUserClubMod, getIsUserClubOwner } from '@/utils/clubs'
+import useUserRecord from '@/hooks/useUserRecord'
 
 const useStyles = makeStyles({
   root: { position: 'relative' },
@@ -148,6 +150,7 @@ const View = () => {
   const classes = useStyles()
   const isMod = useIsModerator()
   const myUserId = useUserId()
+  const [, , user] = useUserRecord()
 
   if (isLoading || !events) {
     return <LoadingIndicator message="Loading event..." />
@@ -192,11 +195,14 @@ const View = () => {
   )
 
   const isClubOwner =
-    club && myUserId
-      ? club.owneruserids.includes(myUserId) || club.createdby === myUserId
+    user && club
+      ? getIsUserClubOwner(user.id, user.linkedvrchatuserid, club)
       : false
   const isClubMod =
-    myUserId && club ? club.moduserids.includes(myUserId) : false
+    user && club
+      ? getIsUserClubMod(user.id, user.linkedvrchatuserid, club)
+      : false
+
   const isClubStaff = isClubOwner || isClubMod
 
   return (

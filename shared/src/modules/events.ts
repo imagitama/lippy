@@ -78,7 +78,15 @@ export interface FullEvent extends Event, EventMeta {
   fullperformances: FullPerformance[]
   club: null | Pick<
     Club,
-    'name' | 'owneruserids' | 'moduserids' | 'createdby' | 'thumbnailurl'
+    // meta
+    | 'name'
+    | 'thumbnailurl'
+    | 'createdby'
+    // perms
+    | 'owneruserids'
+    | 'moduserids'
+    | 'vrchatowneruserids'
+    | 'vrchatmoduserids'
   >
   vrchatinstancecache: VrchatInstanceCachedItem | null
   attendance: FullEventAttendance[]

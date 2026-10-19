@@ -39,6 +39,11 @@ import Metadata from '@/components/metadata'
 import JoinBotToVrchatGroupForm from '@/components/join-bot-to-vrchat-group-form'
 import ImportVrchatGroupRolesForm from '@/components/import-vrchat-group-roles-form'
 import useUserRecord from '@/hooks/useUserRecord'
+import {
+  getIsUserClubMod,
+  getIsUserClubOwner,
+  getIsUserClubStaff,
+} from '@/utils/clubs'
 
 const useStyles = makeStyles({
   categories: {
@@ -128,42 +133,6 @@ const Root = styled.div`
   flex-direction: column;
 `
 
-const getIsUserClubOwner = (
-  userId: string,
-  vrchatUserId: string | null,
-  club: Club
-): boolean => {
-  // console.debug(
-  //   'getIsUserClubOwner',
-  //   userId,
-  //   vrchatUserId,
-  //   club.vrchatowneruserids
-  // )
-
-  if (club.createdby === userId) return true
-
-  if (club.owneruserids.includes(userId)) return true
-
-  if (vrchatUserId && club.vrchatowneruserids.includes(vrchatUserId))
-    return true
-
-  return false
-}
-
-const getIsUserClubMod = (
-  userId: string,
-  vrchatUserId: string | null,
-  club: Club
-): boolean => {
-  // console.debug('getIsUserClubMod', userId, vrchatUserId, club.vrchatmoduserids)
-
-  if (club.moduserids.includes(userId)) return true
-
-  if (vrchatUserId && club.vrchatmoduserids.includes(vrchatUserId)) return true
-
-  return false
-}
-
 const View = () => {
   const { clubId } = useParams<{ clubId: string }>()
   const [, , user] = useUserRecord()
@@ -244,7 +213,6 @@ const View = () => {
           <Message>
             You are a club owner so you can edit the club.
             <FormControls>
-              {/* <SyncVrchatGroupForm vrchatGroupId={club.linkedvrchatgroupid} /> */}
               <EditButton
                 url={routes.editClubWithVar.replace(':clubId', club.id)}
                 color="secondary">
