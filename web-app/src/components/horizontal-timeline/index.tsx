@@ -13,7 +13,8 @@ import Typography from '@mui/material/Typography'
 import { alpha, Theme } from '@mui/material/styles'
 import HistoryIcon from '@mui/icons-material/History'
 
-import { EventForList, Performance } from 'shared/modules/events'
+import { EventForList } from 'shared/modules/events'
+import { FullPerformance, Performance } from 'shared/modules/performances'
 
 import { useEventsFavoriting } from '@/hooks/useEventFavoriting'
 import useEventFilters from '@/hooks/useEventFilters'
@@ -24,7 +25,6 @@ import { mediaQueryForMobiles } from '@/media-queries'
 import Button from '@/components/button'
 
 import FilterButton from './components/filter-button'
-import useInterval from '@/hooks/useInterval'
 
 export interface TimeRange {
   start: Date
@@ -330,7 +330,7 @@ const Genres = styled.div`
 `
 
 interface ParsedPerformance {
-  performance: Performance
+  performance: FullPerformance
   startMs: number
   endMs: number
   lane: number
@@ -386,7 +386,7 @@ function getParsedEvents(events: EventForList[]): ParsedEvent[] {
     const endMs = Date.parse(event.endsat)
     if (Number.isNaN(startMs) || Number.isNaN(endMs)) continue
 
-    const rawPerformances = (event.performances ?? [])
+    const rawPerformances = (event.fullperformances ?? [])
       .map((performance) => ({
         performance,
         startMs: Date.parse(performance.startsat),
@@ -847,13 +847,10 @@ const HorizontalTimeline = ({
                           )
                           if (!performanceBoxPx) return null
 
-                          const fullPerformance = event.fullperformances[idx]
-
-                          const label = fullPerformance
-                            ? fullPerformance.fullperformername ||
-                              fullPerformance.performername
-                            : performance.performerid?.substring(0, 10) ||
-                              performance.performername
+                          const label =
+                            performance.fullperformername ||
+                            performance.name ||
+                            performance.performerid?.substring(0, 10)
 
                           return (
                             // <Tooltip

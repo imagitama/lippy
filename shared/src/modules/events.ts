@@ -1,23 +1,10 @@
 import type { Club } from './clubs.ts'
 import { FeaturedStatus } from './common.ts'
-import type {
-  VrchatInstance,
-  VrchatInstanceCachedItem,
-} from './vrchat-cache.ts'
+import type { FullPerformance } from './performances.ts'
+import type { VrchatInstanceCachedItem } from './vrchat-cache.ts'
 
 export const EVENT_BANNER_WIDTH = 600
 export const EVENT_BANNER_HEIGHT = 300
-
-export interface Performance {
-  performerid: string | null
-  performername: string | null
-  startsat: string // date
-  endsat: string // date
-}
-
-export interface FullPerformance extends Performance {
-  fullperformername: string // prefixed with "full" to differentiate from custom name
-}
 
 export enum EventCategory {
   Music = 'music',
@@ -41,7 +28,6 @@ export interface EventFields extends Record<string, unknown> {
   isbackground: boolean
   genres: string[]
   tags: string[]
-  performances: Performance[]
 }
 
 export interface Event extends EventFields {
@@ -66,10 +52,10 @@ export interface EventMeta {
 
 export interface EventForList extends Event {
   featuredstatus: FeaturedStatus
-  fullperformances: FullPerformance[]
   clubname: string
   clubthumbnailurl: string | null
   vrchatinstancecache: VrchatInstanceCachedItem | null
+  fullperformances: FullPerformance[]
 }
 
 export interface PublicEvent extends EventForList {}

@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import { FullPerformance, Performance } from 'shared/modules/events'
+import { FullPerformance, Performance } from 'shared/modules/performances'
 import { CustomTheme } from '@/themes'
 import moment from 'moment'
 
@@ -36,7 +36,7 @@ export const PerformanceListItem = ({
     <Label>
       {'fullperformername' in perf && perf.fullperformername
         ? perf.fullperformername
-        : perf.performername || perf.performerid}
+        : perf.name || perf.performerid}
     </Label>
     <Date>{getFriendlyDate(perf.endsat)}</Date>
   </Item>

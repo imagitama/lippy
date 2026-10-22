@@ -190,6 +190,11 @@ const GenericEditor = <TRecord extends Record<string, any>>({
       idField: idField as string,
     })
 
+  const onSaveCallbacks = useRef<((record: TRecord) => void)[]>([])
+
+  const addOnSaveCallback = (callback: (record: TRecord) => void) =>
+    onSaveCallbacks.current.push(callback)
+
   const [formFields, setFormFields] = useState<null | Partial<TRecord>>(
     overrideFields
       ? overrideFields
@@ -324,6 +329,8 @@ const GenericEditor = <TRecord extends Record<string, any>>({
     }
   }
 
+  const onCreate = (record: TRecord) => {}
+
   const onSaveBtnClick = async () => {
     try {
       console.debug('on click save button')
@@ -368,6 +375,11 @@ const GenericEditor = <TRecord extends Record<string, any>>({
         ...formFields,
         ...getHiddenFieldsForDb(fields),
       })
+
+      if (!result)
+        throw new Error('Cannot call on save callbacks without a result')
+
+      await Promise.all(onSaveCallbacks.current.map((func) => func(result)))
 
       if (!result) {
         console.debug('result is empty')
@@ -445,6 +457,8 @@ const GenericEditor = <TRecord extends Record<string, any>>({
             databaseResult={rawRecord}
             // for mini editor
             formFields={formFields}
+            // only called on record insert
+            addOnSaveCallback={addOnSaveCallback}
           />
         </Field>
       </Suspense>

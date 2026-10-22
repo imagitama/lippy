@@ -3,16 +3,17 @@ import { useParams } from 'react-router'
 import { Helmet } from '@unhead/react/helmet'
 
 import * as routes from '@/routes'
+import { CollectionNames, Event, EventForList } from 'shared/modules/events'
 import {
-  CollectionNames,
-  Event,
-  EventForList,
-  FullPerformance,
-} from 'shared/modules/events'
-import {
+  FullPerformer,
   Performer,
   CollectionNames as PerformersCollectionNames,
 } from 'shared/modules/performers'
+import {
+  FullPerformance,
+  CollectionNames as PerformancesCollectionNames,
+  ViewNames as PerformancesViewNames,
+} from 'shared/modules/performances'
 import editableFields from '@/editable-fields/events'
 import { addDays } from '@/utils/dates'
 import useIsLoggedIn from '@/hooks/useIsLoggedIn'
@@ -26,65 +27,65 @@ import WarningMessage from '@/components/warning-message'
 import InfoMessage from '@/components/info-message'
 import useDataStoreItems from '@/hooks/useDataStoreItems'
 
-const usePerformerNamesById = (
-  ids: string[]
-): [boolean, string | null, { id: string; name: string }[] | null] => {
-  const [isLoading, lastErrorCode, results] = useDataStoreItems<Performer>(
-    PerformersCollectionNames.Performers,
-    ids
-  )
-  return [
-    isLoading,
-    lastErrorCode,
-    results?.map((perf) => ({
-      id: perf.id,
-      name: perf.name,
-    })) || null,
-  ]
-}
+// const usePerformerNamesById = (
+//   ids: string[]
+// ): [boolean, string | null, { id: string; name: string }[] | null] => {
+//   const [isLoading, lastErrorCode, results] = useDataStoreItems<FullPerformance>(
+//     PerformancesViewNames.GetFullPerformances,
+//     ids
+//   )
+//   return [
+//     isLoading,
+//     lastErrorCode,
+//     results?.map((perf) => ({
+//       id: perf.id,
+//       name: perf.name,
+//     })) || null,
+//   ]
+// }
 
-const EventPreview = ({ event }: { event: Partial<Event> }) => {
-  const [, , performerIdsAndNames] = usePerformerNamesById(
-    event.performances
-      ?.filter((perf) => perf.performerid)
-      .map((perf) => perf.performerid!) || []
-  )
+// const EventPreview = ({ event }: { event: Partial<Event> }) => {
+//   const [, , performerIdsAndNames] = usePerformerNamesById(
+//     event.performances
+//       ?.filter((perf) => perf.performerid)
+//       .map((perf) => perf.performerid!) || []
+//   )
 
-  if (!event.startsat && !event.endsat)
-    return (
-      <WarningMessage>
-        Need a start and end date to show a preview
-      </WarningMessage>
-    )
+//   if (!event.startsat && !event.endsat)
+//     return (
+//       <WarningMessage>
+//         Need a start and end date to show a preview
+//       </WarningMessage>
+//     )
 
-  const mockFullPerformances: FullPerformance[] =
-    event.performances?.map((perf) => {
-      const perfName =
-        perf.performerid && performerIdsAndNames
-          ? performerIdsAndNames.find((item) => item.id === perf.performerid)
-              ?.name || 'Loading...'
-          : perf.performername || perf.performerid || ''
-      return {
-        ...perf,
-        fullperformername: perfName,
-      }
-    }) || []
+//   const mockFullPerformances: FullPerformance[] =
+//     event.performances?.map((perf) => {
+//       const perfName =
+//         perf.performerid && performerIdsAndNames
+//           ? performerIdsAndNames.find((item) => item.id === perf.performerid)
+//               ?.name || 'Loading...'
+//           : perf.performername || perf.performerid || ''
+//       return {
+//         ...perf,
+//         fullperformername: perfName,
+//       }
+//     }) || []
 
-  const mockEventForList = {
-    ...event,
-    fullperformances: mockFullPerformances,
-    clubname: 'My Club',
-  } as EventForList
+//   const mockEventForList = {
+//     ...event,
+//     fullperformances: mockFullPerformances,
+//     clubname: 'My Club',
+//   } as EventForList
 
-  return (
-    <div style={{ height: '200px' }}>
-      <HorizontalTimeline
-        events={[mockEventForList]}
-        now={new Date(event.startsat!)}
-      />
-    </div>
-  )
-}
+//   return (
+//     <div style={{ height: '200px' }}>
+//       <HorizontalTimeline
+//         events={[mockEventForList]}
+//         now={new Date(event.startsat!)}
+//       />
+//     </div>
+//   )
+// }
 
 export default () => {
   const { eventId } = useParams<{ eventId?: string }>()
@@ -115,11 +116,11 @@ export default () => {
         />
       </Helmet>
       <Heading variant="h1">{isCreating ? 'Create' : 'Edit'} Event</Heading>
-      {previewFields ? (
+      {/* {previewFields ? (
         <EventPreview event={previewFields} />
       ) : (
         <InfoMessage>Set a start and end date to show a preview</InfoMessage>
-      )}
+      )} */}
       <GenericEditor<Event>
         fields={editableFields}
         collectionName={CollectionNames.Events}

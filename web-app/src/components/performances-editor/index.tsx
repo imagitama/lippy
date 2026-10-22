@@ -1,4 +1,4 @@
-import React, { PointerEvent, useEffect, useRef } from 'react'
+import React, { PointerEvent, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import AddIcon from '@mui/icons-material/Add'
 import KeyboardIcon from '@mui/icons-material/Keyboard'
@@ -11,19 +11,33 @@ import {
 } from '@/icons'
 import { getFriendlyDuration } from '@/utils/dates'
 
-import { Performance } from 'shared/modules/events'
+import { Event } from 'shared/modules/events'
 import TextInput from '@/components/text-input'
 import Button from '@/components/button'
 import DialogButton from '../dialog-button'
 import Heading from '../heading'
 import FormControls from '../form-controls'
 import SearchForIdForm from '../search-for-id-form'
-import { CollectionNames, Performer } from 'shared/modules/performers'
+import {
+  CollectionNames as PerformancesCollectionNames,
+  Performance,
+  PerformanceFields,
+} from 'shared/modules/performances'
+import {
+  CollectionNames as PerformersCollectionNames,
+  Performer,
+} from 'shared/modules/performers'
 import HintText from '../hint-text'
 import useDataStoreItem from '@/hooks/useDataStoreItem'
 import LoadingIndicator from '../loading-indicator'
 import ErrorMessage from '../error-message'
 import WarningMessage from '../warning-message'
+import useDatabaseQuery, { Operators } from '@/hooks/useDatabaseQuery'
+import { insertRecord, updateRecord } from '@/data-store'
+import { client } from '@/supabase'
+import { handleError } from '@/error-handling'
+import { stripMetaFields } from '@/utils/performances'
+import { useStateGetter } from '@/hooks/useStateGetter'
 
 const SLOT_MS = 30 * 30 * 1000
 const SLOT_WIDTH_PX = 200 // px per 30-min slot
@@ -224,8 +238,11 @@ export const PerformerNameById = ({
   customName: string | null
 }) => {
   const [isLoading, lastErrorCode, performer] = useDataStoreItem<Performer>(
-    CollectionNames.Performers,
-    id ?? false
+    PerformersCollectionNames.Performers,
+    id ?? false,
+    {
+      queryName: `performer_${id}`,
+    }
   )
   if (isLoading) return <LoadingIndicator message="Loading performer..." />
   if (lastErrorCode !== null)
@@ -287,18 +304,123 @@ interface DragState {
   upperMs: number // latest the dragged edge may go (event end / next perf start)
 }
 
+const usePerformancesEditing = (): [
+  boolean,
+  string | null,
+  Performance[] | null | false,
+  (eventId: string, perfs: (Performance | PerformanceFields)[]) => Promise<void>
+] => {
+  const [isLoading, setIsLoading] = useState(false)
+  const [lastErrorCode, setLastErrorCode] = useState<string | null>(null)
+  const [results, setResults] = useState<Performance[] | null | false>(null)
+
+  const createOrEditAll = async (
+    eventId: string,
+    perfs: (Performance | PerformanceFields)[]
+  ) => {
+    console.debug(`usePerformancesEditing.createOrEditAll`, eventId, perfs)
+
+    try {
+      setIsLoading(true)
+      setLastErrorCode(null)
+
+      for (const perf of perfs) {
+        if (perf.id) {
+          await updateRecord<Performance>(
+            client,
+            PerformancesCollectionNames.Performances,
+            perf.id,
+            {
+              ...stripMetaFields(perf),
+            }
+          )
+        } else {
+          if (!eventId) throw new Error('Cannot insert without an event ID')
+
+          await insertRecord<PerformanceFields, Performance>(
+            client,
+            PerformancesCollectionNames.Performances,
+            {
+              ...perf,
+              eventid: eventId,
+            }
+          )
+        }
+      }
+
+      setIsLoading(false)
+      setLastErrorCode(null)
+    } catch (err) {
+      console.error(err)
+      handleError(err)
+      setLastErrorCode((err as Error).constructor.name)
+    }
+  }
+
+  return [isLoading, lastErrorCode, results, createOrEditAll]
+}
+
 const PerformancesEditor = ({
-  value,
-  onChange,
+  event,
+  addOnSaveCallback,
   eventStartsAt,
   eventEndsAt,
 }: {
-  value: Performance[]
-  onChange: (newVal: Performance[]) => void
+  event: Event | false | null
+  addOnSaveCallback: (callback: (event: Event) => void) => void
   eventStartsAt: string
   eventEndsAt: string
 }) => {
+  // const [value, setValue] = useState<(Performance | PerformanceFields)[]>([])
+  const [value, setValue, getValue] = useStateGetter<
+    (Performance | PerformanceFields)[]
+  >([])
+
+  const onChange = (newPerfs: (Performance | PerformanceFields)[]) => {
+    console.debug(`PerformancesEditor.onChange`, newPerfs)
+    setValue(newPerfs)
+  }
+
+  const [isSaving, lastErrorCodeSaving, results, createOrEditAll] =
+    usePerformancesEditing()
+
+  const [isLoadingExisting, lastErrorCodeExisting, existingPerfs] =
+    useDatabaseQuery<Performance>(
+      PerformancesCollectionNames.Performances,
+      event ? [['eventid', Operators.EQUALS, event.id]] : false
+    )
+
   const drag = useRef<DragState | null>(null)
+
+  useEffect(() => {
+    console.debug('MOUNT addOnSaveCallback')
+    addOnSaveCallback((event) => {
+      console.debug(`event has been saved: ${event.id}`)
+      createOrEditAll(event.id, getValue())
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!existingPerfs) return
+    onChange(existingPerfs)
+  }, [JSON.stringify(existingPerfs)])
+
+  if (isLoadingExisting)
+    return <LoadingIndicator message="Loading performances..." />
+  if (lastErrorCodeExisting !== null)
+    return (
+      <ErrorMessage errorCode={lastErrorCodeExisting}>
+        Failed to load performances
+      </ErrorMessage>
+    )
+
+  if (isSaving) return <LoadingIndicator message="Saving performances..." />
+  if (lastErrorCodeSaving !== null)
+    return (
+      <ErrorMessage errorCode={lastErrorCodeSaving}>
+        Failed to save performances
+      </ErrorMessage>
+    )
 
   const slots = getSlots(eventStartsAt, eventEndsAt)
 
@@ -333,7 +455,10 @@ const PerformancesEditor = ({
       value.length > 0 ? value[value.length - 1].endsat : eventStartsAt
 
     // no room left in the event
-    if (startsAt >= eventEndsAt) return
+    if (startsAt >= eventEndsAt) {
+      console.warn('no room left!')
+      return
+    }
 
     const proposedEndsAt = addMins(startsAt, mins)
 
@@ -343,10 +468,12 @@ const PerformancesEditor = ({
     onChange(
       value.concat([
         {
+          // eventid: event ? event.id : undefined, // to populate
+          performerid: null,
+          name: null,
           startsat: startsAt,
           endsat: endsAt,
-          performerid: null,
-          performername: '',
+          genres: [],
         },
       ])
     )
@@ -362,8 +489,11 @@ const PerformancesEditor = ({
   const updateItemAtIdx = (idx: number, patch: Partial<Performance>) =>
     onChange(value.map((item, i) => (i === idx ? { ...item, ...patch } : item)))
 
-  const updateField = (idx: number, fieldName: string, val: any) =>
-    updateItemAtIdx(idx, { [fieldName]: val })
+  const updateField = (
+    idx: number,
+    fieldName: keyof PerformanceFields,
+    val: any
+  ) => updateItemAtIdx(idx, { [fieldName]: val })
 
   const pxToMs = (px: number) => (px / SLOT_WIDTH_PX) * SLOT_MS
 
@@ -373,7 +503,7 @@ const PerformancesEditor = ({
   const eventStartsAtMs = new Date(eventStartsAt).getTime()
   const eventEndsAtMs = new Date(eventEndsAt).getTime()
 
-  const dragProps = (edge: Edge, perf: Performance, idx: number) => ({
+  const dragProps = (edge: Edge, perf: PerformanceFields, idx: number) => ({
     onPointerDown: (e: PointerEvent<HTMLElement>) => {
       e.preventDefault()
       e.stopPropagation()
@@ -510,7 +640,7 @@ const PerformancesEditor = ({
                     </Duration>
                     <PerformerNameById
                       id={perf.performerid}
-                      customName={perf.performername}
+                      customName={perf.name}
                     />
                     <div>
                       <Button
@@ -529,7 +659,9 @@ const PerformancesEditor = ({
                               Set Performer Name
                             </Heading>
                             <SearchForIdForm
-                              collectionName={CollectionNames.Performers}
+                              collectionName={
+                                PerformersCollectionNames.Performers
+                              }
                               fieldAsLabel="name"
                               onClickWithIdAndDetails={(id, details) => {
                                 updateField(idx, 'performerid', id)
@@ -542,13 +674,9 @@ const PerformancesEditor = ({
                             <TextInput
                               size="small"
                               label="Custom Performer Name"
-                              value={perf.performername || ''}
+                              value={perf.name || ''}
                               onChange={(e) =>
-                                updateField(
-                                  idx,
-                                  'performername',
-                                  e.target.value
-                                )
+                                updateField(idx, 'name', e.target.value)
                               }
                             />
                             <br />

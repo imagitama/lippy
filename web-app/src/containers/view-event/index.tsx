@@ -270,7 +270,7 @@ const View = () => {
                 )}
               </Block>
               <Block title="Performers">
-                {event.performances.length ? (
+                {event.fullperformances.length ? (
                   <PerformanceList performances={event.fullperformances} />
                 ) : (
                   <NoResultsMessage>

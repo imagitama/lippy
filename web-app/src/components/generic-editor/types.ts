@@ -12,6 +12,7 @@ export type GenericInputProps<
   setFieldsValues: (updates: Partial<TRecord>) => void
   databaseResult: false | TRecord | null
   formFields: TRecord
+  addOnSaveCallback: (callback: (record: TRecord) => void) => void
 }
 
 export type GenericInput<TValue, TRecord extends Record<string, any>> = (

@@ -55,6 +55,7 @@ const editableFields: EditableField<Event>[] = [
   {
     name: 'category',
     label: 'Category',
+    isRequired: true,
     type: fieldTypes.dropdown,
     options: Object.entries(EventCategory).map(([type, val]) => ({
       label: type,
@@ -130,18 +131,18 @@ ${nsfwRules}`,
 Adult posters can only be uploaded if the event is flagged as adult.`,
   },
   {
-    name: 'performances',
+    name: 'performances-editor',
     label: 'Performances',
     type: fieldTypes.custom,
-    renderer: ({ value, onChange, formFields }) => (
+    renderer: ({ databaseResult, formFields, addOnSaveCallback }) => (
       <PerformancesEditor
-        value={value || []}
-        onChange={onChange}
+        event={databaseResult}
+        addOnSaveCallback={addOnSaveCallback}
         eventStartsAt={formFields.startsat}
         eventEndsAt={formFields.endsat}
       />
     ),
-  } as CustomEditableField<Event, 'performances'>,
+  },
   {
     name: 'vrchatinstanceid',
     label: 'VRChat Instance ID',

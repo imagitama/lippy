@@ -145,7 +145,7 @@ const EventPanel = ({
             <Markdown source={event.description} />
           </Desc>
           <Heading variant="h3">Performances</Heading>
-          {event.performances.length ? (
+          {event.fullperformances.length ? (
             <PerformanceList performances={event.fullperformances} />
           ) : (
             <NoResultsMessage>
