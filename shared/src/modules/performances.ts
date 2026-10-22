@@ -1,3 +1,5 @@
+import type { AccessStatus } from './common.ts'
+
 export interface PerformanceFields extends Record<string, any> {
   eventid: string // uuid
   performerid: string | null
@@ -5,6 +7,7 @@ export interface PerformanceFields extends Record<string, any> {
   startsat: string // date
   endsat: string // date
   genres: string[]
+  accessstatus: AccessStatus
 }
 
 export interface Performance extends PerformanceFields {

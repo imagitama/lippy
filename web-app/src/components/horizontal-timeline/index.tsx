@@ -329,20 +329,20 @@ const Genres = styled.div`
   }
 `
 
-interface ParsedPerformance {
-  performance: FullPerformance
-  startMs: number
-  endMs: number
-  lane: number
-}
-
 interface ParsedEvent {
   event: EventForList
   startMs: number
   endMs: number
-  performances: ParsedPerformance[]
+  performances: ParsedPerformanceGroup[]
   laneCount: number
   rowIdx: number
+}
+
+interface ParsedPerformanceGroup {
+  performances: FullPerformance[]
+  startMs: number
+  endMs: number
+  lane: number
 }
 
 interface ProjectedBoxPx {
@@ -378,6 +378,24 @@ function getPackedLanes<T extends { startMs: number; endMs: number }>(
   return { lanes, laneCount: laneEndsMs.length }
 }
 
+function groupPerformancesByTime(
+  items: { performance: FullPerformance; startMs: number; endMs: number }[]
+): Omit<ParsedPerformanceGroup, 'lane'>[] {
+  const groups = new Map<string, Omit<ParsedPerformanceGroup, 'lane'>>()
+
+  for (const { performance, startMs, endMs } of items) {
+    const key = `${startMs}-${endMs}`
+    const existing = groups.get(key)
+    if (existing) {
+      existing.performances.push(performance)
+    } else {
+      groups.set(key, { startMs, endMs, performances: [performance] })
+    }
+  }
+
+  return Array.from(groups.values())
+}
+
 function getParsedEvents(events: EventForList[]): ParsedEvent[] {
   const parsedEvents: ParsedEvent[] = []
 
@@ -394,14 +412,19 @@ function getParsedEvents(events: EventForList[]): ParsedEvent[] {
       }))
       .filter((p) => !Number.isNaN(p.startMs) && !Number.isNaN(p.endMs))
 
-    const { lanes, laneCount } = getPackedLanes(rawPerformances)
+    const groupedPerformances = groupPerformancesByTime(rawPerformances)
+
+    const { lanes, laneCount } = getPackedLanes(groupedPerformances)
 
     parsedEvents.push({
       event,
       startMs,
       endMs,
       laneCount,
-      performances: rawPerformances.map((p, i) => ({ ...p, lane: lanes[i] })),
+      performances: groupedPerformances.map((g, i) => ({
+        ...g,
+        lane: lanes[i],
+      })),
       rowIdx: -1,
     })
   }
@@ -800,15 +823,6 @@ const HorizontalTimeline = ({
                 if (!eventBoxPx) return null
 
                 return (
-                  // <Tooltip
-                  //   disableInteractive
-                  //   title={
-                  //     <>
-                  //       <strong>{event.name}</strong>
-                  //       <br />
-                  //       {getRangeStr(startMs, endMs)}
-                  //     </>
-                  //   }>
                   <EventButton
                     disableRipple
                     onClick={() => onEventClick?.(event)}
@@ -835,7 +849,7 @@ const HorizontalTimeline = ({
                       {performances.map(
                         (
                           {
-                            performance,
+                            performances: group,
                             startMs: performanceStartMs,
                             endMs: performanceEndMs,
                           },
@@ -847,42 +861,29 @@ const HorizontalTimeline = ({
                           )
                           if (!performanceBoxPx) return null
 
-                          const label =
-                            performance.fullperformername ||
-                            performance.name ||
-                            performance.performerid?.substring(0, 10)
+                          const label = group
+                            .map(
+                              (p) =>
+                                p.fullperformername ||
+                                p.name ||
+                                p.performerid?.substring(0, 10)
+                            )
+                            .filter(Boolean)
+                            .join(', ')
 
                           return (
-                            // <Tooltip
-                            //   key={`${performance.performerid}-${performanceStartMs}`}
-                            //   disableInteractive
-                            //   title={
-                            //     <>
-                            //       <strong>{label}</strong>
-                            //       <br />
-                            //       {getRangeStr(
-                            //         performanceStartMs,
-                            //         performanceEndMs
-                            //       )}
-                            //     </>
-                            //   }>
                             <PerformanceBox
                               leftPx={
                                 performanceBoxPx.leftPx - eventBoxPx.leftPx + 2
                               }
-                              widthPx={performanceBoxPx.widthPx - 1}
-                              data-performer={performance.performerid}>
+                              widthPx={performanceBoxPx.widthPx - 1}>
                               <span>{label}</span>
                             </PerformanceBox>
-                            // </Tooltip>
                           )
                         }
                       )}
                     </Performances>
                   </EventButton>
-                  // </Tooltip>
-                  //   )}
-                  // </EventRow>
                 )
               })}{' '}
             </EventRow>

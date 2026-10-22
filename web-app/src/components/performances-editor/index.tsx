@@ -1,7 +1,14 @@
-import React, { PointerEvent, useEffect, useRef, useState } from 'react'
+import React, {
+  PointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import styled from '@emotion/styled'
 import AddIcon from '@mui/icons-material/Add'
 import KeyboardIcon from '@mui/icons-material/Keyboard'
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
 
 import { removeByIndex } from '@/utils'
 import {
@@ -38,6 +45,7 @@ import { client } from '@/supabase'
 import { handleError } from '@/error-handling'
 import { stripMetaFields } from '@/utils/performances'
 import { useStateGetter } from '@/hooks/useStateGetter'
+import { AccessStatus } from 'shared/modules/common'
 
 const SLOT_MS = 30 * 30 * 1000
 const SLOT_WIDTH_PX = 200 // px per 30-min slot
@@ -297,6 +305,7 @@ type Edge = 'startsat' | 'endsat'
 
 interface DragState {
   edge: Edge
+  indexes: number[]
   startX: number
   originMs: number // the edge's time when the drag began
   otherMs: number // the opposite edge's time (stays fixed)
@@ -308,7 +317,10 @@ const usePerformancesEditing = (): [
   boolean,
   string | null,
   Performance[] | null | false,
-  (eventId: string, perfs: (Performance | PerformanceFields)[]) => Promise<void>
+  (
+    eventId: string,
+    newPerfs: (Performance | PerformanceFields)[]
+  ) => Promise<void>
 ] => {
   const [isLoading, setIsLoading] = useState(false)
   const [lastErrorCode, setLastErrorCode] = useState<string | null>(null)
@@ -371,13 +383,42 @@ const PerformancesEditor = ({
   eventStartsAt: string
   eventEndsAt: string
 }) => {
-  // const [value, setValue] = useState<(Performance | PerformanceFields)[]>([])
   const [value, setValue, getValue] = useStateGetter<
     (Performance | PerformanceFields)[]
   >([])
 
+  const groups = useMemo(() => {
+    const map = new Map<
+      string,
+      { startsat: string; endsat: string; indexes: number[] }
+    >()
+
+    console.debug(
+      `REGENERATE`,
+      value.filter((perf) => perf.accessstatus !== AccessStatus.Deleted)
+    )
+
+    value
+      .filter((perf) => perf.accessstatus !== AccessStatus.Deleted)
+      .forEach((perf, idx) => {
+        const key = `${new Date(perf.startsat).getTime()}-${new Date(
+          perf.endsat
+        ).getTime()}`
+        const existing = map.get(key)
+        if (existing) existing.indexes.push(idx)
+        else
+          map.set(key, {
+            startsat: perf.startsat,
+            endsat: perf.endsat,
+            indexes: [idx],
+          })
+      })
+
+    return Array.from(map.values())
+  }, [JSON.stringify(value)])
+
   const onChange = (newPerfs: (Performance | PerformanceFields)[]) => {
-    console.debug(`PerformancesEditor.onChange`, newPerfs)
+    console.debug(`PerformancesEditor.onChange`, value, newPerfs)
     setValue(newPerfs)
   }
 
@@ -387,22 +428,27 @@ const PerformancesEditor = ({
   const [isLoadingExisting, lastErrorCodeExisting, existingPerfs] =
     useDatabaseQuery<Performance>(
       PerformancesCollectionNames.Performances,
-      event ? [['eventid', Operators.EQUALS, event.id]] : false
+      event
+        ? [
+            ['eventid', Operators.EQUALS, event.id],
+            ['accessstatus', Operators.NOT_EQUALS, AccessStatus.Deleted],
+          ]
+        : false
     )
 
   const drag = useRef<DragState | null>(null)
 
   useEffect(() => {
-    console.debug('MOUNT addOnSaveCallback')
+    if (!existingPerfs) return
+
+    onChange(existingPerfs)
+
     addOnSaveCallback((event) => {
-      console.debug(`event has been saved: ${event.id}`)
+      console.debug(
+        `event has been saved (${event.id}) now saving performances...`
+      )
       createOrEditAll(event.id, getValue())
     })
-  }, [])
-
-  useEffect(() => {
-    if (!existingPerfs) return
-    onChange(existingPerfs)
   }, [JSON.stringify(existingPerfs)])
 
   if (isLoadingExisting)
@@ -466,6 +512,7 @@ const PerformancesEditor = ({
     const endsAt = proposedEndsAt > eventEndsAt ? eventEndsAt : proposedEndsAt
 
     onChange(
+      // @ts-ignore TODO: fix typings
       value.concat([
         {
           // eventid: event ? event.id : undefined, // to populate
@@ -484,16 +531,57 @@ const PerformancesEditor = ({
     (_, i) => new Date(timelineStart + i * THIN_MS)
   )
 
-  const deleteByIdx = (idx: number) => onChange(removeByIndex(value, idx))
+  const dupeAlongsideByIdx = (idx: number) => {
+    console.debug(`dupeAlongsideByIdx`, idx)
 
-  const updateItemAtIdx = (idx: number, patch: Partial<Performance>) =>
+    const source = value[idx]
+
+    const copy = {
+      startsat: source.startsat,
+      endsat: source.endsat,
+    } as PerformanceFields
+
+    const newVal = [...value.slice(0, idx + 1), copy, ...value.slice(idx + 1)]
+
+    onChange(newVal)
+  }
+
+  const deleteByIdx = (idx: number) => {
+    console.debug(`deleteByIdx`, idx)
+
+    const item = value[idx]
+    if (!item) return
+
+    if (!('id' in item) || !item.id) {
+      // never saved so just drop from array
+      onChange(removeByIndex(value, idx))
+    } else {
+      // already persisted so mark as deleted
+      onChange(
+        value.map((perf, i) =>
+          i === idx ? { ...perf, accessstatus: AccessStatus.Deleted } : perf
+        )
+      )
+    }
+  }
+
+  const updateItemAtIdx = (idx: number, patch: Partial<Performance>) => {
+    console.debug(`updateItemAtIdx`, idx, { patch })
     onChange(value.map((item, i) => (i === idx ? { ...item, ...patch } : item)))
+  }
 
   const updateField = (
     idx: number,
     fieldName: keyof PerformanceFields,
     val: any
   ) => updateItemAtIdx(idx, { [fieldName]: val })
+
+  const updateFields = (indexes: number[], edge: Edge, date: string) => {
+    console.debug(`updateFields`, { indexes, edge, date })
+    setValue((prev) =>
+      prev.map((p, i) => (indexes.includes(i) ? { ...p, [edge]: date } : p))
+    )
+  }
 
   const pxToMs = (px: number) => (px / SLOT_WIDTH_PX) * SLOT_MS
 
@@ -503,19 +591,22 @@ const PerformancesEditor = ({
   const eventStartsAtMs = new Date(eventStartsAt).getTime()
   const eventEndsAtMs = new Date(eventEndsAt).getTime()
 
-  const dragProps = (edge: Edge, perf: PerformanceFields, idx: number) => ({
+  const dragProps = (edge: Edge, indexes: number[]) => ({
     onPointerDown: (e: PointerEvent<HTMLElement>) => {
       e.preventDefault()
       e.stopPropagation()
       e.currentTarget.setPointerCapture(e.pointerId)
+
       const otherEdge: Edge = edge === 'startsat' ? 'endsat' : 'startsat'
+      // group members share identical times, so the first one is representative
+      const perf = value[indexes[0]]
       const perfStart = new Date(perf.startsat).getTime()
       const perfEnd = new Date(perf.endsat).getTime()
 
       let lowerMs = eventStartsAtMs
       let upperMs = eventEndsAtMs
       value.forEach((other, i) => {
-        if (i === idx) return
+        if (indexes.includes(i)) return // skip the whole group, not just one item
         const otherStart = new Date(other.startsat).getTime()
         const otherEnd = new Date(other.endsat).getTime()
         if (otherEnd <= perfStart) lowerMs = Math.max(lowerMs, otherEnd)
@@ -524,6 +615,7 @@ const PerformancesEditor = ({
 
       drag.current = {
         edge,
+        indexes,
         startX: e.clientX,
         originMs: new Date(perf[edge]).getTime(),
         otherMs: new Date(perf[otherEdge]).getTime(),
@@ -536,13 +628,12 @@ const PerformancesEditor = ({
       if (!d) return
       let ms = snapSmallColumn(d.originMs + pxToMs(e.clientX - d.startX))
       if (d.edge === 'startsat') {
-        // can't pass the end (keep at least one slot) or the timeline start
         ms = Math.max(d.lowerMs, Math.min(ms, d.otherMs - THIN_MS))
       } else {
-        // can't go past the event end or within one slot of the start
         ms = Math.min(d.upperMs, Math.max(ms, d.otherMs + THIN_MS))
       }
-      updateField(idx, edge, new Date(ms).toISOString())
+      const date = new Date(ms).toISOString()
+      updateFields(d.indexes, d.edge, date)
     },
     onPointerUp: () => {
       drag.current = null
@@ -622,78 +713,93 @@ const PerformancesEditor = ({
                 }}
               />
             </EventRow>
-            {value.map((perf, idx) => {
+            {groups.map((group, idx) => {
               const left = msToPx(
-                new Date(perf.startsat).getTime() - timelineStart
+                new Date(group.startsat).getTime() - timelineStart
               )
               const width = msToPx(
-                new Date(perf.endsat).getTime() -
-                  new Date(perf.startsat).getTime()
+                new Date(group.endsat).getTime() -
+                  new Date(group.startsat).getTime()
               )
               return (
                 <PerformanceCell key={idx} style={{ left, width }}>
-                  <LeftDragHandle {...dragProps('startsat', perf, idx)} />
-                  <StartDate>{getTimeRowLabel(perf.startsat)}</StartDate>
+                  <LeftDragHandle {...dragProps('startsat', group.indexes)} />
+                  <StartDate>{getTimeRowLabel(group.startsat)}</StartDate>
                   <PerformerLabel>
                     <Duration>
-                      {getFriendlyDuration(perf.startsat, perf.endsat)}
+                      {getFriendlyDuration(group.startsat, group.endsat)}
                     </Duration>
-                    <PerformerNameById
-                      id={perf.performerid}
-                      customName={perf.name}
-                    />
-                    <div>
-                      <Button
-                        size="small"
-                        onClick={() => deleteByIdx(idx)}
-                        icon={<DeleteIcon />}
-                        color="secondary"
-                      />{' '}
-                      <DialogButton
-                        size="small"
-                        icon={<EditIcon />}
-                        color="secondary"
-                        dialog={({ close }) => (
-                          <>
-                            <Heading variant="h3" noTopMargin>
-                              Set Performer Name
-                            </Heading>
-                            <SearchForIdForm
-                              collectionName={
-                                PerformersCollectionNames.Performers
-                              }
-                              fieldAsLabel="name"
-                              onClickWithIdAndDetails={(id, details) => {
-                                updateField(idx, 'performerid', id)
-                              }}
-                            />
-                            <br />
-                            or
-                            <br />
-                            <br />
-                            <TextInput
+                    {group.indexes.map((idx) => {
+                      const perf = value[idx]
+                      return (
+                        <div>
+                          <PerformerNameById
+                            id={perf.performerid}
+                            customName={perf.name}
+                          />
+                          <div>
+                            <Button
                               size="small"
-                              label="Custom Performer Name"
-                              value={perf.name || ''}
-                              onChange={(e) =>
-                                updateField(idx, 'name', e.target.value)
-                              }
-                            />
-                            <br />
-                            <HintText>
-                              (only use this if you can't find the performer)
-                            </HintText>
-                            <FormControls>
-                              <Button onClick={close}>Done</Button>
-                            </FormControls>
-                          </>
-                        )}>
-                        Name
-                      </DialogButton>
-                    </div>
+                              onClick={() => deleteByIdx(idx)}
+                              icon={<DeleteIcon />}
+                              title="Remove Performance"
+                              color="secondary"
+                            />{' '}
+                            <DialogButton
+                              size="small"
+                              icon={<EditIcon />}
+                              color="secondary"
+                              title="Set Performer Name"
+                              dialog={({ close }) => (
+                                <>
+                                  <Heading variant="h3" noTopMargin>
+                                    Set Performer Name
+                                  </Heading>
+                                  <SearchForIdForm
+                                    collectionName={
+                                      PerformersCollectionNames.Performers
+                                    }
+                                    fieldAsLabel="name"
+                                    onClickWithIdAndDetails={(id, details) => {
+                                      updateField(idx, 'performerid', id)
+                                    }}
+                                  />
+                                  <br />
+                                  or
+                                  <br />
+                                  <br />
+                                  <TextInput
+                                    size="small"
+                                    label="Custom Performer Name"
+                                    value={perf.name || ''}
+                                    onChange={(e) =>
+                                      updateField(idx, 'name', e.target.value)
+                                    }
+                                  />
+                                  <br />
+                                  <HintText>
+                                    (only use this if you can't find the
+                                    performer)
+                                  </HintText>
+                                  <FormControls>
+                                    <Button onClick={close}>Done</Button>
+                                  </FormControls>
+                                </>
+                              )}
+                            />{' '}
+                            <Button
+                              size="small"
+                              onClick={() => dupeAlongsideByIdx(idx)}
+                              icon={<PersonAddAlt1Icon />}
+                              title="Add 2nd Performer"
+                              color="secondary"></Button>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </PerformerLabel>
-                  <EndDate>{getTimeRowLabel(perf.endsat)}</EndDate>
-                  <RightDragHandle {...dragProps('endsat', perf, idx)} />
+                  <EndDate>{getTimeRowLabel(group.endsat)}</EndDate>
+                  <RightDragHandle {...dragProps('endsat', group.indexes)} />
                 </PerformanceCell>
               )
             })}
