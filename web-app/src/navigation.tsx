@@ -105,6 +105,11 @@ const items: MenuItem[] = [
     label: 'More',
     children: [
       {
+        id: 'world',
+        url: routes.world,
+        label: 'World Info',
+      },
+      {
         id: 'calendar',
         url: routes.events,
         label: 'Event Calendar',

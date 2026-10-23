@@ -6,8 +6,7 @@ import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import styled from '@emotion/styled'
 import { NavLink } from 'react-router-dom'
-
-import CompareIcon from '@mui/icons-material/Compare'
+import PublicIcon from '@mui/icons-material/Public'
 
 import {
   Comments as CommentsIcon,
@@ -39,6 +38,7 @@ import AdminSupportTickets from './components/support-tickets'
 // import AdminAnalytics from './components/analytics'
 import SiteSettingsForm from './components/site-settings-form'
 import AdminNotifications from './components/notifications'
+import World from './components/world'
 import { mediaQueryForTabletsOrBelow } from '@/media-queries'
 
 const drawerWidth = 240
@@ -108,6 +108,12 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  {
+    subPath: '/world',
+    label: 'World',
+    icon: PublicIcon,
+    component: World,
+  },
   {
     subPath: '/history',
     label: 'History',
