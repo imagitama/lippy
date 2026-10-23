@@ -189,7 +189,11 @@ const SingleExternalEventImporter = ({
   const [genresVal, setGenresVal] = useState<string>('')
 
   const onClickImport = () => {
-    const genres = genresVal?.split('\n').map((line) => line.trim()) || []
+    const genres =
+      genresVal
+        ?.split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line) || []
     performImport({
       p_ev: {
         ...ourEventFields,
