@@ -54,9 +54,16 @@ export interface ExternalPerformerInfo {
   name: string
 }
 
+export interface ExternalOrganizer {
+  id: number
+  name: string
+  // etc.
+}
+
 export interface ExternalData {
   eventData: {
     events: ExternalEvent[]
     performers: ExternalPerformerInfo[]
+    organizers: ExternalOrganizer[]
   }
 }

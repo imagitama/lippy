@@ -1,5 +1,7 @@
-import { EventCategory, EventFields, Performance } from 'shared/modules/events'
+import { EventCategory, EventFields } from 'shared/modules/events'
 import { ExternalData, ExternalEvent, ExternalEventSlot } from './types'
+import { PerformanceFields } from 'shared/modules/performances'
+import { AccessStatus } from 'shared/modules/common'
 
 export type EventFieldsResult = Pick<
   EventFields,
@@ -15,8 +17,10 @@ export type EventFieldsResult = Pick<
   | 'isbackground'
   | 'genres'
   | 'tags'
-  | 'performances'
->
+> & {
+  clubname: string
+  performances: PerformanceFields[]
+}
 
 const toIso = (unixSeconds: number): string =>
   new Date(unixSeconds * 1000).toISOString()
@@ -31,7 +35,7 @@ const getPerformerName = (
 const getPerformancesFromSlots = (
   slots: ExternalEventSlot[],
   fullData: ExternalData
-): Performance[] =>
+): Omit<PerformanceFields, 'eventid'>[] =>
   slots
     .filter((slot) => slot.flag === 'performers' && slot.performers.length > 0)
     .flatMap((slot) => {
@@ -41,10 +45,13 @@ const getPerformancesFromSlots = (
       return [...slot.performers]
         .sort((a, b) => a.order - b.order)
         .map((p) => ({
+          eventid: null, // to populate
           performerid: null,
-          performername: getPerformerName(p.performerId, fullData),
+          name: getPerformerName(p.performerId, fullData),
           startsat,
           endsat,
+          genres: [],
+          accessstatus: AccessStatus.Public,
         }))
     })
 
@@ -97,6 +104,17 @@ const EXTERNAL_GENRE_MAP: Record<number, string> = {
 export const getGenresFromExternalTags = (tags: number[]): string[] =>
   tags.flatMap((t) => (EXTERNAL_GENRE_MAP[t] ? [EXTERNAL_GENRE_MAP[t]] : []))
 
+const getClubName = (
+  organizerIds: number[],
+  theirEvent: ExternalData
+): string | null => {
+  const matches = theirEvent.eventData.organizers.filter((org) =>
+    organizerIds.includes(org.id)
+  )
+  if (matches.length) return matches[0].name
+  return null
+}
+
 type Mapping = {
   [T in keyof ExternalEvent]-?: {
     [O in keyof EventFields]-?: {
@@ -124,6 +142,11 @@ const mappings: Mapping[] = [
     ourName: 'performances',
     map: (maybeSlots, fullData) =>
       getPerformancesFromSlots(maybeSlots || [], fullData),
+  },
+  {
+    theirName: 'organizers',
+    ourName: 'clubname',
+    map: (organizerIds, fullData) => getClubName(organizerIds, fullData),
   },
 ]
 

@@ -20,6 +20,7 @@ export interface ImportExternalEventPayload {
   p_ev: EventFieldsResult
   p_externalid: number
   p_vrchatgroupid: string | null
+  p_clubname: string | null
 }
 
 export interface ImportExternalEventResult {

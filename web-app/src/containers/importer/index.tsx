@@ -44,6 +44,10 @@ import CheckboxInput from '@/components/checkbox-input'
 import DateTimeRangeInput from '@/components/datetime-range-input'
 import { callFunction, client } from '@/supabase'
 import { getVrchatGroupIdFromUrl } from '@/vrchat'
+import FormControls from '@/components/form-controls'
+import InfoMessage from '@/components/info-message'
+import Link from '@/components/link'
+import { routes } from '@/routes'
 
 const ComponentForField = ({
   name,
@@ -182,15 +186,19 @@ const SingleExternalEventImporter = ({
     )
   const [posterUrl, setPosterUrl] = useState<null | string>(null)
   const [posterUrlToUse, setPosterUrlToUse] = useState<null | string>(null)
+  const [genresVal, setGenresVal] = useState<string>('')
 
   const onClickImport = () => {
+    const genres = genresVal?.split('\n').map((line) => line.trim()) || []
     performImport({
       p_ev: {
         ...ourEventFields,
         posterurl: posterUrl,
+        genres,
       },
       p_externalid: externalEvent.id,
       p_vrchatgroupid: getVrchatGroupId(externalEvent),
+      p_clubname: ourEventFields.clubname,
     })
   }
 
@@ -211,6 +219,13 @@ const SingleExternalEventImporter = ({
 
   return (
     <>
+      <TextInput
+        value={genresVal}
+        onChange={(e) => setGenresVal(e.target.value)}
+        multiline
+        rows={3}
+        placeholder="Genres (1 per line)"
+      />
       {externalEvent.poster ? (
         <>
           <a href={externalEvent.poster} target="_blank" download="my_file.jpg">
@@ -221,7 +236,7 @@ const SingleExternalEventImporter = ({
             <img src={posterUrl} width="300px" alt="Poster image" />
           ) : (
             <>
-              <Button onClick={onClickDownload}>
+              <Button onClick={onClickDownload} color="secondary">
                 Download Poster ({externalEvent.poster})
               </Button>
               {posterUrlToUse ? (
@@ -236,7 +251,7 @@ const SingleExternalEventImporter = ({
                   {...posterEditableField}
                 />
               ) : (
-                <ErrorMessage>No poster URL!</ErrorMessage>
+                <InfoMessage>Waiting to download poster</InfoMessage>
               )}
             </>
           )}
@@ -252,12 +267,25 @@ const SingleExternalEventImporter = ({
         <ErrorMessage>Failed to import: {lastErrorCode}</ErrorMessage>
       ) : lastResult ? (
         <SuccessMessage>
-          Last result: {JSON.stringify(lastResult)}
+          Event created:{' '}
+          <a
+            href={routes.viewEventWithVar.replace(
+              ':eventId',
+              lastResult.eventid
+            )}
+            target="_blank">
+            View Event (new tab)
+          </a>
         </SuccessMessage>
       ) : null}
-      <Button onClick={onClickImport} isDisabled={!isImportAllowed}>
-        Create Event
-      </Button>
+      <FormControls>
+        <Button
+          onClick={onClickImport}
+          isDisabled={!isImportAllowed}
+          size="large">
+          Create Event
+        </Button>
+      </FormControls>
     </>
   )
 }
@@ -306,32 +334,29 @@ const ExternalEventOutput = ({
   }
 
   return (
-    <>
-      <Button onClick={() => setIsExpanded(!isExpanded)}>Toggle Expand</Button>
+    <Paper>
+      <Button onClick={() => setIsExpanded(!isExpanded)} color="secondary">
+        Toggle Expand
+      </Button>
       {isExpanded ? (
         <Columns>
           <Column widthPerc={50}>
-            <Paper key={externalEvent.id}>
-              <Table size="small" noMinWidth>
-                <TableBody>
-                  {Object.entries(externalEvent).map(([name, val]) => (
-                    <TableRow key={name}>
-                      <TableCell width="20%">{name}</TableCell>
-                      <TableCell width="80%">
-                        <ComponentForField
-                          name={name as keyof ExternalEvent}
-                          val={val}
-                          all={externalEvent}
-                        />
-                      </TableCell>
-                      {/* <TableCell width="40%">
-                        <ComponentForOurField  />
-                    </TableCell> */}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Paper>
+            <Table size="small" noMinWidth>
+              <TableBody>
+                {Object.entries(externalEvent).map(([name, val]) => (
+                  <TableRow key={name}>
+                    <TableCell width="20%">{name}</TableCell>
+                    <TableCell width="80%">
+                      <ComponentForField
+                        name={name as keyof ExternalEvent}
+                        val={val}
+                        all={externalEvent}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </Column>
           <Column widthPerc={50}>
             <OurFields ourEventFields={ourEventFields} />
@@ -340,11 +365,11 @@ const ExternalEventOutput = ({
       ) : (
         <Paper>
           <strong>
-            {externalEvent.name} {externalEvent.category}
+            {externalEvent.name} ({externalEvent.category})
           </strong>
         </Paper>
       )}
-      <Paper>
+      <>
         <Heading variant="h2" noTopMargin>
           Import
         </Heading>
@@ -358,8 +383,8 @@ const ExternalEventOutput = ({
             ourEventFields={ourEventFields}
           />
         )}
-      </Paper>
-    </>
+      </>
+    </Paper>
   )
 }
 
