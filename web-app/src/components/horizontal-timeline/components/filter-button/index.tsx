@@ -32,7 +32,10 @@ const FilterButton = () => {
             onChange={(newTags) =>
               setEventFilters({ ...eventFilters, genres: newTags })
             }
-            suggestedTags={commonGenres.concat(lessCommonGenres)}
+            suggestedTags={{
+              Common: commonGenres,
+              'Less Common': lessCommonGenres,
+            }}
           />
           <Heading variant="h3">Tags</Heading>
           Dims events that do not have these tags:
@@ -41,7 +44,10 @@ const FilterButton = () => {
             onChange={(newTags) =>
               setEventFilters({ ...eventFilters, tags: newTags })
             }
-            suggestedTags={eventTags.concat(worldTags)}
+            suggestedTags={{
+              Events: eventTags,
+              World: worldTags,
+            }}
           />
         </Dialog>
       )}
