@@ -31,19 +31,17 @@ export const PURE_WHITE: RgbaColor = {
 }
 
 const ColorPickerButton = ({
-  initialValue,
-  onDone,
+  value,
+  onChange,
   ...buttonProps
 }: {
-  initialValue: Color
-  onDone: (newColorRgba: Color) => void
+  value: Color | null
+  onChange: (newColorRgba: Color | null) => void
 } & ButtonProps) => {
-  const [newColorRgba, setNewColorRgba] = useState<Color>(initialValue)
   const [isOpen, setIsOpen] = useState(false)
 
   const onClickDone = () => {
     setIsOpen(false)
-    onDone(newColorRgba)
   }
 
   return (
@@ -53,20 +51,20 @@ const ColorPickerButton = ({
           <Heading variant="h1">Color Picker</Heading>
           <p>Pick a color:</p>
           <Sketch
-            color={rgbaToHsva(newColorRgba)}
-            onChange={(color) => {
-              setNewColorRgba(color.rgba)
-            }}
+            color={value ? rgbaToHsva(value) : undefined}
+            onChange={(color) => onChange(color.rgba)}
           />
-          <p>
-            You have chosen:{' '}
-            <div
-              style={{
-                width: '20px',
-                height: '20px',
-                backgroundColor: `rgba(${newColorRgba.r},${newColorRgba.g},${newColorRgba.b},${newColorRgba.a})`,
-              }}></div>
-          </p>
+          {value && (
+            <p>
+              You have chosen:{' '}
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: `rgba(${value.r},${value.g},${value.b},${value.a})`,
+                }}></div>
+            </p>
+          )}
           <Button onClick={onClickDone}>Done</Button>
         </Dialog>
       )}
@@ -77,13 +75,15 @@ const ColorPickerButton = ({
         {...buttonProps}>
         <span style={{ display: 'flex', alignItems: 'center' }}>
           Color
-          <div
-            style={{
-              width: '10px',
-              height: '10px',
-              marginLeft: '0.25rem',
-              backgroundColor: `rgba(${newColorRgba.r},${newColorRgba.g},${newColorRgba.b},${newColorRgba.a})`,
-            }}></div>
+          {value && (
+            <div
+              style={{
+                width: '10px',
+                height: '10px',
+                marginLeft: '0.25rem',
+                backgroundColor: `rgba(${value.r},${value.g},${value.b},${value.a})`,
+              }}></div>
+          )}
         </span>
       </Button>
     </>

@@ -1,5 +1,7 @@
 import type { SocialFields } from './common.ts'
 
+export type ClubColor = [number, number, number]
+
 export interface ClubFields extends Record<string, any>, SocialFields {
   vrchatgroupid: string | null // VRChat ID
   resonitegroupid: string | null
@@ -9,6 +11,7 @@ export interface ClubFields extends Record<string, any>, SocialFields {
   thumbnailurl: string | null
   websiteurl: string | null
   email: string | null
+  color: ClubColor | null
   owneruserids: string[] // our users who can edit the entire club
   moduserids: string[] // our users who can create/edit events
   vrchatownerroleids: string[] // VRC role IDs

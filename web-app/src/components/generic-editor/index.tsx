@@ -39,6 +39,7 @@ import JsonInput from './components/json-input'
 import { GenericInput } from './types'
 import IntInput from './components/int-input'
 import FloatInput from './components/float-input'
+import ColorInput from './components/color-input'
 import useStorage from '@/hooks/useStorage'
 
 function getInputForFieldType<TRecord extends Record<string, any>>(
@@ -91,6 +92,8 @@ function getInputForFieldType<TRecord extends Record<string, any>>(
       return IntInput
     case fieldTypes.float:
       return FloatInput
+    case fieldTypes.color:
+      return ColorInput as unknown as GenericInput<any, TRecord>
     default:
       throw new Error(`Invalid field type "${type}"`)
   }

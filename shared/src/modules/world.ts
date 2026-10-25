@@ -40,18 +40,12 @@ export interface WorldDataEvent {
     y: number
   } | null
   vrchatinstance: VrchatInstanceForWorld | null
+  accentcolor: [number, number, number] | null
 }
 
 export interface EventToSend extends Event {
   vrchatgroupid: string // from parent club
 }
-
-// export interface QueuedEvent {
-//   eventid: string
-//   queuedat: string // date
-// }
-
-// interface QueuedEventWithEvent extends QueuedEvent, Event {}
 
 export interface EventAlphaOrBeta extends Record<string, unknown> {
   eventid: string
@@ -67,10 +61,11 @@ export interface EventAlphaOrBetaForWorld extends EventAlphaOrBeta {
   vrchatgroupid: string // from parent club
   event: Event
   clubname: string
+  clubcolor: [number, number, number] | null
   vrchatinstancecache: VrchatInstanceCachedItem | null
 }
 
-// for display /world
+// for display on website
 export interface FullEventAlphaOrBeta extends EventAlphaOrBetaForWorld {
   event: Event
 }

@@ -21,6 +21,7 @@ export enum fieldTypes {
   email = 'email',
   item = 'item', // a single item eg. record by ID
   price = 'price',
+  color = 'color',
 }
 
 interface CommonEditorProps<TValue, TRecord = undefined> {

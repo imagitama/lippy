@@ -237,7 +237,12 @@ const View = () => {
         </Message>
       )}
 
-      <Paper>
+      <Paper
+        style={{
+          border: club.color
+            ? `0.5rem solid rgb(${club.color[0]},${club.color[1]},${club.color[2]})`
+            : undefined,
+        }}>
         <div className={classes.title}>
           <div className={classes.avatar}>
             <Avatar

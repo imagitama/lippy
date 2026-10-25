@@ -115,6 +115,11 @@ export interface JsonEditableField<TRecord> extends EditableFieldBase<TRecord> {
   json: EditableField<any>[]
 }
 
+export interface ColorEditableField<TRecord>
+  extends EditableFieldBase<TRecord> {
+  type: fieldTypes.color
+}
+
 export type EditableField<TRecord extends Record<string, any>> =
   | TextEditableField<TRecord>
   | DateRangeEditableField<TRecord>
@@ -128,4 +133,5 @@ export type EditableField<TRecord extends Record<string, any>> =
   | SelectEditableField<TRecord>
   | MarkdownEditableField<TRecord>
   | JsonEditableField<TRecord>
+  | ColorEditableField<TRecord>
   | EditableFieldBase<TRecord>
