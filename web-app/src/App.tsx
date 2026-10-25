@@ -9,7 +9,11 @@ import {
 import { makeStyles } from '@mui/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { useHead } from '@unhead/react'
-import { Club as ClubIcon, Performer as PerformerIcon } from '@/icons'
+import {
+  Club as ClubIcon,
+  Event as EventIcon,
+  Performer as PerformerIcon,
+} from '@/icons'
 
 import * as routes from './routes'
 
@@ -128,38 +132,54 @@ const WelcomeMessage = () => {
   if (isHidden) return null
   return (
     <Dialog onClose={() => setIsHidden(true)}>
-      <Heading variant="h1" noTopMargin>
-        Welcome to Lippy
+      <Heading variant="h2" noTopMargin>
+        What is this?
       </Heading>
-      <Heading variant="h2">What is this place?</Heading>
       <BodyText>
-        A VRChat world that lets you walk down a street and find clubs as real
-        buildings you can "walk into", complete with event info like posters.
+        My name is PeanutBuddha and I created a VRChat world and website from
+        scratch to help everyone find live music events. You can walk down a
+        physical street and find events that just ended, are live right now and
+        will be coming up next.
+      </BodyText>
+      <BodyText>
+        <em>
+          Until more clubs are added, I am manually importing events from other
+          websites.
+        </em>
       </BodyText>
       <Heading variant="h2">
-        <ClubIcon /> Club Owners/Managers
+        <ClubIcon /> Club Owners
       </Heading>
       <BodyText>
-        Create an account, link it with VRChat and import your VRChat group.
-        Then you can create events.
+        Only VRChat group creators can create clubs. Import your club by signing
+        up, linking your VRChat account and selecting a group you are the
+        creator of.
+      </BodyText>
+      <Heading variant="h2">
+        <EventIcon /> Event Organizers
+      </Heading>
+      <BodyText>
+        Ask your club's VRChat group creator to create the club. Once created
+        they can pick which VRChat group roles should be the event organizers.
+        Sign up, link your VRChat account, and you should be able to create
+        events.
       </BodyText>
       <Heading variant="h2">
         <PerformerIcon /> Event Performers
       </Heading>
       <BodyText>
-        Create an account, create a performer profile (stage name), then event
-        organisers can assign you to events (they can also just type in your
-        name manually).
-      </BodyText>
-      <Heading variant="h2">Attendees</Heading>
-      <BodyText>
-        Create an account to attend events, comment on them and "watch"
-        clubs/events/performers. Or stay signed out and favorite
-        clubs/events/performers to track them (locally in your browser).
+        Event organizers can either add you as a performer by name <em>or</em>{' '}
+        you can create a performer profile which has a lot more customization.
       </BodyText>
       <FormControls>
         <Button onClick={() => setIsHidden(true)}>
           Okay - hide this forever
+        </Button>
+        <Button
+          onClick={() => setIsHidden(true)}
+          url={routes.about}
+          color="secondary">
+          Read More
         </Button>
       </FormControls>
     </Dialog>
