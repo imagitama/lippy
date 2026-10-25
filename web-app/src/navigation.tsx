@@ -105,9 +105,9 @@ const items: MenuItem[] = [
     label: 'More',
     children: [
       {
-        id: 'world',
-        url: routes.world,
-        label: 'World Info',
+        id: 'about',
+        url: routes.about,
+        label: 'About',
       },
       {
         id: 'calendar',

@@ -62,18 +62,22 @@ export const darkTheme: CustomTheme = createTheme({
         h1: {
           fontSize: '2rem',
           margin: '0 0 1rem',
+          fontFamily: specialFontFamily,
         },
         h2: {
           fontSize: '1.5rem',
           margin: '1rem 0 1rem',
+          fontFamily: specialFontFamily,
         },
         h3: {
           fontSize: '1.25rem',
           margin: '1rem 0 1rem',
+          fontFamily: specialFontFamily,
         },
         h4: {
           fontSize: '1.1rem',
           margin: '0.5rem 0 0.5rem',
+          fontFamily: specialFontFamily,
         },
       },
     },
