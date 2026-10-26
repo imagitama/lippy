@@ -462,6 +462,13 @@ function getDaySpans(viewStartMs: number, viewEndMs: number) {
   return spans
 }
 
+/** Width of one time column in px. Smaller = thinner columns, more time visible. */
+const COL_WIDTH_PX = 150
+/** How much time one column represents. */
+const COL_MS = HOUR_MS
+/** Tick labels are skipped so they never get closer than this. */
+const MIN_LABEL_SPACING_PX = 60
+
 function appendToRows(
   items: ParsedEvent[], // sorted by start time
   rowOf: Map<string, number>
@@ -552,11 +559,14 @@ const HorizontalTimeline = ({
     return () => resizeObserver.disconnect()
   }, [])
 
+  const pxPerMsRatio = containerWidthPx > 0 ? COL_WIDTH_PX / COL_MS : 0
+  // the prop is only a fallback until the container has been measured
+  const effectiveHalfWindowMs =
+    pxPerMsRatio > 0 ? containerWidthPx / pxPerMsRatio / 2 : halfWindowMs
+
   const centerMs = panningAnchorMs ?? nowMs
-  const viewStartMs = centerMs - halfWindowMs
-  const viewEndMs = centerMs + halfWindowMs
-  const pxPerMsRatio =
-    containerWidthPx > 0 ? containerWidthPx / (2 * halfWindowMs) : 0
+  const viewStartMs = centerMs - effectiveHalfWindowMs
+  const viewEndMs = centerMs + effectiveHalfWindowMs
   const getTimestampPx = (timestampMs: number) =>
     (timestampMs - viewStartMs) * pxPerMsRatio
 
@@ -580,7 +590,7 @@ const HorizontalTimeline = ({
       ...appendToRows(favedEvents, rowOfRef.current.faved),
       ...appendToRows(otherEvents, rowOfRef.current.other),
     ]
-  }, [JSON.stringify(parsedEvents), JSON.stringify(favedEventIds)])
+  }, [parsedEvents.map((ev) => ev.event.id).join(','), favedEventIds.join(',')])
 
   const daySpans = useMemo(
     () => getDaySpans(viewStartMs, viewEndMs),
@@ -598,9 +608,10 @@ const HorizontalTimeline = ({
     const leftPx = Math.max(unclippedLeftPx, 0)
     const rightPx = Math.min(unclippedRightPx, containerWidthPx)
     if (rightPx <= leftPx) return null
+    const widthPx = Math.max(rightPx - leftPx, 2)
     return {
       leftPx,
-      widthPx: Math.max(rightPx - leftPx, 2),
+      widthPx,
       isClippedLeft: unclippedLeftPx < 0,
       isClippedRight: unclippedRightPx > containerWidthPx,
     }
@@ -610,8 +621,13 @@ const HorizontalTimeline = ({
   // latest values live in refs so the native listener is attached only once
   const centerMsRef = useRef(centerMs)
   centerMsRef.current = centerMs
-  const latestRef = useRef({ pxPerMsRatio, halfWindowMs })
-  latestRef.current = { pxPerMsRatio, halfWindowMs }
+  // const latestRef = useRef({ pxPerMsRatio, halfWindowMs })
+  // latestRef.current = { pxPerMsRatio, halfWindowMs }
+  const latestRef = useRef({
+    pxPerMsRatio,
+    halfWindowMs: effectiveHalfWindowMs,
+  })
+  latestRef.current = { pxPerMsRatio, halfWindowMs: effectiveHalfWindowMs }
   const wheelTimeoutRef = useRef<number>()
 
   useEffect(() => {
@@ -655,19 +671,22 @@ const HorizontalTimeline = ({
 
   const ticks = useMemo(() => {
     if (pxPerMsRatio === 0) return []
-    const stepMs =
-      TICK_STEPS_MS.find((s) => s * pxPerMsRatio >= MIN_TICK_SPACING_PX) ??
-      TICK_STEPS_MS[TICK_STEPS_MS.length - 1]
     const timezoneOffsetMs =
       new Date(viewStartMs).getTimezoneOffset() * MINUTE_MS
     const firstTickMs =
-      Math.ceil((viewStartMs - timezoneOffsetMs) / stepMs) * stepMs +
+      Math.ceil((viewStartMs - timezoneOffsetMs) / COL_MS) * COL_MS +
       timezoneOffsetMs
+    const labelEvery = Math.max(
+      1,
+      Math.ceil(MIN_LABEL_SPACING_PX / COL_WIDTH_PX)
+    )
     const ticksToRender: { tickMs: number; label: string }[] = []
-    for (let tickMs = firstTickMs; tickMs <= viewEndMs; tickMs += stepMs) {
+    for (let tickMs = firstTickMs; tickMs <= viewEndMs; tickMs += COL_MS) {
+      const colIdx = Math.round((tickMs - timezoneOffsetMs) / COL_MS)
       ticksToRender.push({
         tickMs,
-        label: timeFormatter.format(tickMs),
+        // absolute index, so labels don't jump around while panning
+        label: colIdx % labelEvery === 0 ? timeFormatter.format(tickMs) : '',
       })
     }
     return ticksToRender
@@ -675,8 +694,8 @@ const HorizontalTimeline = ({
 
   const onRangeEmit = (newCenterMs: number) =>
     onRangeChange?.({
-      start: new Date(newCenterMs - halfWindowMs),
-      end: new Date(newCenterMs + halfWindowMs),
+      start: new Date(newCenterMs - effectiveHalfWindowMs),
+      end: new Date(newCenterMs + effectiveHalfWindowMs),
     })
 
   const onDragStart = (e: PointerEvent<HTMLDivElement>) => {
@@ -776,15 +795,17 @@ const HorizontalTimeline = ({
 
       {/* Axis */}
       <AxisRow>
-        {ticks.map(({ tickMs, label }) => (
-          <TickLabel
-            key={tickMs}
-            variant="caption"
-            color="text.secondary"
-            leftPx={getTimestampPx(tickMs) + 6}>
-            {label}
-          </TickLabel>
-        ))}
+        {ticks.map(({ tickMs, label }) =>
+          label ? (
+            <TickLabel
+              key={tickMs}
+              variant="caption"
+              color="text.secondary"
+              leftPx={getTimestampPx(tickMs) + 6}>
+              {label}
+            </TickLabel>
+          ) : null
+        )}
       </AxisRow>
 
       {/* Rows */}
@@ -798,14 +819,6 @@ const HorizontalTimeline = ({
               data-tick={tickMs}
             />
           ))}
-
-          {parsedEvents.length === 0 && (
-            <EmptyState>
-              <Typography variant="body2" color="text.secondary">
-                No events to show
-              </Typography>
-            </EmptyState>
-          )}
 
           {eventRows.map((rowEvents, lane) => (
             <EventRow key={lane}>

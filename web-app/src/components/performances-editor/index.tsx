@@ -393,10 +393,10 @@ const PerformancesEditor = ({
       { startsat: string; endsat: string; indexes: number[] }
     >()
 
-    console.debug(
-      `REGENERATE`,
-      value.filter((perf) => perf.accessstatus !== AccessStatus.Deleted)
-    )
+    // console.debug(
+    //   `REGENERATE`,
+    //   value.filter((perf) => perf.accessstatus !== AccessStatus.Deleted)
+    // )
 
     value
       .filter((perf) => perf.accessstatus !== AccessStatus.Deleted)
