@@ -124,7 +124,7 @@ const WelcomeMessage = () => (
   <>
     <Paper>
       <Heading variant="h4" noTopMargin>
-        <ClubIcon /> Club Owners/Managers
+        <ClubIcon /> Club Owners
       </Heading>
       <BodyText>
         Connect your account with VRChat{' '}
@@ -137,13 +137,27 @@ const WelcomeMessage = () => (
     </Paper>
     <Paper>
       <Heading variant="h4" noTopMargin>
+        <ClubIcon /> Event Organizers
+      </Heading>
+      <BodyText>
+        Connect your account with VRChat{' '}
+        <Link to={routes.myAccountWithTabNameVar.replace(':tabName', 'vrchat')}>
+          here
+        </Link>{' '}
+        and ask your club owner to create the club. They can pick which VRC
+        group roles are event organizers. They can also assign signed up users
+        if they don't want to use roles.
+      </BodyText>
+    </Paper>
+    <Paper>
+      <Heading variant="h4" noTopMargin>
         <PerformerIcon /> Performers
       </Heading>
       <BodyText>
         A user on this site can have as many performers (stage names) as they
-        like. Club owners/managers will search by name and add you to events.
-        Get started by going to <Link to={routes.performers}>Performers</Link>{' '}
-        and click Create.
+        like. Club owners/managers will search by name and add you to events (or
+        just type it manually). Get started by going to{' '}
+        <Link to={routes.performers}>Performers</Link> and click Create.
       </BodyText>
     </Paper>
     <Paper>
@@ -151,17 +165,18 @@ const WelcomeMessage = () => (
         Attendees
       </Heading>
       <BodyText>
-        Connecting your VRChat account is not required. Go nuts!
+        Connecting your VRChat account is not required but we might use it in
+        future to do cool stuff.
       </BodyText>
     </Paper>
   </>
 )
 
 const SetupProfile = ({
-  analyticsCategory,
+  // analyticsCategory,
   onDone,
 }: {
-  analyticsCategory: string
+  // analyticsCategory: string
   onDone: () => void
 }) => {
   const userId = useUserId()

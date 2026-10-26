@@ -252,8 +252,8 @@ const EventLabel = styled.div`
   width: 100%;
   height: 17px;
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: 2px;
+  left: 4px;
   display: flex;
   align-items: center;
   img {
@@ -265,7 +265,6 @@ const EventLabel = styled.div`
 const EventName = styled.span`
   flex-shrink: 0;
   font-size: 75%;
-  margin-top: 2px;
 `
 
 const Performances = styled.div`

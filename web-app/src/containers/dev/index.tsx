@@ -4,8 +4,9 @@ import Select, { MenuItem } from '@/components/select'
 import Button from '@/components/button'
 import TextInput from '@/components/text-input'
 import PerformancesEditor from '@/components/performances-editor'
-import { Performance } from 'shared/modules/events'
 import PasswordInput from '@/components/password-input'
+import SetupProfile from '@/components/setup-profile'
+import { Performance } from 'shared/modules/performances'
 
 const PerformancesEditorDev = () => {
   const [val, setVal] = useState<Performance[]>([])
@@ -48,8 +49,10 @@ export default () => {
       </Helmet>
       <div>
         <h1>Forms</h1>
-        <h2>Performances Editor</h2>
-        <PerformancesEditorDev />
+        {/* <h2>Performances Editor</h2>
+        <PerformancesEditorDev /> */}
+        <h2>Setup Profile Form</h2>
+        <SetupProfile onDone={() => {}} />
         <h2>Basic Components (Default Size)</h2>
         <Button>Click Me</Button>{' '}
         <Select label="Here We Go" button={<Button>Click Me</Button>}>
