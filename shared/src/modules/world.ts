@@ -60,6 +60,7 @@ export interface EventAlphaOrBeta extends Record<string, unknown> {
 export interface EventAlphaOrBetaForWorld extends EventAlphaOrBeta {
   vrchatgroupid: string // from parent club
   event: Event
+  clubid: string | null
   clubname: string
   clubcolor: [number, number, number] | null
   vrchatinstancecache: VrchatInstanceCachedItem | null

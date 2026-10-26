@@ -46,6 +46,8 @@ import { handleError } from '@/error-handling'
 import { stripMetaFields } from '@/utils/performances'
 import { useStateGetter } from '@/hooks/useStateGetter'
 import { AccessStatus } from 'shared/modules/common'
+import TagsInput from '../tags-input'
+import { commonGenres, lessCommonGenres } from '@/tags'
 
 const SLOT_MS = 30 * 30 * 1000
 const SLOT_WIDTH_PX = 200 // px per 30-min slot
@@ -749,11 +751,11 @@ const PerformancesEditor = ({
                               size="small"
                               icon={<EditIcon />}
                               color="secondary"
-                              title="Set Performer Name"
+                              title="Configure Performer"
                               dialog={({ close }) => (
                                 <>
                                   <Heading variant="h3" noTopMargin>
-                                    Set Performer Name
+                                    Performer Name
                                   </Heading>
                                   <SearchForIdForm
                                     collectionName={
@@ -764,9 +766,7 @@ const PerformancesEditor = ({
                                       updateField(idx, 'performerid', id)
                                     }}
                                   />
-                                  <br />
                                   or
-                                  <br />
                                   <br />
                                   <TextInput
                                     size="small"
@@ -781,6 +781,19 @@ const PerformancesEditor = ({
                                     (only use this if you can't find the
                                     performer)
                                   </HintText>
+                                  <Heading variant="h3" noTopMargin>
+                                    Genres
+                                  </Heading>
+                                  <TagsInput
+                                    currentTags={perf.genres}
+                                    onChange={(newGenres) =>
+                                      updateField(idx, 'genres', newGenres)
+                                    }
+                                    suggestedTags={{
+                                      Common: commonGenres,
+                                      'Less Common': lessCommonGenres,
+                                    }}
+                                  />
                                   <FormControls>
                                     <Button onClick={close}>Done</Button>
                                   </FormControls>

@@ -19,8 +19,13 @@ const Item = styled.div`
   padding: 0.25rem;
 `
 const Date = styled.div``
-const Label = styled.div`
+const Label = styled.div``
+const Name = styled.span`
   font-weight: bold;
+  margin-right: 0.25rem;
+`
+const Genres = styled.span`
+  font-size: 75%;
 `
 
 function getFriendlyDate(date: string): string {
@@ -43,7 +48,12 @@ export const PerformanceListItem = ({
     <Item>
       <Date>{getFriendlyDate(startsat)}</Date>
       <Label>
-        {performances.map(getPerformanceLabel).filter(Boolean).join(', ')}
+        <Name>
+          {performances.map(getPerformanceLabel).filter(Boolean).join(', ')}
+        </Name>
+        <Genres>
+          {performances.flatMap((perf) => perf.genres).join(', ')}
+        </Genres>
       </Label>
       <Date>{getFriendlyDate(endsat)}</Date>
     </Item>
