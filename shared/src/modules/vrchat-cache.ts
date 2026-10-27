@@ -94,13 +94,16 @@ export interface VrchatGroupMembership {
 
 export interface VrchatGroup extends Omit<VrchatGroupMembership, 'groupId'> {}
 
+export interface VrchatGroupWithRoles extends VrchatGroup {
+  roles: VrchatGroupRole[]
+}
+
 export interface VrchatGroupCachedItem {
   id: string // VRChat ID
   group: VrchatGroup | VrchatGroupMembership
   otherdata: {
-    // not in use
-    ownerIds: string[]
-    otherStaffIds: string[]
+    managementRoleIds: string[]
+    managementUserIds: string[]
   } | null
   thumbnailurl: string | null // converted to webp on our servers TODO: do this
   fetchedat: string // date

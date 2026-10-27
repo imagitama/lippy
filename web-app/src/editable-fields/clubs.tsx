@@ -9,13 +9,14 @@ import ImportVrchatGroupRolesForm, {
 } from '@/components/import-vrchat-group-roles-form'
 import InfoMessage from '@/components/info-message'
 import VrchatRoleIdsEditor from '@/components/vrchat-role-ids-editor'
+import ErrorMessage from '@/components/error-message'
 
 export enum SectionNames {
   Basic = 'Basic',
   Perms = 'Perms',
 }
 
-const ignoreFieldNames = ['vrchatuserid', 'vrchatusername']
+const ignoreFieldNames = ['vrchatuserid', 'vrchatusername', 'vrchatgroupid']
 const filterSocialEditableField = (field: EditableField<any>): boolean =>
   !ignoreFieldNames.includes(field.name as string)
 
@@ -95,26 +96,35 @@ const fields: EditableField<Club>[] = [
     name: 'vrchatownerroleids',
     label: 'Owner Roles',
     type: fieldTypes.custom,
-    renderer: ({ value, formFields, setFieldsValues }) => (
-      <VrchatRoleIdsEditor
-        roleIdsWithMemberIds={value.map((roleId) => {
-          return {
-            roleId,
-            memberIds: formFields.vrchatowneruserids,
+    renderer: ({ value, formFields, setFieldsValues, extraFormData }) =>
+      extraFormData.isManagement ? (
+        <ErrorMessage>
+          You do not have permission to edit this field
+        </ErrorMessage>
+      ) : (
+        <VrchatRoleIdsEditor
+          roleIdsWithMemberIds={
+            value?.map((roleId) => {
+              return {
+                roleId,
+                memberIds: formFields.vrchatowneruserids,
+              }
+            }) || []
           }
-        })}
-        onChange={(roleIdsWithMemberIds) => {
-          setFieldsValues({
-            vrchatownerroleids: roleIdsWithMemberIds.map((item) => item.roleId),
-            vrchatowneruserids: roleIdsWithMemberIds.flatMap(
-              (item) => item.memberIds
-            ),
-          })
-        }}
-        roleType={RoleType.Owner}
-        vrchatGroupId={formFields.vrchatgroupid}
-      />
-    ),
+          onChange={(roleIdsWithMemberIds) => {
+            setFieldsValues({
+              vrchatownerroleids: roleIdsWithMemberIds.map(
+                (item) => item.roleId
+              ),
+              vrchatowneruserids: roleIdsWithMemberIds.flatMap(
+                (item) => item.memberIds
+              ),
+            })
+          }}
+          roleType={RoleType.Owner}
+          vrchatGroupId={formFields.vrchatgroupid}
+        />
+      ),
     default: [],
     hint: 'VRC group roles that are considered owners and can edit the club.',
     section: SectionNames.Perms,
@@ -129,26 +139,33 @@ const fields: EditableField<Club>[] = [
     name: 'vrchatmodroleids',
     label: 'Event Organizer Roles',
     type: fieldTypes.custom,
-    renderer: ({ value, formFields, setFieldsValues }) => (
-      <VrchatRoleIdsEditor
-        roleIdsWithMemberIds={value.map((roleId) => {
-          return {
-            roleId,
-            memberIds: formFields.vrchatmoduserids,
+    renderer: ({ value, formFields, setFieldsValues, extraFormData }) =>
+      extraFormData.isManagement ? (
+        <ErrorMessage>
+          You do not have permission to edit this field
+        </ErrorMessage>
+      ) : (
+        <VrchatRoleIdsEditor
+          roleIdsWithMemberIds={
+            value?.map((roleId) => {
+              return {
+                roleId,
+                memberIds: formFields.vrchatmoduserids,
+              }
+            }) || []
           }
-        })}
-        onChange={(roleIdsWithMemberIds) => {
-          setFieldsValues({
-            vrchatmodroleids: roleIdsWithMemberIds.map((item) => item.roleId),
-            vrchatmoduserids: roleIdsWithMemberIds.flatMap(
-              (item) => item.memberIds
-            ),
-          })
-        }}
-        roleType={RoleType.Mod}
-        vrchatGroupId={formFields.vrchatgroupid}
-      />
-    ),
+          onChange={(roleIdsWithMemberIds) => {
+            setFieldsValues({
+              vrchatmodroleids: roleIdsWithMemberIds.map((item) => item.roleId),
+              vrchatmoduserids: roleIdsWithMemberIds.flatMap(
+                (item) => item.memberIds
+              ),
+            })
+          }}
+          roleType={RoleType.Mod}
+          vrchatGroupId={formFields.vrchatgroupid}
+        />
+      ),
     default: [],
     hint: 'VRC group roles that can create/manage events.',
     section: SectionNames.Perms,
@@ -163,13 +180,18 @@ const fields: EditableField<Club>[] = [
     name: 'owneruserids',
     label: 'Owner Users',
     type: fieldTypes.custom,
-    renderer: ({ value, onChange, formFields }) => (
-      <ClubPermissionsEditor
-        value={value || []}
-        onChange={onChange}
-        vrchatGroupId={formFields.vrchatgroupid}
-      />
-    ),
+    renderer: ({ value, onChange, formFields, extraFormData }) =>
+      extraFormData.isManagement ? (
+        <ErrorMessage>
+          You do not have permission to edit this field
+        </ErrorMessage>
+      ) : (
+        <ClubPermissionsEditor
+          value={value || []}
+          onChange={onChange}
+          vrchatGroupId={formFields.vrchatgroupid}
+        />
+      ),
     default: [],
     hint: `Users on this site who can edit the club (and create/manage events).`,
     section: SectionNames.Perms,
@@ -178,13 +200,18 @@ const fields: EditableField<Club>[] = [
     name: 'moduserids',
     label: 'Event Organizer Users',
     type: fieldTypes.custom,
-    renderer: ({ value, onChange, formFields }) => (
-      <ClubPermissionsEditor
-        value={value || []}
-        onChange={onChange}
-        vrchatGroupId={formFields.vrchatgroupid}
-      />
-    ),
+    renderer: ({ value, onChange, formFields, extraFormData }) =>
+      extraFormData.isManagement ? (
+        <ErrorMessage>
+          You do not have permission to edit this field
+        </ErrorMessage>
+      ) : (
+        <ClubPermissionsEditor
+          value={value || []}
+          onChange={onChange}
+          vrchatGroupId={formFields.vrchatgroupid}
+        />
+      ),
     default: [],
     hint: `Users on this site who can create/manage events.`,
     section: SectionNames.Perms,

@@ -30,9 +30,8 @@ export interface Club extends ClubFields {
 
 export interface ClubMeta {
   id: string
-  linkedvrchatgroupid: string // linked VRChat ID
-  // owneruserids: string[] // our user IDs
-  // moduserids: string[] // our user IDs
+  linkedvrchatgroupid: string // VRC group ID
+  vrchatownerid: string // VRC user ID
   approvalstatus: string
   accessstatus: string
   modnotes: string | null

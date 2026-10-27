@@ -13,10 +13,13 @@ export const getIsUserClubOwner = (
   //   club.vrchatowneruserids
   // )
 
-  if (club.createdby === userId) return true
+  // 1. if they own the VRChat group itself
+  if (club.vrchatownerid === vrchatUserId) return true
 
+  // 2. if the VRChat group owner has specified Lippy users as co-owners
   if (club.owneruserids.includes(userId)) return true
 
+  // 3. if the VRChat group owner has specified VRChat users as co-owners (by role or manually)
   if (vrchatUserId && club.vrchatowneruserids.includes(vrchatUserId))
     return true
 
@@ -30,8 +33,10 @@ export const getIsUserClubMod = (
 ): boolean => {
   // console.debug('getIsUserClubMod', userId, vrchatUserId, club.vrchatmoduserids)
 
+  // 1. if the VRChat group owner has specified Lippy users as mods
   if (club.moduserids.includes(userId)) return true
 
+  // 2. if the VRChat group owner has specified VRChat users as mods
   if (vrchatUserId && club.vrchatmoduserids.includes(vrchatUserId)) return true
 
   return false
@@ -40,7 +45,7 @@ export const getIsUserClubMod = (
 export const getIsUserClubStaff = (
   userId: string,
   vrchatUserId: string | null,
-  club: Club
+  club: NonNullable<FullEvent['club']>
 ): boolean =>
   getIsUserClubOwner(userId, vrchatUserId, club) ||
   getIsUserClubMod(userId, vrchatUserId, club)

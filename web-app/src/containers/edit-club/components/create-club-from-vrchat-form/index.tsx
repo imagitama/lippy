@@ -27,6 +27,8 @@ import { PostgresErrorCode } from '@/data-store'
 import FormControls from '@/components/form-controls'
 import WarningMessage from '@/components/warning-message'
 import JoinBotToVrchatGroupForm from '@/components/join-bot-to-vrchat-group-form'
+import NoPermissionMessage from '@/components/no-permission-message'
+import SyncVrchatGroupForm from '@/components/sync-vrchat-group-form'
 
 interface GetVrchatGroupsForUserPayload {
   userId: string
@@ -78,16 +80,22 @@ const VrchatGroups = ({
     setSearchResultIds(matches.map((group) => group.groupId))
   }
 
+  const groupsByOwnership = lastResult.groups.sort((groupA, groupB) =>
+    groupA.ownerId === user?.linkedvrchatuserid ? -1 : 1
+  )
+
   const groupsToRender =
     searchResultIds !== null
-      ? lastResult.groups.filter((group) =>
+      ? groupsByOwnership.filter((group) =>
           searchResultIds.includes(group.groupId)
         )
-      : lastResult.groups
+      : groupsByOwnership
 
   return (
     <>
-      <SearchInput performSearch={onSearch} />
+      <FormControls>
+        <SearchInput performSearch={onSearch} />
+      </FormControls>
       <Table size="small">
         <TableHead>
           <TableRow>
@@ -114,7 +122,7 @@ const VrchatGroups = ({
                     <VerifiedIcon /> You are the owner
                   </StatusText>
                 ) : (
-                  '-'
+                  <StatusText positivity={-1}>You are not the owner</StatusText>
                 )}
               </TableCell>
               <TableCell>
@@ -133,15 +141,43 @@ const VrchatGroups = ({
 const CreateClubFromVrchatForm = () => {
   const [, , user] = useUserRecord()
   const [groupMem, setGroupMem] = useState<null | VrchatGroupMembership>(null)
-  const [isMemberOfGroup, setIsMemberOfGroup] = useState(false)
+  const [isBotMemberOfGroup, setIsBotMemberOfGroup] = useState(false)
   const [isSkipping, setIsSkipping] = useState(false)
+  const [needsManagement, setNeedsManagement] = useState<null | boolean>(null) // null to skip
+  const [isManagement, setIsManagement] = useState<null | boolean>(null) // null is unknown
+
+  useEffect(() => {
+    if (!groupMem?.ownerId || !user?.linkedvrchatuserid) return
+
+    if (groupMem.ownerId !== user.linkedvrchatuserid) {
+      setNeedsManagement(true)
+      setIsManagement(null)
+    }
+  }, [groupMem?.ownerId, user?.linkedvrchatuserid])
 
   const onClickSkipJoiningGroup = () => setIsSkipping(true)
 
-  if (!user!.linkedvrchatuserid)
+  const onSyncVrchatGroupSuccess = ({
+    managementUserIds,
+  }: {
+    managementUserIds?: string[]
+  }) => {
+    if (!user?.linkedvrchatuserid)
+      throw new Error('No user or linked vrchat user ID')
+
+    if (!managementUserIds)
+      throw new Error('No management user IDs (bot not in group?)')
+
+    const isMatch = managementUserIds.includes(user.linkedvrchatuserid)
+    setIsManagement(isMatch)
+  }
+
+  if (!user) return <NoPermissionMessage />
+
+  if (!user.linkedvrchatuserid)
     return (
-      <WarningMessage>
-        You must link your account with VRChat to continue.
+      <ErrorMessage>
+        You must link your account with VRChat to create a club.
         <br />
         <br />
         <FormControls>
@@ -150,11 +186,64 @@ const CreateClubFromVrchatForm = () => {
             Link Now
           </Button>
         </FormControls>
-      </WarningMessage>
+      </ErrorMessage>
     )
 
   if (groupMem) {
-    if (!isMemberOfGroup && isSkipping === false) {
+    if (needsManagement && isManagement !== true) {
+      return (
+        <>
+          <WarningMessage title="Group Ownership">
+            You are not the owner of the VRChat group. You can create the club
+            however you cannot assign any permissions and the real owner may
+            assume control and kick you out.
+            <br />
+            <br />
+            <strong>
+              We strongly recommend you only create clubs for groups you own.
+            </strong>
+          </WarningMessage>
+          {isBotMemberOfGroup ? (
+            <InfoMessage title="Verify Role">
+              Click this button to verify you have a management role inside the
+              VRChat group:
+              <FormControls>
+                <SyncVrchatGroupForm
+                  vrchatGroupId={groupMem.groupId}
+                  onSuccess={onSyncVrchatGroupSuccess}
+                />
+              </FormControls>
+            </InfoMessage>
+          ) : (
+            <InfoMessage title="Verify Role">
+              To verify you have the management role inside the VRChat group
+              (aka you can edit the group name/desc/etc.) our bot needs to join
+              your group.
+              <br />
+              <br />
+              You can kick the bot after but we recommend it stays there so we
+              can automatically output group instance info in the VRC world.
+              <FormControls>
+                <JoinBotToVrchatGroupForm
+                  vrchatGroupId={groupMem.groupId}
+                  onSuccess={() => setIsBotMemberOfGroup(true)}
+                />
+              </FormControls>
+            </InfoMessage>
+          )}
+        </>
+      )
+    } else if (isManagement === false) {
+      return (
+        <ErrorMessage>
+          You do not have a management role inside the VRChat group. Please
+          confirm with the VRChat group owner that you have a management role
+          (eg. you can edit the group name).
+        </ErrorMessage>
+      )
+    }
+
+    if (!isBotMemberOfGroup && isSkipping === false) {
       return (
         <>
           <InfoMessage>
@@ -165,7 +254,7 @@ const CreateClubFromVrchatForm = () => {
           <FormControls>
             <JoinBotToVrchatGroupForm
               vrchatGroupId={groupMem.groupId}
-              onSuccess={() => setIsMemberOfGroup(true)}
+              onSuccess={() => setIsBotMemberOfGroup(true)}
             />
           </FormControls>
           <FormControls>
@@ -192,6 +281,7 @@ const CreateClubFromVrchatForm = () => {
               // TODO: resonite/chilloutvr group IDs here too
               name: groupMem.name,
               description: groupMem.description,
+              vrchatowneruserids: isManagement ? [user.linkedvrchatuserid] : [],
             }}
             getErrorMessage={(code: string) => {
               switch (code) {
@@ -200,13 +290,16 @@ const CreateClubFromVrchatForm = () => {
               }
               return ''
             }}
+            extraFormData={{
+              isManagement,
+            }}
           />
         </>
       )
     }
   }
 
-  return <VrchatGroups onSelectGroup={(group) => setGroupMem(group)} />
+  return <VrchatGroups onSelectGroup={(groupMem) => setGroupMem(groupMem)} />
 }
 
 export default CreateClubFromVrchatForm

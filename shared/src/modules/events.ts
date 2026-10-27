@@ -1,4 +1,4 @@
-import type { Club } from './clubs.ts'
+import type { Club, ClubMeta } from './clubs.ts'
 import { FeaturedStatus } from './common.ts'
 import type { FullPerformance } from './performances.ts'
 import type { VrchatInstanceCachedItem } from './vrchat-cache.ts'
@@ -62,18 +62,21 @@ export interface PublicEvent extends EventForList {}
 
 export interface FullEvent extends Event, EventMeta {
   fullperformances: FullPerformance[]
-  club: null | Pick<
-    Club,
-    // meta
-    | 'name'
-    | 'thumbnailurl'
-    | 'createdby'
-    // perms
-    | 'owneruserids'
-    | 'moduserids'
-    | 'vrchatowneruserids'
-    | 'vrchatmoduserids'
-  >
+  club:
+    | null
+    | (Pick<
+        Club,
+        // meta
+        | 'name'
+        | 'thumbnailurl'
+        | 'createdby'
+        // perms
+        | 'owneruserids'
+        | 'moduserids'
+        | 'vrchatowneruserids'
+        | 'vrchatmoduserids'
+      > &
+        Pick<ClubMeta, 'vrchatownerid'>)
   vrchatinstancecache: VrchatInstanceCachedItem | null
   attendance: FullEventAttendance[]
 }

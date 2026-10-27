@@ -10,8 +10,8 @@ interface SyncVrchatGroupPayload {
 }
 interface SyncVrchatGroupResult {
   group: VrchatGroup
-  //   ownerIds: string[]
-  //   otherStaffIds: string[]
+  managementRoleIds?: string[] // undefined if bot not inside group
+  managementUserIds?: string[] // undefined if bot not inside group
   error?: string
 }
 
@@ -53,8 +53,10 @@ const VrchatGroupOutput = ({
 
 const SyncVrchatGroupForm = ({
   vrchatGroupId,
+  onSuccess,
 }: {
   vrchatGroupId: string | null
+  onSuccess?: (result: SyncVrchatGroupResult) => void
 }) => {
   const [isSyncing, lastErrorCode, lastResult, performSync] =
     useSupabaseFunction<SyncVrchatGroupPayload, SyncVrchatGroupResult>(
@@ -64,10 +66,14 @@ const SyncVrchatGroupForm = ({
   if (vrchatGroupId === null)
     return <ErrorMessage>Cannot sync - no VRChat group ID</ErrorMessage>
 
-  const onClickSync = () => {
-    performSync({
+  const onClickSync = async () => {
+    const result = await performSync({
       vrchatGroupId,
     })
+
+    if (onSuccess) {
+      onSuccess(result)
+    }
   }
 
   if (isSyncing) return <LoadingIndicator message="Syncing VRChat group..." />
