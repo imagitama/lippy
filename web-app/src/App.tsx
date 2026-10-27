@@ -9,11 +9,7 @@ import {
 import { makeStyles } from '@mui/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { useHead } from '@unhead/react'
-import {
-  Club as ClubIcon,
-  Event as EventIcon,
-  Performer as PerformerIcon,
-} from '@/icons'
+import { Club as ClubIcon, Event as EventIcon } from '@/icons'
 
 import * as routes from './routes'
 
@@ -48,9 +44,7 @@ import Heading from './components/heading'
 import BodyText from './components/body-text'
 import FormControls from './components/form-controls'
 import Button from './components/button'
-import InfoMessage from './components/info-message'
 import Link from './components/link'
-import Message from './components/message'
 
 const cache = new Map<string, React.ComponentType<any>>()
 
@@ -76,12 +70,12 @@ export const Lazy = new Proxy(
 const useStyles = makeStyles({
   mainContainer: {
     height: '100%', // ensure timeline fits
-    padding: '0 0.5rem 0.5rem',
+    padding: '0 0.5rem',
     [mediaQueryForTabletsOrBelow]: {
       maxWidth: '100vw',
     },
     [mediaQueryForMobiles]: {
-      padding: '0 0.25rem 0.25rem',
+      padding: '0 0.25rem',
     },
   },
   homeNotices: {

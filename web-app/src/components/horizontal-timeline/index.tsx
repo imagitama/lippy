@@ -100,7 +100,7 @@ const Root = styled.div<{ fill: boolean; isDragging: boolean }>`
   flex-direction: column;
   position: relative;
   width: 100%;
-  height: ${(p) => (p.fill ? 'calc(100vh - 30px)' : '100%')};
+  height: 100%;
   overflow: hidden;
   border: 1px solid ${(p) => getTheme(p).palette.divider};
   border-radius: ${(p) => getTheme(p).shape.borderRadius}px;

@@ -24,7 +24,7 @@ import { colorBrandLight, specialFontFamily } from '@/themes'
 
 const useStyles = makeStyles({
   root: {
-    height: '30px',
+    height: '2rem',
     padding: '0 0.5rem',
     display: 'flex',
     position: 'relative',

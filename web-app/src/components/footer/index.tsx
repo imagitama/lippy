@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { makeStyles } from '@mui/styles'
 
@@ -8,7 +8,6 @@ import { trackAction } from '@/analytics'
 // dev tools
 import { alreadyOver18Key } from '@/config'
 
-import useUserId from '@/hooks/useUserId'
 import useStorage from '@/hooks/useStorage'
 import useSupabaseUserId from '@/hooks/useSupabaseUserId'
 import useIsModerator from '@/hooks/useIsModerator'
@@ -17,11 +16,18 @@ import useIsBanned from '@/hooks/useIsBanned'
 
 import Button from '@/components/button'
 import ErrorBoundary from '../error-boundary'
+import { mediaQueryForMobiles } from '@/media-queries'
 
 const useStyles = makeStyles({
   footer: {
-    padding: '0.5rem',
+    height: '1.5rem',
+    padding: '0.1rem 0.5rem',
     display: 'flex',
+    alignItems: 'center',
+    [mediaQueryForMobiles]: {
+      padding: '0.1rem 0.25rem',
+      fontSize: '75%',
+    },
   },
   col: {
     width: '25%',
@@ -61,7 +67,7 @@ function ScrollToTopBtn() {
 const footerLinks = [
   {
     url: routes.takedownPolicy,
-    label: 'Takedowns',
+    label: 'Takedown',
   },
   {
     url: routes.privacyPolicy,
@@ -69,7 +75,7 @@ const footerLinks = [
   },
   {
     url: routes.termsOfService,
-    label: 'Terms of Service',
+    label: 'TOS',
   },
   {
     url: routes.dmcaPolicy,
@@ -87,18 +93,25 @@ const footerLinks = [
     url: routes.aiPolicy,
     label: 'AI Policy',
   },
-  {
-    url: routes.world,
-    label: 'VRC World Details',
-  },
 ]
 
 function DevelopmentTools() {
+  const [isExpanded, setIsExpanded] = useState(false)
   const [isAlreadyOver18, setIsAlreadyOver18] = useStorage(alreadyOver18Key)
   const supabaseUserId = useSupabaseUserId()
   const isMod = useIsModerator()
   const isVerified = useAccountVerification()
   const isBanned = useIsBanned()
+
+  if (!isExpanded)
+    return (
+      <Button
+        size="small"
+        color="secondary"
+        onClick={() => setIsExpanded(true)}>
+        Expand Dev Tools
+      </Button>
+    )
 
   return (
     <table>
@@ -131,19 +144,13 @@ function DevelopmentTools() {
 }
 
 export default () => {
-  const uid = useUserId()
   const classes = useStyles()
   return (
     <ErrorBoundary>
-      {process.env.NODE_ENV === 'development' && <DevelopmentTools />}
       <ScrollToTopBtn />
       <footer className={classes.footer}>
         <div className={classes.col}>
-          {uid ? (
-            <span title={uid}>You are logged in</span>
-          ) : (
-            'You are logged out'
-          )}
+          {process.env.NODE_ENV === 'development' && <DevelopmentTools />}
         </div>
         <div className={`${classes.col} ${classes.colRight}`}>
           &copy; {new Date().getFullYear()}{' '}

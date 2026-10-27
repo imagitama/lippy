@@ -66,11 +66,11 @@ function useEventsByDay(
       }
     )
 
-  console.debug(`useEventsByDay`, {
-    targetStartDate,
-    targetEndDate,
-    fetchedEvents: events,
-  })
+  // console.debug(`useEventsByDay`, {
+  //   targetStartDate,
+  //   targetEndDate,
+  //   fetchedEvents: events,
+  // })
 
   // only commit results once we've seen this target's fetch actually run,
   // so stale results from the previous day never get filed under the new one
@@ -94,6 +94,7 @@ function useEventsByDay(
     const byId = new Map<string, PublicEvent>()
     for (const list of cache.values()) for (const e of list) byId.set(e.id, e)
     return [...byId.values()]
+    // TODO: stop subscribing to entire cache
   }, [cache])
 
   return [isLoading, lastErrorCode, allEvents, hydrate]

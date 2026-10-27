@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { Helmet } from '@unhead/react/helmet'
 
@@ -9,15 +9,31 @@ import ErrorBoundary from '@/components/error-boundary'
 import ErrorMessage from '@/components/error-message'
 
 import useEventsByDay from './useEventsByDay'
+import { mediaQueryForMobiles } from '@/media-queries'
 
+// header - footer - padding
 const StyledRoot = styled.div`
   position: relative;
+  height: calc(100vh - 3.5rem);
+  ${mediaQueryForMobiles} {
+    height: calc(100vh - 44px - 3rem);
+  }
 `
+
+const usePreventBodyScroll = () => {
+  useEffect(() => {
+    document.getElementById('root')!.classList.add('no-scroll')
+    return () => {
+      document.getElementById('root')!.classList.remove('no-scroll')
+    }
+  }, [])
+}
 
 const View = () => {
   const [selectedEventId, setSelectedEventId] = useState<null | string>(null)
   const [range, setRange] = useState<TimeRange | null>(null)
   const [isLoading, lastErrorCode, events, hydrate] = useEventsByDay(range)
+  usePreventBodyScroll()
 
   const allEventsRef = useRef(new Map<string, PublicEvent>())
 
@@ -25,12 +41,12 @@ const View = () => {
     if (!events) return []
     for (const event of events) allEventsRef.current.set(event.id, event)
     return [...allEventsRef.current.values()]
-  }, [JSON.stringify(events)])
+  }, [events?.map((ev) => ev.id).join(',')])
 
   const selectedEvent =
     (selectedEventId && events?.find((ev) => ev.id === selectedEventId)) || null
 
-  console.debug(`view.render`, { range, allEvents })
+  // console.debug(`view.render`, { range, allEvents })
 
   return (
     <StyledRoot>
