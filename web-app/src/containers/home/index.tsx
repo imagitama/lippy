@@ -14,9 +14,9 @@ import { mediaQueryForMobiles } from '@/media-queries'
 // header - footer - padding
 const StyledRoot = styled.div`
   position: relative;
-  height: calc(100vh - 3.5rem);
+  height: calc(100dvh - 3.5rem);
   ${mediaQueryForMobiles} {
-    height: calc(100vh - 44px - 3rem);
+    height: calc(100dvh - 44px - 3rem);
   }
 `
 
