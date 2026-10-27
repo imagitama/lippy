@@ -23,7 +23,7 @@ const useStyles = makeStyles({
   col: {
     width: '50%',
     padding: '1rem',
-    height: '100vh',
+    height: '100dvh',
     '&:last-child > *': {
       height: '100%',
       overflow: 'auto',

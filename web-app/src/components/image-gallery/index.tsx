@@ -53,7 +53,7 @@ const useStyles = makeStyles({
     height: 'auto',
     '& .image': {
       maxWidth: '100%',
-      maxHeight: '100vh',
+      maxHeight: '100dvh',
     },
     '& .image img': {
       width: 'auto',
