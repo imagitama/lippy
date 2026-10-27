@@ -28,6 +28,9 @@ export const darkTheme: CustomTheme = createTheme({
   typography: {
     fontFamily: 'sans-serif',
     fontWeightRegular: 400,
+    body1: {
+      fontSize: '0.9rem',
+    },
   },
   palette: {
     mode: 'dark',

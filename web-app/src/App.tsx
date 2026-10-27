@@ -139,10 +139,17 @@ const WelcomeMessage = () => {
         What is this?
       </Heading>
       <BodyText>
-        My name is PeanutBuddha and I created a VRChat world and website from
-        scratch to help everyone find live music events. You can walk down a
-        physical street and find events that just ended, are live right now and
-        will be coming up next.
+        <strong>
+          A VRChat world that represents live music events as physical buildings
+          on a street.
+        </strong>
+      </BodyText>
+      <Heading variant="h2">Who made it?</Heading>
+      <BodyText>
+        My name is PeanutBuddha and I've been on VRChat for 8 years, created{' '}
+        <Link to="https://www.vrcarena.com/">VRCArena</Link> 5 years ago and I
+        love dnb/techno. I wanted to find live events in-game not from a
+        website.
       </BodyText>
       <BodyText>
         <em>
@@ -150,38 +157,44 @@ const WelcomeMessage = () => {
           websites.
         </em>
       </BodyText>
-      <Message>
+      <BodyText>
         The VRChat world and website was <strong>not</strong> vibe coded. See
         our{' '}
         <Link to={routes.aiPolicy} onClick={() => setIsHidden(true)}>
           AI Policy
         </Link>
         .
-      </Message>
+      </BodyText>
       <Heading variant="h2">
         <ClubIcon /> Club Owners
       </Heading>
       <BodyText>
-        Only VRChat group creators can create clubs. Import your club by signing
-        up, linking your VRChat account and selecting a group you are the
-        creator of.
+        VRChat group owners can create clubs. Import your club by signing up,
+        linking your VRChat account and selecting a group you are the owner of.
+      </BodyText>
+      <BodyText>
+        Event organizers can create clubs on behalf of group owners only if they
+        have a "management" role (not recommended).
       </BodyText>
       <Heading variant="h2">
         <EventIcon /> Event Organizers
       </Heading>
       <BodyText>
-        Ask your club's VRChat group creator to create the club. Once created
-        they can pick which VRChat group roles should be the event organizers.
-        Sign up, link your VRChat account, and you should be able to create
-        events.
+        If a VRChat group owner has created the club, they can pick which roles
+        can create/edit events (or assign users manually).
       </BodyText>
-      <Heading variant="h2">
+      <BodyText>
+        If you can't ask the owner to create the club you can do it on their
+        behalf (if you have a "management" role). Your options will be more
+        limited.
+      </BodyText>
+      {/* <Heading variant="h2">
         <PerformerIcon /> Event Performers
       </Heading>
       <BodyText>
         Event organizers can either add you as a performer by name <em>or</em>{' '}
         you can create a performer profile which has a lot more customization.
-      </BodyText>
+      </BodyText> */}
       <FormControls>
         <Button onClick={() => setIsHidden(true)}>
           Okay - hide this forever
