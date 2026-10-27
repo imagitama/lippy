@@ -48,6 +48,9 @@ import Heading from './components/heading'
 import BodyText from './components/body-text'
 import FormControls from './components/form-controls'
 import Button from './components/button'
+import InfoMessage from './components/info-message'
+import Link from './components/link'
+import Message from './components/message'
 
 const cache = new Map<string, React.ComponentType<any>>()
 
@@ -147,6 +150,14 @@ const WelcomeMessage = () => {
           websites.
         </em>
       </BodyText>
+      <Message>
+        The VRChat world and website was <strong>not</strong> vibe coded. See
+        our{' '}
+        <Link to={routes.aiPolicy} onClick={() => setIsHidden(true)}>
+          AI Policy
+        </Link>
+        .
+      </Message>
       <Heading variant="h2">
         <ClubIcon /> Club Owners
       </Heading>
