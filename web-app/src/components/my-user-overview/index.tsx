@@ -29,7 +29,11 @@ const MyUserOverview = () => {
         <UsernameLink username={user.username} id={user.id} />
       </Heading>
       <Heading variant="h2">Sign-up Method</Heading>
-      {getSignedUpWithEmail(loggedInUser!) ? 'Email' : 'Other'}
+      {getSignedUpWithEmail(loggedInUser!)
+        ? 'Email'
+        : getSignedUpWithDiscord(loggedInUser!)
+        ? 'Discord'
+        : 'Unknown'}
       <Heading variant="h2">Email</Heading>
       {isPrivateInfoRevealed ? (
         loggedInUser!.email!

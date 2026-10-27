@@ -54,7 +54,8 @@ export const unloadUserFromStore = async () => {
 export const getSignedUpWithEmail = (user: SupabaseUser): boolean =>
   user.app_metadata?.provider === 'email'
 
-export const getSignedUpWithDiscord = (user: SupabaseUser): boolean => false
+export const getSignedUpWithDiscord = (user: SupabaseUser): boolean =>
+  user.app_metadata?.provider === 'discord'
 
 export const getHasUserVerifiedTheirEmail = (user: SupabaseUser): boolean =>
   user.email_confirmed_at !== undefined

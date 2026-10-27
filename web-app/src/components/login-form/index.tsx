@@ -296,16 +296,6 @@ const Form = ({
             <LoginWithDiscord code={''} onFail={reset} onSuccess={onSuccess} />
           </div>
         )
-      // case GoogleAuthProvider.PROVIDER_ID:
-      // case TwitterAuthProvider.PROVIDER_ID:
-      //   return (
-      //     <div className={classes.form}>
-      //       <LoginWithProviderForm
-      //         providerId={selectedProviderId}
-      //         onSuccess={onSuccess}
-      //       />
-      //     </div>
-      //   )
       case EMAIL_PROVIDER_ID:
         return (
           <div className={classes.form}>
@@ -329,7 +319,7 @@ const Form = ({
         className={classes.email}
         onClick={() => setSelectedProviderId(EMAIL_PROVIDER_ID)}
       />
-      {/* <LoginButton
+      <LoginButton
         isSignUp={isSignUp}
         label="Discord"
         providerId={DISCORD_PROVIDER_ID}
@@ -337,22 +327,6 @@ const Form = ({
         className={classes.discord}
         onClick={() => setSelectedProviderId(DISCORD_PROVIDER_ID)}
       />
-      <LoginButton
-        isSignUp={isSignUp}
-        label="Google"
-        providerId={GoogleAuthProvider.PROVIDER_ID}
-        icon={<GoogleIcon />}
-        className={classes.google}
-        onClick={() => setSelectedProviderId(GoogleAuthProvider.PROVIDER_ID)}
-      />
-      <LoginButton
-        isSignUp={isSignUp}
-        label="Twitter/X"
-        providerId={TwitterAuthProvider.PROVIDER_ID}
-        icon={<TwitterIcon />}
-        className={classes.twitter}
-        onClick={() => setSelectedProviderId(TwitterAuthProvider.PROVIDER_ID)}
-      /> */}
       <Button
         size="large"
         url={isSignUp ? routes.login : routes.signUp}
