@@ -48,6 +48,7 @@ import FormControls from '@/components/form-controls'
 import InfoMessage from '@/components/info-message'
 import Link from '@/components/link'
 import { routes } from '@/routes'
+import { downloadExternalImageToUrl } from '@/hooks/useDownloadExternalImage'
 
 const ComponentForField = ({
   name,
@@ -138,35 +139,6 @@ const ComponentForField = ({
   }
 }
 
-const FUNCTION_URL = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/downloadExternalImage`
-
-export async function fetchExternalImage(url: string): Promise<string> {
-  const {
-    data: { session },
-  } = await client.auth.getSession()
-  if (!session) throw new Error('NotAuthenticated')
-
-  const res = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: process.env.REACT_APP_SUPABASE_API_KEY!,
-    },
-    body: JSON.stringify({ url }),
-  })
-
-  // Success -> image bytes. Failure -> JSON { error: 'SomeErrorClassName' }
-  const contentType = res.headers.get('content-type') ?? ''
-  if (!res.ok || !contentType.startsWith('image/')) {
-    const body = await res.json().catch(() => null)
-    throw new Error(body?.error ?? `HTTP_${res.status}`)
-  }
-
-  const blob = await res.blob()
-  return URL.createObjectURL(blob)
-}
-
 const getVrchatGroupId = (ev: ExternalEvent): string | null => {
   if (!ev.urls.vrcGroup) return null
   return getVrchatGroupIdFromUrl(ev.urls.vrcGroup)
@@ -216,7 +188,7 @@ const SingleExternalEventImporter = ({
 
   const onClickDownload = async () => {
     console.debug(`downloading event poster...`)
-    const url = await fetchExternalImage(externalEvent.poster!)
+    const url = await downloadExternalImageToUrl(externalEvent.poster!)
     console.debug(`we have an internal URL: `, url)
     setPosterUrlToUse(url)
   }

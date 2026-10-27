@@ -40,7 +40,7 @@ export default <TRecord extends Record<string, any>>({
         <>
           <ImageUploader
             onDone={(urls) => {
-              console.debug(`GenericEditor.ImageUploadInput urls`, { urls })
+              // console.debug(`GenericEditor.ImageUploadInput urls`, { urls })
               onChange(urls[0])
             }}
             {...editableField}

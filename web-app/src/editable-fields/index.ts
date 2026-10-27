@@ -28,9 +28,7 @@ export interface EditableFieldBase<TRecord> {
   overrideValue?: any
 }
 
-export interface TextEditableField<TRecord>
-  extends ImageUploaderConfig,
-    EditableFieldBase<TRecord> {
+export interface TextEditableField<TRecord> extends EditableFieldBase<TRecord> {
   type: fieldTypes.text
   minLength?: number
   maxLength?: number
@@ -38,8 +36,7 @@ export interface TextEditableField<TRecord>
 }
 
 export interface SelectEditableField<TRecord>
-  extends ImageUploaderConfig,
-    EditableFieldBase<TRecord> {
+  extends EditableFieldBase<TRecord> {
   type: fieldTypes.singlechoice | fieldTypes.multichoice | fieldTypes.dropdown
   options: Option[] | ((fields: Partial<TRecord>) => Option[])
 }

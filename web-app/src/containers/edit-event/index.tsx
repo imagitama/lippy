@@ -3,7 +3,12 @@ import { useParams } from 'react-router'
 import { Helmet } from '@unhead/react/helmet'
 
 import * as routes from '@/routes'
-import { CollectionNames, Event, EventForList } from 'shared/modules/events'
+import {
+  CollectionNames,
+  Event,
+  EventFields,
+  EventForList,
+} from 'shared/modules/events'
 import {
   FullPerformer,
   Performer,
@@ -26,6 +31,10 @@ import HorizontalTimeline from '@/components/horizontal-timeline'
 import WarningMessage from '@/components/warning-message'
 import InfoMessage from '@/components/info-message'
 import useDataStoreItems from '@/hooks/useDataStoreItems'
+import ImportVrchatEventForm from '@/components/import-vrchat-event-form'
+import useDownloadExternalImage from '@/hooks/useDownloadExternalImage'
+import LoadingIndicator from '@/components/loading-indicator'
+import ErrorMessage from '@/components/error-message'
 
 // const usePerformerNamesById = (
 //   ids: string[]
@@ -99,10 +108,51 @@ export default () => {
   const [previewFields, setPreviewFields] = useState<null | Partial<Event>>(
     null
   )
+  const [vrcPosterImageUrl, setVrcPosterImageUrl] = useState<null | string>(
+    null
+  )
+  const [prefillFields, setPrefillFields] =
+    useState<null | Partial<EventFields>>(null)
+  const [isHidingImport, setIsHidingImport] = useState(false)
+  const [isDownloading, lastErrorCodeDownloading, posterLocalUrl] =
+    useDownloadExternalImage(vrcPosterImageUrl || false)
 
   if (!isLoggedIn) {
     return <NotLoggedInMessage />
   }
+
+  if (isDownloading) return <LoadingIndicator message="Downloading poster..." />
+
+  if (lastErrorCodeDownloading !== null)
+    return (
+      <ErrorMessage errorCode={lastErrorCodeDownloading}>
+        Failed to download poster
+      </ErrorMessage>
+    )
+
+  if (vrcPosterImageUrl && !posterLocalUrl)
+    return <LoadingIndicator message="Waiting for poster..." />
+
+  const onImportSuccess = async (
+    eventFields: Partial<EventFields>,
+    posterImageUrl: string | null
+  ) => {
+    console.debug(`import success`, eventFields, posterImageUrl)
+
+    setVrcPosterImageUrl(posterImageUrl)
+    setPrefillFields(eventFields)
+  }
+
+  const editableFieldsToUse = posterLocalUrl
+    ? editableFields.map((field) =>
+        field.name === 'posterurl'
+          ? {
+              ...field,
+              preloadImageUrl: posterLocalUrl,
+            }
+          : field
+      )
+    : editableFields
 
   return (
     <>
@@ -116,45 +166,54 @@ export default () => {
         />
       </Helmet>
       <Heading variant="h1">{isCreating ? 'Create' : 'Edit'} Event</Heading>
-      {/* {previewFields ? (
-        <EventPreview event={previewFields} />
+      {providedClubId && !isHidingImport && !prefillFields ? (
+        <InfoMessage title="Import VRChat Group Event">
+          You can import an event from your VRChat group by clicking this
+          button.
+          <br />
+          <ImportVrchatEventForm
+            clubId={providedClubId}
+            onSuccess={onImportSuccess}
+            onCancel={() => setIsHidingImport(true)}
+          />
+        </InfoMessage>
       ) : (
-        <InfoMessage>Set a start and end date to show a preview</InfoMessage>
-      )} */}
-      <GenericEditor<Event>
-        fields={editableFields}
-        collectionName={CollectionNames.Events}
-        id={eventId}
-        analyticsCategory={`${eventId ? 'Edit' : 'Create'}Event`}
-        saveBtnAction="Click save button"
-        cancelBtnAction="Click cancel button"
-        getSuccessUrl={(newId) =>
-          newId
-            ? routes.viewEventWithVar.replace(':eventId', newId)
-            : routes.events
-        }
-        cancelUrl={
-          eventId
-            ? routes.viewEventWithVar.replace(':eventId', eventId)
-            : routes.events
-        }
-        overrideSomeFields={{
-          ...(providedDateIso
-            ? { startsat: providedDateIso, endsat: providedDateIsoEnd }
-            : {}),
-          ...(providedClubId
-            ? {
-                clubid: providedClubId,
-              }
-            : {}),
-        }}
-        isAccordion
-        startExpanded
-        onFieldsChanged={(newFields) => {
-          setPreviewFields(newFields)
-        }}
-        showControls
-      />
+        <GenericEditor<Event>
+          fields={editableFieldsToUse}
+          collectionName={CollectionNames.Events}
+          id={eventId}
+          analyticsCategory={`${eventId ? 'Edit' : 'Create'}Event`}
+          saveBtnAction="Click save button"
+          cancelBtnAction="Click cancel button"
+          getSuccessUrl={(newId) =>
+            newId
+              ? routes.viewEventWithVar.replace(':eventId', newId)
+              : routes.events
+          }
+          cancelUrl={
+            eventId
+              ? routes.viewEventWithVar.replace(':eventId', eventId)
+              : routes.events
+          }
+          overrideSomeFields={{
+            ...(providedDateIso
+              ? { startsat: providedDateIso, endsat: providedDateIsoEnd }
+              : {}),
+            ...(providedClubId
+              ? {
+                  clubid: providedClubId,
+                }
+              : {}),
+            ...(prefillFields || {}),
+          }}
+          isAccordion
+          startExpanded
+          onFieldsChanged={(newFields) => {
+            setPreviewFields(newFields)
+          }}
+          showControls
+        />
+      )}
     </>
   )
 }

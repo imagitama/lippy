@@ -109,3 +109,33 @@ export const getRelativeTime = (date: Date | string): string =>
     .fromNow()
     .replace(/^in\s+/, '')
     .replace(/\s+ago$/, '')
+
+const ISO_WITH_OFFSET =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}(?::?\d{2})?)$/i
+
+export const getIsValidPostgresDate = (dateStr: unknown): dateStr is string => {
+  if (typeof dateStr !== 'string') return false
+
+  const match = ISO_WITH_OFFSET.exec(dateStr.trim())
+  if (!match) return false // wrong format or missing offset
+
+  const [, y, mo, d, h, mi, s = '0'] = match
+  const [year, month, day, hour, minute, second] = [y, mo, d, h, mi, s].map(
+    Number
+  )
+
+  if (year < 1) return false // Postgres has no year 0000
+  if (hour > 23 || minute > 59 || second > 59) return false
+
+  // reject impossible dates like 2026-02-31 (round-trip check)
+  const check = new Date(Date.UTC(year, month - 1, day))
+  if (
+    check.getUTCFullYear() !== year ||
+    check.getUTCMonth() !== month - 1 ||
+    check.getUTCDate() !== day
+  ) {
+    return false
+  }
+
+  return !Number.isNaN(Date.parse(dateStr))
+}

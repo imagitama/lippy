@@ -335,14 +335,14 @@ export interface ImageUploaderConfig {
   maxSizeBytes?: number
   allowMultiple?: boolean
   allowCropping?: boolean
+  // for sync with gumroad
+  preloadImageUrl?: string
+  preloadFile?: File
 }
 
 export interface ImageUploaderProps extends ImageUploaderConfig {
   onDone: (urls: string[]) => void
   onCancel?: () => void
-  // for sync with gumroad
-  preloadImageUrl?: string
-  preloadFile?: File
   resetOnDone?: boolean
   clickToOpen?: boolean
   children?: any // (props: { triggerOpen: () => void }) => React.ReactElement
