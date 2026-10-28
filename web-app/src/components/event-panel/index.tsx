@@ -50,6 +50,11 @@ const Desc = styled.div`
 
 const EventPoster = styled.div`
   padding: 0.5rem;
+  & img {
+    max-height: calc(100dvh - 64px - 2rem);
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+  }
 `
 
 const FavButtonWrapper = styled.div`
@@ -102,7 +107,7 @@ const EventPanel = ({
         <Column>
           {event.posterurl ? (
             <EventPoster>
-              <img src={event.posterurl} alt="Event poster" width="100%" />
+              <img src={event.posterurl} alt="Event poster" />
             </EventPoster>
           ) : (
             <NoResultsMessage>This event has no poster</NoResultsMessage>
