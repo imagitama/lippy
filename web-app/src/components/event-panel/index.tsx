@@ -53,7 +53,6 @@ const EventPoster = styled.div`
   & img {
     max-height: calc(100dvh - 64px - 2rem);
     max-width: 100%;
-    aspect-ratio: 1 / 1;
   }
 `
 
