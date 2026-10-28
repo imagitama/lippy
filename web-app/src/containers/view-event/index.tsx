@@ -288,6 +288,7 @@ const View = () => {
             <div className={classes.rightCol}>
               <div className={classes.controlGroup}>
                 <VisitVrchatInstanceButton
+                  vrchatGroupId={event.club?.vrchatgroupid || null}
                   instance={event.vrchatinstancecache?.instance || null}
                   fetchedAt={event.vrchatinstancecache?.fetchedat}
                 />

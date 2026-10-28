@@ -133,6 +133,7 @@ const EventPanel = ({
           <EventDateRange startsAt={event.startsat} endsAt={event.endsat} />
           <Heading variant="h3">Instance</Heading>
           <VisitVrchatInstanceButton
+            vrchatGroupId={event.vrchatgroupid}
             instance={event.vrchatinstancecache?.instance || null}
             fetchedAt={event.vrchatinstancecache?.fetchedat}
           />

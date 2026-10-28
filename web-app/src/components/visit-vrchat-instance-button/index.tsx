@@ -20,14 +20,30 @@ const getUrlForInstanceId = (id: string): string => {
   return `https://vrchat.com/home/launch?${params}`
 }
 
+const getUrlForVrchatGroup = (id: string) =>
+  `https://vrchat.com/home/group/${id}`
+
 const VisitVrchatInstanceButton = ({
+  vrchatGroupId,
   instance,
   fetchedAt,
 }: {
+  vrchatGroupId: string | null
   instance: VrchatInstance | null
   fetchedAt?: string // date
 }) => {
   if (!instance) {
+    if (vrchatGroupId) {
+      return (
+        <Button
+          icon={<JoinIcon />}
+          url={getUrlForVrchatGroup(vrchatGroupId)}
+          size="large">
+          View VRChat Group
+        </Button>
+      )
+    }
+
     return (
       <Button size="large" isDisabled>
         No Instance Found

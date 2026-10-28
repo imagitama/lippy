@@ -56,6 +56,7 @@ export interface EventForList extends Event {
   clubthumbnailurl: string | null
   vrchatinstancecache: VrchatInstanceCachedItem | null
   fullperformances: FullPerformance[]
+  vrchatgroupid: string | null
 }
 
 export interface PublicEvent extends EventForList {}
@@ -70,6 +71,7 @@ export interface FullEvent extends Event, EventMeta {
         | 'name'
         | 'thumbnailurl'
         | 'createdby'
+        | 'vrchatgroupid'
         // perms
         | 'owneruserids'
         | 'moduserids'
