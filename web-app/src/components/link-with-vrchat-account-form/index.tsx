@@ -72,7 +72,7 @@ const getMessageForErrorCode = (code: string): string => {
       return 'you already have a link code'
     case GenerateVrchatLinkCodeErrorCode.VrchatApiError:
     case LinkWithVrchatAccountErrorCode.VrchatApiError:
-      return 'there was an issue talking to VRChat. Our bot might have issues logging in. Please report this in our Discord and try again later.'
+      return 'there was an issue talking to VRChat. Our bot might be temporarily blocked if we are spamming their servers too much. Please report this to our Discord and try again in 1 hour.'
     default:
       return `something unexpected happened: ${code}`
   }
