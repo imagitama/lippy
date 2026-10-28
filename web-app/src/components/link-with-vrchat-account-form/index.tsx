@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react'
 import CheckIcon from '@mui/icons-material/Check'
-import ClearIcon from '@mui/icons-material/Clear'
-import LinkIcon from '@mui/icons-material/Link'
 import LinkOffIcon from '@mui/icons-material/LinkOff'
 
 import useSupabaseFunction from '@/hooks/useSupabaseFunction'
@@ -20,6 +18,7 @@ enum GenerateVrchatLinkCodeErrorCode {
   NeedVrchatUsername = 'NeedVrchatUsername',
   VrchatUserDoesNotExist = 'VrchatUserDoesNotExist',
   AlreadyHasLinkCode = 'AlreadyHasLinkCode',
+  VrchatApiError = 'VrchatApiError',
   Unknown = 'Unknown',
 }
 
@@ -38,6 +37,7 @@ enum LinkWithVrchatAccountErrorCode {
   VrchatUserDoesNotExist = 'VrchatUserDoesNotExist',
   VrchatStatusDoesNotHaveCode = 'VrchatStatusDoesNotHaveCode',
   VrchatUserAlreadyLinked = 'VrchatUserAlreadyLinked',
+  VrchatApiError = 'VrchatApiError',
   Unknown = 'Unknown',
 }
 
@@ -70,6 +70,9 @@ const getMessageForErrorCode = (code: string): string => {
       return 'the VRChat account was found with the code but that account has already been linked to someone'
     case GenerateVrchatLinkCodeErrorCode.AlreadyHasLinkCode:
       return 'you already have a link code'
+    case GenerateVrchatLinkCodeErrorCode.VrchatApiError:
+    case LinkWithVrchatAccountErrorCode.VrchatApiError:
+      return 'there was an issue talking to VRChat. Our bot might have issues logging in. Please report this in our Discord and try again later.'
     default:
       return `something unexpected happened: ${code}`
   }
