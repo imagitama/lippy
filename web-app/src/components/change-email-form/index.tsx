@@ -8,6 +8,7 @@ import ErrorMessage from '@/components/error-message'
 import { handleError } from '@/error-handling'
 import SuccessMessage from '@/components/success-message'
 import FormControls from '@/components/form-controls'
+import { client } from '@/supabase'
 
 const getIsValidEmail = (input: string): boolean =>
   String(input)
@@ -36,11 +37,17 @@ const ChangeEmailForm = () => {
 
   const onClickChange = async () => {
     try {
+      if (!emailInput) return
+
       setIsChanging(true)
       setIsSuccess(false)
       setLastErrorCode(null)
-      // await changeLoggedInUserEmail(emailInput.trim())
-      throw new Error('noop')
+
+      const { error } = await client.auth.updateUser({
+        email: emailInput,
+      })
+      if (error) throw error
+
       setIsChanging(false)
       setIsSuccess(true)
       setLastErrorCode(null)

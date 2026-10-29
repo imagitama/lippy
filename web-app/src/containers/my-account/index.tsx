@@ -150,10 +150,10 @@ const View = () => {
             label: 'Auth',
             contents: (
               <>
-                <Heading variant="h2">Authentication</Heading>
+                {/* <Heading variant="h2">Authentication</Heading>
                 <Block title="Multi-Factor Authentication">
                   <MultiFactorAuthForm />
-                </Block>
+                </Block> */}
                 <Block title="Change Email Address">
                   <p>
                     Use this form to change your signup email address to
