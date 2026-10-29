@@ -2,7 +2,12 @@ import { User as SupabaseUser } from '@supabase/supabase-js'
 
 import { client } from '@/supabase'
 import { store } from '@/store'
-import { USER_IS_LOADING, USER_LOADED, USER_UNLOADED } from '@/slices/user'
+import {
+  PASSWORD_NEEDS_CHANGING,
+  USER_IS_LOADING,
+  USER_LOADED,
+  USER_UNLOADED,
+} from '@/slices/user'
 import { readRecord } from '@/data-store'
 import { MyUser, ViewNames } from 'shared/modules/users'
 import { accountVerifySuccess } from './slices/app'
@@ -115,6 +120,10 @@ client.auth.onAuthStateChange(async (event, session) => {
         break
       case 'PASSWORD_RECOVERY':
         // user arrived via a password reset link
+
+        store.dispatch({
+          type: PASSWORD_NEEDS_CHANGING,
+        })
         break
       default:
         console.debug(`unknown auth event: ${event}`)

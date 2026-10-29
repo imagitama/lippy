@@ -8,6 +8,12 @@ import SuccessMessage from '@/components/success-message'
 import Button from '@/components/button'
 import TextInput from '@/components/text-input'
 import FormControls from '@/components/form-controls'
+import { client } from '@/supabase'
+import { routes } from '@/routes'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/slices'
+import ChangePasswordForm from '../change-password-form'
+import Heading from '../heading'
 
 enum ErrorCode {
   Unknown,
@@ -18,6 +24,9 @@ const ResetPasswordForm = () => {
   const [isSending, setIsSending] = useState(false)
   const [hasSent, setHasSent] = useState(false)
   const [lastErrorCode, setLastErrorCode] = useState<null | ErrorCode>(null)
+  const passwordNeedsChanging = useSelector<RootState, boolean>(
+    ({ user }) => user.passwordNeedsChanging
+  )
 
   const onClickSend = async () => {
     try {
@@ -29,8 +38,10 @@ const ResetPasswordForm = () => {
       setHasSent(false)
       setLastErrorCode(null)
 
-      // await sendPasswordResetEmail(auth, emailValue)
-      throw new Error('noop')
+      const { error } = await client.auth.resetPasswordForEmail(emailValue, {
+        redirectTo: `${location.origin}${routes.resetPassword}`,
+      })
+      if (error) throw error
 
       setIsSending(false)
       setHasSent(true)
@@ -49,6 +60,15 @@ const ResetPasswordForm = () => {
     setIsSending(false)
     setHasSent(false)
     setLastErrorCode(null)
+  }
+
+  if (passwordNeedsChanging) {
+    return (
+      <>
+        <Heading variant="h2">Change Password</Heading>
+        <ChangePasswordForm />
+      </>
+    )
   }
 
   if (isSending === true) {

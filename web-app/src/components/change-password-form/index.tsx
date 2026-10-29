@@ -8,6 +8,7 @@ import ErrorMessage from '@/components/error-message'
 import { handleError } from '@/error-handling'
 import SuccessMessage from '@/components/success-message'
 import FormControls from '@/components/form-controls'
+import { client } from '@/supabase'
 
 const getErrorCodeFromError = (err: Error): string => {
   return 'unknown'
@@ -37,7 +38,12 @@ const ChangePasswordForm = () => {
       setIsChanging(true)
       setIsSuccess(false)
       setLastErrorCode(null)
-      throw new Error('noop')
+
+      const { error } = await client.auth.updateUser({
+        password: passwordInput,
+      })
+      if (error) throw error
+
       setIsChanging(false)
       setIsSuccess(true)
       setLastErrorCode(null)
