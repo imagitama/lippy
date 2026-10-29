@@ -39,6 +39,18 @@ interface GetVrchatGroupsForUserResult {
   groups: VrchatGroupMembership[]
 }
 
+const getMessageForError = (errorName: string): string => {
+  switch (errorName) {
+    // TODO: use codes
+    case 'VrchatApiError':
+      return 'there was an issue talking to VRChat. Please report this to our Discord.'
+    case 'VrchatApiOverloadedError':
+      return 'there was an issue talking to VRChat. Our bot might be temporarily blocked if we are spamming their servers too much. Please report this to our Discord and try again in 1 hour.'
+    default:
+      return `something unexpected happened: ${errorName}`
+  }
+}
+
 const VrchatGroups = ({
   onSelectGroup,
 }: {
@@ -57,14 +69,21 @@ const VrchatGroups = ({
     })
   }, [])
 
-  if (isGetting)
+  if (lastErrorCode !== null)
+    return (
+      <ErrorMessage>
+        Failed to get your VRChat groups: {lastErrorCode}
+      </ErrorMessage>
+    )
+
+  if (isGetting || !lastResult)
     return <LoadingIndicator message="Getting your VRChat groups..." />
 
-  if (lastErrorCode !== null || !lastResult || !lastResult.success)
+  if (lastResult && !lastResult.success)
     return (
       <ErrorMessage>
         Failed to get your VRChat groups:{' '}
-        {lastErrorCode !== null ? lastErrorCode : lastResult?.error}
+        {getMessageForError(lastResult.error!)}
       </ErrorMessage>
     )
 
