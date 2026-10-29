@@ -316,6 +316,7 @@ const View = () => {
               {isMod && (
                 <>
                   <Heading variant="h3">Mod Controls</Heading>
+                  <div>Owned by {club?.vrchatownerid}</div>
                   <div className={classes.controlGroup}>
                     <EditorRecordManager
                       id={id}

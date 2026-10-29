@@ -72,6 +72,7 @@ export interface FullEvent extends Event, EventMeta {
         | 'thumbnailurl'
         | 'createdby'
         | 'vrchatgroupid'
+        | 'owneruserid'
         // perms
         | 'owneruserids'
         | 'moduserids'
