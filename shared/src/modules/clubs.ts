@@ -46,6 +46,9 @@ export interface FullClub extends ClubMeta, Club {
   lastmodifiedbyavatarurl: string
   createdbyusername: string
   createdbyavatarurl: string
+  vrchatownerid: string // VRChat user ID
+  owneruserid: string | null // our ID
+  ownerusername: string | null
 }
 
 export interface ClubForList extends FullClub {}

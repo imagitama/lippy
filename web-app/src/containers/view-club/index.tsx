@@ -44,6 +44,7 @@ import {
   getIsUserClubOwner,
   getIsUserClubStaff,
 } from '@/utils/clubs'
+import UsernameLink from '@/components/username-link'
 
 const useStyles = makeStyles({
   categories: {
@@ -276,6 +277,15 @@ const View = () => {
         {isMod && (
           <div>
             <Heading variant="h2">Moderator Actions</Heading>
+            {club.owneruserid && (
+              <div>
+                Owned by{' '}
+                <UsernameLink
+                  id={club.owneruserid}
+                  username={club.ownerusername}
+                />
+              </div>
+            )}
             <FormControls>
               <EditButton
                 url={routes.editClubWithVar.replace(':clubId', club.id)}>
@@ -286,6 +296,7 @@ const View = () => {
             <JoinBotToVrchatGroupForm
               vrchatGroupId={club.linkedvrchatgroupid}
             />
+
             {/* <EditorRecordManager
             id={clubId}
             metaCollectionName={CollectionNames.ClubsMeta}
