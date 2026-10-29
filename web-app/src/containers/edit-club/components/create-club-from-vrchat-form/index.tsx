@@ -34,6 +34,8 @@ interface GetVrchatGroupsForUserPayload {
   userId: string
 }
 interface GetVrchatGroupsForUserResult {
+  success: boolean
+  error?: string
   groups: VrchatGroupMembership[]
 }
 
@@ -58,10 +60,11 @@ const VrchatGroups = ({
   if (isGetting)
     return <LoadingIndicator message="Getting your VRChat groups..." />
 
-  if (lastErrorCode !== null || !lastResult)
+  if (lastErrorCode !== null || !lastResult || !lastResult.success)
     return (
       <ErrorMessage>
-        Failed to get your VRChat groups: {lastErrorCode}
+        Failed to get your VRChat groups:{' '}
+        {lastErrorCode !== null ? lastErrorCode : lastResult?.error}
       </ErrorMessage>
     )
 
