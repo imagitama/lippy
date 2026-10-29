@@ -80,7 +80,7 @@ const TagInput = ({ onNewTag }: { onNewTag: (tag: string) => void }) => {
           onAdd()
         }
       }}
-      button={<Button onClick={onAdd}>Add</Button>}
+      button={<Button onClick={onAdd}>Add Custom Tag</Button>}
     />
   )
 }
