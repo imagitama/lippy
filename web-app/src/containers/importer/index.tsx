@@ -309,6 +309,9 @@ const ExternalEventOutput = ({
     )
   }
 
+  if (externalEvent.category !== 1)
+    return <Paper> Event "{externalEvent.name}" is not music category</Paper>
+
   return (
     <Paper>
       <Button onClick={() => setIsExpanded(!isExpanded)} color="secondary">
