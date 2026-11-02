@@ -108,6 +108,10 @@ const ImportFromTimelineForm = ({
             </Button>,
           ]}>
           No events found with VRChat group "{clubVrcGroupId}"
+          <br />
+          <br />
+          The data you pasted from Timeline might just be missing your events
+          because they are too far in the future. Try again closer to the event.
         </WarningMessage>
       )
 
