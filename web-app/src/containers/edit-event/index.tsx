@@ -184,8 +184,7 @@ export default () => {
         !prefillFields ? (
         <ImportFromTimelineForm
           clubId={club.id}
-          // clubVrcGroupId={club.vrchatgroupid}
-          clubVrcGroupId={'grp_f3cfc1c2-af05-4ffc-8d1d-27bea4e5115c'}
+          clubVrcGroupId={club.vrchatgroupid}
           onSuccess={onImportSuccess}
           onCancel={() => setImportMode(null)}
         />
