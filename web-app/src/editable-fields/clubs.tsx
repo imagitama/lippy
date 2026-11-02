@@ -1,3 +1,4 @@
+import React from 'react'
 import { fieldTypes } from '@/generic-forms'
 import { THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT } from '@/config'
 import type { CustomEditableField, EditableField } from './'
@@ -11,8 +12,13 @@ import InfoMessage from '@/components/info-message'
 import VrchatRoleIdsEditor from '@/components/vrchat-role-ids-editor'
 import ErrorMessage from '@/components/error-message'
 
+const PreferredBuildingSelector = React.lazy(
+  () => import('@/components/preferred-building-selector')
+)
+
 export enum SectionNames {
   Basic = 'Basic',
+  Building = 'Building',
   Perms = 'Perms',
 }
 
@@ -48,8 +54,19 @@ const fields: EditableField<Club>[] = [
     label: 'Color',
     type: fieldTypes.color,
     default: null,
-    section: SectionNames.Basic,
-    hint: 'Used in the VRChat world as the "accent" color.',
+    section: SectionNames.Building,
+    hint: 'A color for your club which is used on the website, timeline and building in the VRChat world.',
+  },
+  {
+    name: 'preferredbuilding',
+    label: 'Building',
+    type: fieldTypes.custom,
+    default: null,
+    renderer: ({ value, onChange }) => (
+      <PreferredBuildingSelector value={value} onChange={onChange} />
+    ),
+    section: SectionNames.Building,
+    hint: 'Which building your club would prefer to be represented by. It may be adjusted over time as buildings change.',
   },
   {
     name: 'thumbnailurl',

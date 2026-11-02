@@ -12,6 +12,7 @@ export interface ClubFields extends Record<string, any>, SocialFields {
   websiteurl: string | null
   email: string | null
   color: ClubColor | null
+  preferredbuilding: string | null
   owneruserids: string[] // our users who can edit the entire club
   moduserids: string[] // our users who can create/edit events
   vrchatownerroleids: string[] // VRC role IDs
