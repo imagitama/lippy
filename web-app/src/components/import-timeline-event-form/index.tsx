@@ -48,7 +48,6 @@ const ImportFromTimelineForm = ({
   ) => void
   onCancel: () => void
 }) => {
-  const [isProceed, setIsProceed] = useState(false)
   const [textVal, setTextVal] = useState('')
   const [lastErrorCode, setLastErrorCode] = useState<null | ErrorCode>(null)
   const externalDataRef = useRef<null | ExternalData>(null)
@@ -86,7 +85,7 @@ const ImportFromTimelineForm = ({
       externalEvent,
       externalDataRef.current
     )
-    onSuccess(eventFields, eventFields.posterurl, eventFields.performances)
+    onSuccess(eventFields, externalEvent.poster, eventFields.performances)
   }
 
   if (lastErrorCode !== null)
@@ -167,51 +166,43 @@ const ImportFromTimelineForm = ({
         <p>Timeline's TOS says we cannot automatically get events from it.</p>
         <p>
           Instead you must view all of the raw data that Timeline gives out
-          publically and copy it here.
+          publically and paste it here.
         </p>
       </InfoMessage>
-      {!isProceed ? (
-        <FormControls>
-          <Button onClick={() => setIsProceed(true)}>Proceed</Button>
-        </FormControls>
-      ) : (
-        <>
-          <ol>
-            <li>
-              open{' '}
-              <a
-                href="https://vrc.tl/api/v1/events"
-                target="_blank"
-                rel="noopener noreferrer">
-                https://vrc.tl/api/v1/events
-              </a>{' '}
-              in your browser
-            </li>
-            <li>
-              click on "Raw Data" at the very top:
-              <br />
-              <img
-                src={rawDataScreenshotUrl}
-                width="100%"
-                style={{ maxWidth: '50vw' }}
-              />
-            </li>
-            <li>copy all of the text</li>
-            <li>paste it into the textbox below</li>
-          </ol>
-          <TextInput
-            fullWidth
-            placeholder="Paste text here"
-            multiline
-            rows={2}
-            value={textVal}
-            onChange={(e) => setTextVal(e.target.value)}
+      <ol>
+        <li>
+          open{' '}
+          <a
+            href="https://vrc.tl/api/v1/events"
+            target="_blank"
+            rel="noopener noreferrer">
+            https://vrc.tl/api/v1/events
+          </a>{' '}
+          in your browser
+        </li>
+        <li>
+          click on "Raw Data" at the very top:
+          <br />
+          <img
+            src={rawDataScreenshotUrl}
+            width="100%"
+            style={{ maxWidth: '50vw' }}
           />
-          <FormControls>
-            <Button onClick={onClickProceed}>Proceed</Button>
-          </FormControls>
-        </>
-      )}
+        </li>
+        <li>copy all of the text</li>
+        <li>paste it into the textbox below</li>
+      </ol>
+      <TextInput
+        fullWidth
+        placeholder="Paste text here"
+        multiline
+        rows={2}
+        value={textVal}
+        onChange={(e) => setTextVal(e.target.value)}
+      />
+      <FormControls>
+        <Button onClick={onClickProceed}>Proceed</Button>
+      </FormControls>
     </>
   )
 }
