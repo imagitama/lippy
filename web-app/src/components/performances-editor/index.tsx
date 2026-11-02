@@ -50,7 +50,7 @@ import TagsInput from '../tags-input'
 import { commonGenres, lessCommonGenres } from '@/tags'
 
 const SLOT_MS = 30 * 30 * 1000
-const SLOT_WIDTH_PX = 200 // px per 30-min slot
+const SLOT_WIDTH_PX = 120 // px per 30-min slot
 const THIN_MS = 1 * 60 * 1000
 const THIN_PER_SLOT = SLOT_MS / THIN_MS // 6
 const THIN_WIDTH_PX = SLOT_WIDTH_PX / THIN_PER_SLOT
@@ -333,7 +333,7 @@ const usePerformancesEditing = (): [
     eventId: string,
     perfs: (Performance | PerformanceFields)[]
   ) => {
-    console.debug(`usePerformancesEditing.createOrEditAll`, eventId, perfs)
+    // console.debug(`usePerformancesEditing.createOrEditAll`, eventId, perfs)
 
     try {
       setIsLoading(true)
@@ -532,7 +532,7 @@ const PerformancesEditor = ({
   )
 
   const dupeAlongsideByIdx = (idx: number) => {
-    console.debug(`dupeAlongsideByIdx`, idx)
+    // console.debug(`dupeAlongsideByIdx`, idx)
 
     const source = value[idx]
 
@@ -547,7 +547,7 @@ const PerformancesEditor = ({
   }
 
   const deleteByIdx = (idx: number) => {
-    console.debug(`deleteByIdx`, idx)
+    // console.debug(`deleteByIdx`, idx)
 
     const item = value[idx]
     if (!item) return
@@ -566,7 +566,7 @@ const PerformancesEditor = ({
   }
 
   const updateItemAtIdx = (idx: number, patch: Partial<Performance>) => {
-    console.debug(`updateItemAtIdx`, idx, { patch })
+    // console.debug(`updateItemAtIdx`, idx, { patch })
     onChange(value.map((item, i) => (i === idx ? { ...item, ...patch } : item)))
   }
 
@@ -577,7 +577,7 @@ const PerformancesEditor = ({
   ) => updateItemAtIdx(idx, { [fieldName]: val })
 
   const updateFields = (indexes: number[], edge: Edge, date: string) => {
-    console.debug(`updateFields`, { indexes, edge, date })
+    // console.debug(`updateFields`, { indexes, edge, date })
     setValue((prev) =>
       prev.map((p, i) => (indexes.includes(i) ? { ...p, [edge]: date } : p))
     )
@@ -819,13 +819,13 @@ const PerformancesEditor = ({
       </Root>
       <Controls>
         <FormControls>
-          <Button
+          {/* <Button
             color="secondary"
             onClick={() => onClickAddRight(15)}
             icon={<AddIcon />}
             isDisabled={!isAbleToAddRight}>
             15 min slot
-          </Button>
+          </Button> */}
           <Button
             color="secondary"
             onClick={() => onClickAddRight(30)}
