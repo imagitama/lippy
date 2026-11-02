@@ -134,8 +134,14 @@ Adult posters can only be uploaded if the event is flagged as adult.`,
     name: 'performances-editor',
     label: 'Performances',
     type: fieldTypes.custom,
-    renderer: ({ databaseResult, formFields, addOnSaveCallback }) => (
+    renderer: ({
+      databaseResult,
+      formFields,
+      addOnSaveCallback,
+      extraFormData,
+    }) => (
       <PerformancesEditor
+        prefill={extraFormData.performances}
         event={databaseResult}
         addOnSaveCallback={addOnSaveCallback}
         eventStartsAt={formFields.startsat}

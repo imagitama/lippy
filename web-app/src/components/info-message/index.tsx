@@ -22,7 +22,9 @@ export default ({
         <Button onClick={onOkay} icon={<CheckIcon />} color="secondary">
           Okay
         </Button>
-      ) : undefined
+      ) : (
+        messageProps.controls
+      )
     }>
     {title !== undefined ? children : null}
   </Message>

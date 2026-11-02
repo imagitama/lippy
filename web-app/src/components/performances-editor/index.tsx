@@ -202,6 +202,7 @@ const PerformerLabel = styled.div`
 const PerformerName = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   svg {
     margin-right: 2px;
   }
@@ -375,11 +376,13 @@ const usePerformancesEditing = (): [
 }
 
 const PerformancesEditor = ({
+  prefill,
   event,
   addOnSaveCallback,
   eventStartsAt,
   eventEndsAt,
 }: {
+  prefill: PerformanceFields[] | null
   event: Event | false | null
   addOnSaveCallback: (callback: (event: Event) => void) => void
   eventStartsAt: string
@@ -387,18 +390,13 @@ const PerformancesEditor = ({
 }) => {
   const [value, setValue, getValue] = useStateGetter<
     (Performance | PerformanceFields)[]
-  >([])
+  >(prefill || [])
 
   const groups = useMemo(() => {
     const map = new Map<
       string,
       { startsat: string; endsat: string; indexes: number[] }
     >()
-
-    // console.debug(
-    //   `REGENERATE`,
-    //   value.filter((perf) => perf.accessstatus !== AccessStatus.Deleted)
-    // )
 
     value
       .filter((perf) => perf.accessstatus !== AccessStatus.Deleted)

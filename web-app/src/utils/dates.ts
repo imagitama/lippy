@@ -139,3 +139,10 @@ export const getIsValidPostgresDate = (dateStr: unknown): dateStr is string => {
 
   return !Number.isNaN(Date.parse(dateStr))
 }
+
+// also rounds seconds to 0
+export const timestampToDate = (timestamp: number): Date | null => {
+  const d = new Date(timestamp * 1000)
+  d.setUTCSeconds(0, 0)
+  return d
+}

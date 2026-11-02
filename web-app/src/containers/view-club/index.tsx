@@ -238,6 +238,20 @@ const View = () => {
         </Message>
       )}
 
+      {isMod && (
+        <Message>
+          You are a moderator so you can create events for it.
+          <FormControls>
+            <Button
+              icon={<EventIcon />}
+              url={routes.createEventWithClubVar.replace(':clubId', club.id)}
+              color="secondary">
+              Create Club Event
+            </Button>
+          </FormControls>
+        </Message>
+      )}
+
       <Paper
         style={{
           border: club.color

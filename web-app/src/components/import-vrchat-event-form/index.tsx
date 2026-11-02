@@ -93,9 +93,9 @@ const ImportVrchatEventForm = ({
   if (!lastGetResult)
     return (
       <FormControls>
-        <Button onClick={onFetch}>Fetch Events</Button>
-        <Button color="secondary" onClick={onCancel}>
-          Create Manually
+        <Button onClick={onFetch}>Load VRChat Group Events</Button>
+        <Button onClick={onCancel} color="secondary">
+          Cancel
         </Button>
       </FormControls>
     )
@@ -112,9 +112,9 @@ const ImportVrchatEventForm = ({
     return (
       <ErrorMessage
         controls={[
-          <Button onClick={onCancel}>Create Manually</Button>,
-          <Button color="secondary" onClick={onFetch}>
-            Try Again
+          <Button onClick={onFetch}>Try Again</Button>,
+          <Button color="secondary" onClick={onCancel}>
+            Create Manually
           </Button>,
         ]}>
         No events found

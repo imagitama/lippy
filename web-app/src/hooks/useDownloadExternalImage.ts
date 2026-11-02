@@ -10,6 +10,8 @@ export async function downloadExternalImageToUrl(url: string): Promise<string> {
   } = await client.auth.getSession()
   if (!session) throw new Error('NotAuthenticated')
 
+  console.debug(`downloading external image "${url}"...`)
+
   const res = await fetch(FUNCTION_URL, {
     method: 'POST',
     headers: {
@@ -23,9 +25,12 @@ export async function downloadExternalImageToUrl(url: string): Promise<string> {
   // Success -> image bytes. Failure -> JSON { error: 'SomeErrorClassName' }
   const contentType = res.headers.get('content-type') ?? ''
   if (!res.ok || !contentType.startsWith('image/')) {
+    console.debug(`download failed`, res.status, res.statusText)
     const body = await res.json().catch(() => null)
     throw new Error(body?.error ?? `HTTP_${res.status}`)
   }
+
+  console.debug(`download success`)
 
   const blob = await res.blob()
   return URL.createObjectURL(blob)
@@ -41,12 +46,15 @@ const useDownloadExternalImage = (
   const performDownload = async (): Promise<string | null> => {
     try {
       if (!externalUrl) return null
+      setIsLoading(true)
       const localUrl = await downloadExternalImageToUrl(externalUrl)
+      setIsLoading(false)
       setResult(localUrl)
       return localUrl
     } catch (err) {
       console.error(err)
       handleError(err)
+      setIsLoading(false)
       setLastErrorCode((err as Error).constructor.name)
       return null
     }

@@ -10,12 +10,18 @@ import {
   EventForList,
 } from 'shared/modules/events'
 import {
+  Club,
+  CollectionNames as ClubsCollectionNames,
+} from 'shared/modules/clubs'
+import {
   FullPerformer,
   Performer,
   CollectionNames as PerformersCollectionNames,
 } from 'shared/modules/performers'
 import {
   FullPerformance,
+  Performance,
+  PerformanceFields,
   CollectionNames as PerformancesCollectionNames,
   ViewNames as PerformancesViewNames,
 } from 'shared/modules/performances'
@@ -35,66 +41,16 @@ import ImportVrchatEventForm from '@/components/import-vrchat-event-form'
 import useDownloadExternalImage from '@/hooks/useDownloadExternalImage'
 import LoadingIndicator from '@/components/loading-indicator'
 import ErrorMessage from '@/components/error-message'
+import ImportFromTimelineForm from '@/components/import-timeline-event-form'
+import FormControls from '@/components/form-controls'
+import Button from '@/components/button'
+import useDataStoreItem from '@/hooks/useDataStoreItem'
 
-// const usePerformerNamesById = (
-//   ids: string[]
-// ): [boolean, string | null, { id: string; name: string }[] | null] => {
-//   const [isLoading, lastErrorCode, results] = useDataStoreItems<FullPerformance>(
-//     PerformancesViewNames.GetFullPerformances,
-//     ids
-//   )
-//   return [
-//     isLoading,
-//     lastErrorCode,
-//     results?.map((perf) => ({
-//       id: perf.id,
-//       name: perf.name,
-//     })) || null,
-//   ]
-// }
-
-// const EventPreview = ({ event }: { event: Partial<Event> }) => {
-//   const [, , performerIdsAndNames] = usePerformerNamesById(
-//     event.performances
-//       ?.filter((perf) => perf.performerid)
-//       .map((perf) => perf.performerid!) || []
-//   )
-
-//   if (!event.startsat && !event.endsat)
-//     return (
-//       <WarningMessage>
-//         Need a start and end date to show a preview
-//       </WarningMessage>
-//     )
-
-//   const mockFullPerformances: FullPerformance[] =
-//     event.performances?.map((perf) => {
-//       const perfName =
-//         perf.performerid && performerIdsAndNames
-//           ? performerIdsAndNames.find((item) => item.id === perf.performerid)
-//               ?.name || 'Loading...'
-//           : perf.performername || perf.performerid || ''
-//       return {
-//         ...perf,
-//         fullperformername: perfName,
-//       }
-//     }) || []
-
-//   const mockEventForList = {
-//     ...event,
-//     fullperformances: mockFullPerformances,
-//     clubname: 'My Club',
-//   } as EventForList
-
-//   return (
-//     <div style={{ height: '200px' }}>
-//       <HorizontalTimeline
-//         events={[mockEventForList]}
-//         now={new Date(event.startsat!)}
-//       />
-//     </div>
-//   )
-// }
+enum ImportMode {
+  VRChat = 'vrchat',
+  Timeline = 'timeline',
+  Manual = 'manual',
+}
 
 export default () => {
   const { eventId } = useParams<{ eventId?: string }>()
@@ -108,14 +64,21 @@ export default () => {
   const [previewFields, setPreviewFields] = useState<null | Partial<Event>>(
     null
   )
-  const [vrcPosterImageUrl, setVrcPosterImageUrl] = useState<null | string>(
-    null
-  )
+  const [externalPosterImageUrl, setExternalPosterImageUrl] = useState<
+    null | string
+  >(null)
   const [prefillFields, setPrefillFields] =
     useState<null | Partial<EventFields>>(null)
-  const [isHidingImport, setIsHidingImport] = useState(false)
   const [isDownloading, lastErrorCodeDownloading, posterLocalUrl] =
-    useDownloadExternalImage(vrcPosterImageUrl || false)
+    useDownloadExternalImage(externalPosterImageUrl || false)
+  const [isLoadingClub, lastErrorCodeClub, club] = useDataStoreItem<Club>(
+    ClubsCollectionNames.Clubs,
+    providedClubId || false
+  )
+  const [importMode, setImportMode] = useState<null | ImportMode>(null)
+  const [importedPerformances, setImportedPerformances] = useState<
+    null | PerformanceFields[]
+  >(null)
 
   if (!isLoggedIn) {
     return <NotLoggedInMessage />
@@ -130,16 +93,18 @@ export default () => {
       </ErrorMessage>
     )
 
-  if (vrcPosterImageUrl && !posterLocalUrl)
+  if (externalPosterImageUrl && !posterLocalUrl)
     return <LoadingIndicator message="Waiting for poster..." />
 
   const onImportSuccess = async (
     eventFields: Partial<EventFields>,
-    posterImageUrl: string | null
+    posterImageUrl: string | null,
+    performances: PerformanceFields[] | null
   ) => {
-    console.debug(`import success`, eventFields, posterImageUrl)
+    console.debug(`import success`, eventFields, posterImageUrl, performances)
 
-    setVrcPosterImageUrl(posterImageUrl)
+    setImportedPerformances(performances)
+    setExternalPosterImageUrl(posterImageUrl)
     setPrefillFields(eventFields)
   }
 
@@ -154,6 +119,14 @@ export default () => {
       )
     : editableFields
 
+  if (isLoadingClub) return <LoadingIndicator message="Loading club..." />
+  if (lastErrorCodeClub !== null)
+    return (
+      <ErrorMessage errorCode={lastErrorCodeClub}>
+        Failed to load club
+      </ErrorMessage>
+    )
+
   return (
     <>
       <Helmet>
@@ -166,17 +139,56 @@ export default () => {
         />
       </Helmet>
       <Heading variant="h1">{isCreating ? 'Create' : 'Edit'} Event</Heading>
-      {providedClubId && !isHidingImport && !prefillFields ? (
-        <InfoMessage title="Import VRChat Group Event">
-          You can import an event from your VRChat group by clicking this
-          button.
-          <br />
-          <ImportVrchatEventForm
-            clubId={providedClubId}
-            onSuccess={onImportSuccess}
-            onCancel={() => setIsHidingImport(true)}
-          />
-        </InfoMessage>
+      {providedClubId && importMode === null && !prefillFields ? (
+        <>
+          <InfoMessage
+            title="Import VRChat Event"
+            controls={
+              <Button onClick={() => setImportMode(ImportMode.VRChat)}>
+                Import from VRChat
+              </Button>
+            }>
+            We can import any calendar event from your VRChat group.
+          </InfoMessage>
+          <InfoMessage
+            title="Import Timeline Event (experimental)"
+            controls={
+              <Button onClick={() => setImportMode(ImportMode.Timeline)}>
+                Import from Timeline
+              </Button>
+            }>
+            We can import any event from Timeline (vrc.tl) except there is an
+            extra manual step.
+          </InfoMessage>
+          <InfoMessage
+            title="Manual"
+            controls={
+              <Button
+                onClick={() => setImportMode(ImportMode.Manual)}
+                color="secondary">
+                Create Manually
+              </Button>
+            }></InfoMessage>
+        </>
+      ) : club && importMode === ImportMode.VRChat && !prefillFields ? (
+        <ImportVrchatEventForm
+          clubId={club.id}
+          onSuccess={(fields, posterImageUrl) =>
+            onImportSuccess(fields, posterImageUrl, null)
+          }
+          onCancel={() => setImportMode(null)}
+        />
+      ) : club &&
+        club.vrchatgroupid &&
+        importMode === ImportMode.Timeline &&
+        !prefillFields ? (
+        <ImportFromTimelineForm
+          clubId={club.id}
+          // clubVrcGroupId={club.vrchatgroupid}
+          clubVrcGroupId={'grp_f3cfc1c2-af05-4ffc-8d1d-27bea4e5115c'}
+          onSuccess={onImportSuccess}
+          onCancel={() => setImportMode(null)}
+        />
       ) : (
         <GenericEditor<Event>
           fields={editableFieldsToUse}
@@ -205,6 +217,9 @@ export default () => {
                 }
               : {}),
             ...(prefillFields || {}),
+          }}
+          extraFormData={{
+            performances: importedPerformances,
           }}
           isAccordion
           startExpanded

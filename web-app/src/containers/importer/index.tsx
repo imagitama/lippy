@@ -6,10 +6,20 @@ import Heading from '@/components/heading'
 import Message from '@/components/message'
 import NoResultsMessage from '@/components/no-results-message'
 import TextInput from '@/components/text-input'
-import WarningMessage from '@/components/warning-message'
 import { Helmet } from '@unhead/react/helmet'
 import Paper from '@/components/paper'
-import { ExternalData, ExternalEvent, ExternalEventSlot } from './types'
+
+import {
+  ExternalData,
+  ExternalEvent,
+  ExternalEventSlot,
+} from '@/timeline/types'
+import {
+  EventFieldsResult,
+  getEventFieldsFromExternalEvent,
+} from '@/timeline/map'
+import { routes } from '@/routes'
+
 import Table, {
   TableBody,
   TableCell,
@@ -17,7 +27,6 @@ import Table, {
 } from '@/components/responsive-table'
 import Button from '@/components/button'
 // import testDataJson from './test-data.json?raw'
-import useDataStoreItems from '@/hooks/useDataStoreItems'
 import {
   CollectionNames,
   FunctionNames,
@@ -27,117 +36,20 @@ import {
 } from './data-store'
 import useDataStore, { GetQueryFn } from '@/hooks/useDataStore'
 import LoadingIndicator from '@/components/loading-indicator'
-import Columns from '@/components/columns'
-import Column from '@/components/column'
-import useDataStoreCreate from '@/hooks/useDataStoreCreate'
 import useDataStoreFunction from '@/hooks/useDataStoreFunction'
 import SuccessMessage from '@/components/success-message'
-import { EventFieldsResult, getEventFieldsFromExternalEvent } from './map'
-import ImageUploadInput from '@/components/generic-editor/components/image-upload-input'
 import editableFields from '@/editable-fields/events'
 import { ImageUploadEditableField } from '@/editable-fields'
 import { Event } from 'shared/modules/events'
 import ImageUploader from '@/components/image-uploader'
 import LazyLoad from '@/components/lazy-load'
-import FormattedDate from '@/components/formatted-date'
 import CheckboxInput from '@/components/checkbox-input'
 import DateTimeRangeInput from '@/components/datetime-range-input'
-import { callFunction, client } from '@/supabase'
 import { getVrchatGroupIdFromUrl } from '@/vrchat'
 import FormControls from '@/components/form-controls'
 import InfoMessage from '@/components/info-message'
-import Link from '@/components/link'
-import { routes } from '@/routes'
 import { downloadExternalImageToUrl } from '@/hooks/useDownloadExternalImage'
-
-const ComponentForField = ({
-  name,
-  val,
-  all,
-}: {
-  name: keyof ExternalEvent
-  val: any
-  all: ExternalEvent
-}) => {
-  switch (name) {
-    // case 'name': return <span>{val}</span>
-    // case 'description': return <span>{val}</span>
-
-    case 'start':
-    case 'end':
-      return (
-        <span>
-          {val}
-          <br />
-          Mapped:{' '}
-          <FormattedDate date={new Date(val * 1000)} isRelative={false} /> (
-          <FormattedDate date={new Date(val * 1000)} isRelative />)
-        </span>
-      )
-
-    case 'duration':
-      const secs = val
-      return (
-        <span>
-          {secs} ({secs / 60} mins)
-        </span>
-      )
-
-    case 'eventSlots':
-      return (
-        <Table size="small" noMinWidth>
-          <TableBody>
-            {(val as ExternalEventSlot[]).map((slot) => (
-              <TableRow key={slot.id}>
-                <TableCell>
-                  <Table size="small" noMinWidth>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Datetime</TableCell>
-                        <TableCell>
-                          {slot.start} ({slot.duration / 60} mins)
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Performers</TableCell>
-                        <TableCell>
-                          {slot.performers.length > 0 ? (
-                            <Table size="small" noMinWidth>
-                              <TableBody>
-                                {slot.performers.map((perf) => (
-                                  <TableRow key={perf.id}>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell>{perf.performerId}</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          ) : (
-                            '(none)'
-                          )}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Flag</TableCell>
-                        <TableCell>{slot.flag}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Notes</TableCell>
-                        <TableCell>{slot.note || '-'}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )
-
-    default:
-      return <span>{JSON.stringify(val)}</span>
-  }
-}
+import ExternalEventOutput from '@/components/external-event-output'
 
 const getVrchatGroupId = (ev: ExternalEvent): string | null => {
   if (!ev.urls.vrcGroup) return null
@@ -285,7 +197,7 @@ const OurFields = ({
   )
 }
 
-const ExternalEventOutput = ({
+const ExternalEventItem = ({
   externalEvent,
   existingImporterDetails,
   fullData,
@@ -318,29 +230,10 @@ const ExternalEventOutput = ({
         Toggle Expand
       </Button>
       {isExpanded ? (
-        <Columns>
-          <Column widthPerc={50}>
-            <Table size="small" noMinWidth>
-              <TableBody>
-                {Object.entries(externalEvent).map(([name, val]) => (
-                  <TableRow key={name}>
-                    <TableCell width="20%">{name}</TableCell>
-                    <TableCell width="80%">
-                      <ComponentForField
-                        name={name as keyof ExternalEvent}
-                        val={val}
-                        all={externalEvent}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Column>
-          <Column widthPerc={50}>
-            <OurFields ourEventFields={ourEventFields} />
-          </Column>
-        </Columns>
+        <ExternalEventOutput
+          importData={fullData}
+          externalEvent={externalEvent}
+        />
       ) : (
         <Paper>
           <strong>
@@ -457,7 +350,7 @@ const EventsOutput = ({ json }: { json: string }) => {
       </Paper>
       {results.map((rawEvent) => (
         <LazyLoad key={rawEvent.id}>
-          <ExternalEventOutput
+          <ExternalEventItem
             externalEvent={rawEvent}
             existingImporterDetails={
               existingImporterDetails?.find(
@@ -473,10 +366,7 @@ const EventsOutput = ({ json }: { json: string }) => {
 }
 
 const Importer = () => {
-  const [textVal, setTextVal] = useState<string>(
-    // testDataJson as unknown as string
-    ''
-  )
+  const [textVal, setTextVal] = useState<string>('')
   return (
     <>
       <Helmet>
