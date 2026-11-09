@@ -70,6 +70,7 @@ const SingleExternalEventImporter = ({
     )
   const [posterUrl, setPosterUrl] = useState<null | string>(null)
   const [posterUrlToUse, setPosterUrlToUse] = useState<null | string>(null)
+  const [overrideNameVal, setOverrideNameVal] = useState<string>('')
   const [genresVal, setGenresVal] = useState<string>('')
 
   const onClickImport = () => {
@@ -83,6 +84,7 @@ const SingleExternalEventImporter = ({
         ...ourEventFields,
         posterurl: posterUrl,
         genres,
+        name: overrideNameVal ?? ourEventFields.name,
       },
       p_externalid: externalEvent.id,
       p_vrchatgroupid: getVrchatGroupId(externalEvent),
@@ -107,6 +109,11 @@ const SingleExternalEventImporter = ({
 
   return (
     <>
+      <TextInput
+        value={overrideNameVal}
+        onChange={(e) => setOverrideNameVal(e.target.value)}
+        placeholder="Override name (leave blank to use remote)"
+      />
       <TextInput
         value={genresVal}
         onChange={(e) => setGenresVal(e.target.value)}
