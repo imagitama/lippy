@@ -84,7 +84,7 @@ const SingleExternalEventImporter = ({
         ...ourEventFields,
         posterurl: posterUrl,
         genres,
-        name: overrideNameVal ?? ourEventFields.name,
+        name: overrideNameVal ? overrideNameVal : ourEventFields.name,
       },
       p_externalid: externalEvent.id,
       p_vrchatgroupid: getVrchatGroupId(externalEvent),
