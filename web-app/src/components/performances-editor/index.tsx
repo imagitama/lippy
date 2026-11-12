@@ -440,8 +440,11 @@ const PerformancesEditor = ({
 
   useEffect(() => {
     if (!existingPerfs) return
-
     onChange(existingPerfs)
+  }, [JSON.stringify(existingPerfs)])
+
+  useEffect(() => {
+    console.debug('PerformancesEditor addOnSaveCallback')
 
     addOnSaveCallback((event) => {
       console.debug(
@@ -449,7 +452,7 @@ const PerformancesEditor = ({
       )
       createOrEditAll(event.id, getValue())
     })
-  }, [JSON.stringify(existingPerfs)])
+  }, [])
 
   if (isLoadingExisting)
     return <LoadingIndicator message="Loading performances..." />

@@ -382,6 +382,8 @@ const GenericEditor = <TRecord extends Record<string, any>>({
       if (!result)
         throw new Error('Cannot call on save callbacks without a result')
 
+      console.debug('onSaveCallbacks', { cb: onSaveCallbacks.current, result })
+
       await Promise.all(onSaveCallbacks.current.map((func) => func(result)))
 
       if (!result) {
